@@ -6,6 +6,7 @@ source 'https://rubygems.org'
 gem 'caxlsx', '~> 4.1'   # Excel export
 gem 'csv', '~> 3.3'      # CSV parsing (required from Ruby 3.4+)
 gem 'dotenv', '~> 3.1'   # Environment variables
+gem 'openssl', '~> 3.2'  # SSL/TLS support
 gem 'thor', '~> 1.3'     # CLI framework
 gem 'zeitwerk', '~> 2.6' # Autoloading
 

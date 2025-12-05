@@ -125,11 +125,11 @@ Create HTML dashboard from collected metrics:
 By default, the report filters metrics to selected teams. You can control this via CLI options:
 
 ```bash
-# Use default teams (ATS, Marketplace, Platform, ROI, Sourcing)
+# Use default teams (Global ATS, Marketplace, Platform, ROI, Sourcing, Talents)
 ./bin/wttj-metrics report metrics.csv
 
 # Specify custom teams
-./bin/wttj-metrics report metrics.csv --teams ATS Platform Sourcing
+./bin/wttj-metrics report metrics.csv --teams "Global ATS" Platform Sourcing
 
 # Show all teams from the data (no filtering)
 ./bin/wttj-metrics report metrics.csv --all-teams
@@ -138,7 +138,7 @@ By default, the report filters metrics to selected teams. You can control this v
 To change the default teams, edit `SELECTED_TEAMS` in `lib/wttj_metrics/report_generator.rb`:
 
 ```ruby
-SELECTED_TEAMS = %w[ATS Marketplace Platform ROI Sourcing].freeze
+SELECTED_TEAMS = ['Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourcing', 'Talents'].freeze
 ```
 
 Filtered charts display a "Filtered" badge. When using `--all-teams`, all teams from the data are included and no filter badge is shown.

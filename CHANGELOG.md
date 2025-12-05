@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Metrics::TeamStatsCalculator` - Aggregate team statistics
 - **APP_ROOT constant**: Global path constant for file references
 - **rubocop-rspec**: RSpec-specific linting rules
+- **openssl gem**: Explicit SSL/TLS support dependency
+- **Team filtering**: Filter badges showing selected teams in report sections
 
 ### Changed
 
@@ -36,10 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Uses native Ruby HTTP client with SSL support
 - **RuboCop Configuration**: Updated to use `plugins` instead of `require`
   - Added relaxed RSpec cop settings for aggregate_failures style
+- **CycleParser**: `DEFAULT_TEAMS` now references `ReportGenerator::SELECTED_TEAMS` (single source of truth)
+- **Team Configuration**: Added both `ATS` and `Global ATS` to selected teams
+  - `ATS` for cycle data
+  - `Global ATS` for bugs data
 
-### Removed
+### Fixed
 
-- **HTTParty dependency**: Replaced with Net::HTTP
+- **csv gem**: Added explicit dependency for Ruby 3.4+ compatibility
+- **STATE_CATEGORIES**: Fixed namespace reference in TransitionDataBuilder
 
 ## [0.1.0] - 2024-12-01
 

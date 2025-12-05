@@ -6,7 +6,7 @@ module WttjMetrics
   # Parses cycle metrics and organizes them by team
   # Single Responsibility: Cycle data parsing and organization
   class CycleParser
-    DEFAULT_TEAMS = %w[ATS Marketplace Platform ROI Sourcing].freeze
+    DEFAULT_TEAMS = ReportGenerator::SELECTED_TEAMS
 
     METRIC_PARSERS = {
       'total_issues' => lambda(&:to_i),

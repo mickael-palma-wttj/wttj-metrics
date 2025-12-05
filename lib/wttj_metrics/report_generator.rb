@@ -8,7 +8,7 @@ module WttjMetrics
   # Generates HTML and Excel reports from CSV metrics data
   # Facade pattern: Coordinates multiple specialized classes
   class ReportGenerator
-    SELECTED_TEAMS = %w[ATS Marketplace Platform ROI Sourcing].freeze
+    SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourcing', 'Talents'].freeze
 
     STATE_CATEGORIES = {
       'Backlog' => %w[Backlog Triage],
