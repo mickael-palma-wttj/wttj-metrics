@@ -11,7 +11,7 @@ module WttjMetrics
       }.freeze
 
       def label
-        name.gsub('_', ' ')
+        name.tr('_', ' ')
             .gsub('current ', '')
             .gsub('cycle ', '')
             .strip

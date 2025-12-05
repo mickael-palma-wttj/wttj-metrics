@@ -12,7 +12,7 @@ module WttjMetrics
       }.freeze
 
       def label
-        name.gsub('_', ' ')
+        name.tr('_', ' ')
             .gsub('avg ', 'Avg ')
             .gsub('days', '')
             .gsub('current ', '')

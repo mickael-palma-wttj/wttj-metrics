@@ -65,7 +65,8 @@ module WttjMetrics
       puts '✅ Metrics collected and saved successfully!'
 
       puts "\nMetrics Summary:"
-      summary = rows.select { |r| %w[flow cycle_metrics team issues].include?(r[1]) }.first(6)
+      summary_categories = %w[flow cycle_metrics team issues]
+      summary = rows.select { |r| summary_categories.include?(r[1]) }.first(6)
       summary.each { |row| puts "  - #{row[2]}: #{row[3]}" }
     end
 

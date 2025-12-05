@@ -4,6 +4,8 @@ module WttjMetrics
   module Presenters
     # Presenter for bug flow by team table rows
     class BugTeamPresenter
+      include Helpers::FormattingHelper
+
       def initialize(team, stats)
         @team = team
         @stats = stats
@@ -28,11 +30,11 @@ module WttjMetrics
       def resolution_rate
         return 0 unless created.positive?
 
-        ((closed.to_f / created) * 100).round(1)
+        format_percentage(closed, created)
       end
 
       def resolution_rate_display
-        "#{resolution_rate}%"
+        format_with_unit(resolution_rate, '%')
       end
 
       def resolution_rate_class

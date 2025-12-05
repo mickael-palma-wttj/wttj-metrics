@@ -15,7 +15,7 @@ module WttjMetrics
       }.freeze
 
       def label
-        name.gsub('_', ' ')
+        name.tr('_', ' ')
             .gsub('bugs ', '')
             .gsub('bug ', '')
             .gsub('avg ', 'Avg ')

@@ -5,6 +5,8 @@ module WttjMetrics
     # Calculates aggregate statistics for team cycles
     # Single Responsibility: Team statistics calculation
     class TeamStatsCalculator
+      COUNTABLE_STATUSES = %w[completed active].freeze
+
       def initialize(cycles_by_team)
         @cycles_by_team = cycles_by_team
       end
@@ -32,7 +34,7 @@ module WttjMetrics
 
       def select_active_cycles(cycles)
         cycles.select do |c|
-          %w[completed active].include?(c[:status]) && (c[:total_issues] || 0).positive?
+          COUNTABLE_STATUSES.include?(c[:status]) && (c[:total_issues] || 0).positive?
         end
       end
 

@@ -83,8 +83,9 @@ module WttjMetrics
         sheet.add_row ['Bugs by Priority'], style: @header_style
         sheet.add_row %w[Priority Count], style: @header_style
 
+        priority_order = %w[Urgent High Medium Low]
         sorted_bugs = @data[:bugs_by_priority].sort_by do |m|
-          %w[Urgent High Medium Low].index(m[:metric]) || 99
+          priority_order.index(m[:metric]) || 99
         end
         sorted_bugs.each { |m| sheet.add_row [m[:metric], m[:value].to_i] }
 
@@ -101,8 +102,9 @@ module WttjMetrics
         end
 
         add_section(sheet, 'Priority Distribution', %w[Priority Count]) do
+          priority_order = %w[Urgent High Medium Low]
           @data[:priority_dist]
-            .sort_by { |m| %w[Urgent High Medium Low].index(m[:metric]) || 99 }
+            .sort_by { |m| priority_order.index(m[:metric]) || 99 }
             .map { |m| [m[:metric], m[:value].to_i] }
         end
 
@@ -201,7 +203,7 @@ module WttjMetrics
 
     def add_metrics_rows(sheet, metrics, type)
       metrics.each do |m|
-        label = m[:metric].gsub('_', ' ').capitalize
+        label = m[:metric].tr('_', ' ').capitalize
         unit = determine_unit(m[:metric], type)
         sheet.add_row [label, "#{m[:value].round(1)}#{unit}", METRIC_DESCRIPTIONS[m[:metric]] || '']
       end
@@ -217,7 +219,7 @@ module WttjMetrics
     end
 
     def format_bug_metric_row(metric)
-      label = metric[:metric].gsub('_', ' ').gsub('bugs ', '').gsub('bug ', '').capitalize
+      label = metric[:metric].tr('_', ' ').gsub('bugs ', '').gsub('bug ', '').capitalize
       unit = case metric[:metric]
              when 'avg_bug_resolution_days' then ' days'
              when 'bug_ratio' then '%'

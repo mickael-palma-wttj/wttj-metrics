@@ -1,0 +1,74 @@
+---
+# Reek configuration
+# See: https://github.com/troessner/reek/blob/master/docs/defaults.reek.yml
+
+detectors:
+  # Relaxed settings for this project
+  TooManyStatements:
+    max_statements: 30
+
+  TooManyMethods:
+    max_methods: 45
+
+  TooManyInstanceVariables:
+    max_instance_variables: 12
+
+  UtilityFunction:
+    enabled: false  # Helpers are intentionally utility functions
+
+  FeatureEnvy:
+    enabled: false  # Data transformation code accesses other objects by design
+
+  IrresponsibleModule:
+    enabled: false  # We use inline comments instead
+
+  DuplicateMethodCall:
+    max_calls: 5  # Allow up to 5 duplicate calls
+
+  NestedIterators:
+    max_allowed_nesting: 3
+
+  InstanceVariableAssumption:
+    enabled: false  # Lazy initialization is intentional
+
+  NilCheck:
+    enabled: false  # Explicit nil checks are often clearer
+
+  MissingSafeMethod:
+    enabled: false  # Bang methods don't always need safe versions
+
+  DataClump:
+    enabled: false  # Parameters are intentionally passed together
+
+  RepeatedConditional:
+    enabled: false  # Some conditionals are intentionally repeated for clarity
+
+  LongParameterList:
+    max_params: 5
+
+  UncommunicativeVariableName:
+    accept:
+      - _   # Unused variable
+      - e   # Exception
+      - h   # Hash block variable
+      - h2  # Nested hash
+      - k   # Key
+      - k2  # Nested key
+      - l   # Label
+      - m   # Metric
+      - c   # Cycle
+      - d   # Date/data
+      - i   # Issue/index
+      - b   # Breakdown
+      - v   # Value
+      - r   # Row
+      - s   # State
+      - x   # Generic
+
+  ControlParameter:
+    enabled: false  # We use optional parameters legitimately
+
+exclude_paths:
+  - spec
+  - tmp
+  - vendor

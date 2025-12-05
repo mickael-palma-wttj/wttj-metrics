@@ -5,6 +5,9 @@ module WttjMetrics
     # Base class for all metric calculators
     # Provides common functionality and interface
     class Base
+      include Helpers::DateHelper
+      include Helpers::IssueHelper
+
       def initialize(issues, today: Date.today)
         @issues = issues
         @today = today
@@ -20,20 +23,7 @@ module WttjMetrics
       attr_reader :issues, :today
 
       def completed_issues
-        @completed_issues ||= issues.select { |i| i['completedAt'] }
-      end
-
-      def issue_is_bug?(issue)
-        labels = (issue.dig('labels', 'nodes') || []).map { |l| l['name'].downcase }
-        labels.any? { |l| l.include?('bug') || l.include?('fix') }
-      end
-
-      def parse_date(date_string)
-        Date.parse(date_string) if date_string
-      end
-
-      def parse_datetime(date_string)
-        DateTime.parse(date_string) if date_string
+        @completed_issues ||= issues.select { |i| issue_completed?(i) }
       end
     end
   end

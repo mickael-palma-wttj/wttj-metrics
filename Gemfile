@@ -11,12 +11,16 @@ gem 'thor', '~> 1.3'     # CLI framework
 gem 'zeitwerk', '~> 2.6' # Autoloading
 
 group :development do
-  gem 'rubocop', '~> 1.68', require: false
-  gem 'rubocop-rspec', '~> 3.8'
+  gem 'bundler-audit', '~> 0.9', require: false # Dependency vulnerability check
+  gem 'reek', '~> 6.3', require: false # Code smell detector
+  gem 'rubocop', '~> 1.68', require: false # Style linting
+  gem 'rubocop-performance', '~> 1.23', require: false # Performance cops
+  gem 'rubocop-rspec', '~> 3.8', require: false # RSpec cops
 end
 
 group :test do
   gem 'rspec', '~> 3.13'
+  gem 'simplecov', '~> 0.22', require: false # Code coverage
   gem 'vcr', '~> 6.3'
   gem 'webmock', '~> 3.24'
 end

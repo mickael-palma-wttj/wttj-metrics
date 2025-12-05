@@ -4,6 +4,8 @@ module WttjMetrics
   module Presenters
     # Base presenter class with common formatting helpers
     class BasePresenter
+      include Helpers::FormattingHelper
+
       def initialize(metric)
         @metric = metric
       end
@@ -21,7 +23,7 @@ module WttjMetrics
       end
 
       def label
-        name.gsub('_', ' ').strip.capitalize
+        humanize_metric_name(name)
       end
 
       def tooltip
@@ -33,7 +35,7 @@ module WttjMetrics
       end
 
       def display_value
-        "#{value}#{unit}"
+        format_with_unit(value, unit)
       end
 
       def to_h

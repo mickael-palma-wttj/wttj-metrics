@@ -4,6 +4,8 @@ module WttjMetrics
   module Presenters
     # Presenter for cycle (sprint) data in the cycles table
     class CyclePresenter
+      include Helpers::FormattingHelper
+
       def initialize(cycle)
         @cycle = cycle
       end
@@ -33,7 +35,7 @@ module WttjMetrics
       end
 
       def issues_display
-        "#{completed_issues}/#{total_issues}"
+        format_count_display(completed_issues, total_issues)
       end
 
       def bug_count
@@ -49,7 +51,7 @@ module WttjMetrics
       end
 
       def velocity_display
-        "#{velocity} pts"
+        format_points_display(velocity)
       end
 
       def tickets_per_day
@@ -61,7 +63,7 @@ module WttjMetrics
       end
 
       def completion_rate_display
-        "#{completion_rate}%"
+        format_with_unit(completion_rate, '%')
       end
 
       def carryover

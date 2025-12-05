@@ -179,7 +179,7 @@ module WttjMetrics
       end
 
       def assignee_count
-        cycle_issues.map { |i| i.dig('assignee', 'id') }.compact.uniq.size
+        cycle_issues.filter_map { |i| i.dig('assignee', 'id') }.uniq.size
       end
 
       def status

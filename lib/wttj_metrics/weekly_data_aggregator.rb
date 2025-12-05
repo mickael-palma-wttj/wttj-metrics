@@ -6,6 +6,9 @@ module WttjMetrics
   # Aggregates timeseries data into weekly buckets with percentages
   # Single Responsibility: Weekly data aggregation logic
   class WeeklyDataAggregator
+    include Helpers::DateHelper
+    include Helpers::FormattingHelper
+
     def initialize(cutoff_date)
       @cutoff_date = cutoff_date
     end
@@ -30,7 +33,7 @@ module WttjMetrics
       result = { labels: [], values: [] }
 
       weekly_data.sort.each do |week, dates|
-        result[:labels] << format_week_label(week, dates)
+        result[:labels] << format_week_label(week)
         result[:values] << sum_for_dates(dates, by_date)
       end
 
@@ -46,9 +49,7 @@ module WttjMetrics
     def group_by_week(dates)
       # Group by Monday of each week to handle year boundaries correctly
       dates.uniq.sort.group_by do |d|
-        date = Date.parse(d)
-        monday = date - ((date.wday - 1) % 7)
-        monday.to_s
+        monday_of_week(d).to_s
       end
     end
 
@@ -62,7 +63,7 @@ module WttjMetrics
       }
 
       weekly_data.sort.each do |week, dates|
-        result[:labels] << format_week_label(week, dates)
+        result[:labels] << format_week_label(week)
 
         sum_a = sum_for_dates(dates, by_date_a)
         sum_b = sum_for_dates(dates, by_date_b)
@@ -70,26 +71,15 @@ module WttjMetrics
 
         result[:"#{labels[0]}_raw"] << sum_a
         result[:"#{labels[1]}_raw"] << sum_b
-        result[:"#{labels[0]}_pct"] << calculate_percentage(sum_a, total)
-        result[:"#{labels[1]}_pct"] << calculate_percentage(sum_b, total)
+        result[:"#{labels[0]}_pct"] << format_percentage(sum_a, total)
+        result[:"#{labels[1]}_pct"] << format_percentage(sum_b, total)
       end
 
       result
     end
 
-    def format_week_label(week, _dates)
-      # week is now the Monday date string (e.g., "2024-12-30")
-      Date.parse(week).strftime('%b %d')
-    end
-
     def sum_for_dates(dates, by_date)
       dates.sum { |d| by_date[d] || 0 }
-    end
-
-    def calculate_percentage(value, total)
-      return 0 if total.zero?
-
-      ((value.to_f / total) * 100).round(1)
     end
   end
 end
