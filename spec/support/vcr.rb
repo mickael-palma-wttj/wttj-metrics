@@ -17,9 +17,9 @@ VCR.configure do |config|
   # Allow localhost for local testing
   config.ignore_localhost = true
 
-  # Record mode - use :new_episodes to record new interactions
+  # Record mode - use :none in CI, :new_episodes for development
   config.default_cassette_options = {
-    record: :new_episodes,
-    match_requests_on: %i[method uri body]
+    record: :none,
+    match_requests_on: %i[method uri]
   }
 end

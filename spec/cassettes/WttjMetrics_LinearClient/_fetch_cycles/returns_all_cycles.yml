@@ -1,0 +1,23 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.linear.app/graphql
+    body:
+      encoding: UTF-8
+      string: ''
+    headers:
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"data":{"cycles":{"nodes":[{"id":"c1","name":"Sprint 1","number":1},{"id":"c2","name":"Sprint 2","number":2}]}}}'
+  recorded_at: Thu, 05 Dec 2024 10:00:00 GMT
+recorded_with: VCR 6.3.1

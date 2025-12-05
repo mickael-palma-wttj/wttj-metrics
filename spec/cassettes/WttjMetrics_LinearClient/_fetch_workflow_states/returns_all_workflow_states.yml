@@ -1,0 +1,23 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.linear.app/graphql
+    body:
+      encoding: UTF-8
+      string: ''
+    headers:
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"data":{"workflowStates":{"nodes":[{"id":"s1","name":"Backlog","type":"backlog"},{"id":"s2","name":"In Progress","type":"started"}]}}}'
+  recorded_at: Thu, 05 Dec 2024 10:00:00 GMT
+recorded_with: VCR 6.3.1

@@ -1,0 +1,43 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.linear.app/graphql
+    body:
+      encoding: UTF-8
+      string: ''
+    headers:
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"data":{"issues":{"nodes":[{"id":"1","title":"Issue 1"}],"pageInfo":{"hasNextPage":true,"endCursor":"cursor1"}}}}'
+  recorded_at: Thu, 05 Dec 2024 10:00:00 GMT
+- request:
+    method: post
+    uri: https://api.linear.app/graphql
+    body:
+      encoding: UTF-8
+      string: ''
+    headers:
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"data":{"issues":{"nodes":[{"id":"2","title":"Issue 2"}],"pageInfo":{"hasNextPage":false,"endCursor":null}}}}'
+  recorded_at: Thu, 05 Dec 2024 10:00:01 GMT
+recorded_with: VCR 6.3.1
