@@ -1,0 +1,53 @@
+# frozen_string_literal: true
+
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.2
+  SuggestExtensions: false
+  Exclude:
+    - 'vendor/**/*'
+    - 'tmp/**/*'
+
+# Metrics - relaxed for this project
+# metrics_calculator.rb has complex data processing methods that are
+# intentionally kept together for readability
+Metrics/AbcSize:
+  Max: 150
+
+Metrics/MethodLength:
+  Max: 110
+
+Metrics/ClassLength:
+  Max: 450
+
+Metrics/BlockLength:
+  Max: 55
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/CyclomaticComplexity:
+  Max: 35
+
+Metrics/PerceivedComplexity:
+  Max: 35
+
+Metrics/ParameterLists:
+  Max: 6
+
+# Style
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+
+# RSpec - relaxed settings for aggregate_failures style
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/ExampleLength:
+  Max: 10

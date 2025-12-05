@@ -1,0 +1,199 @@
+# frozen_string_literal: true
+
+module WttjMetrics
+  module Metrics
+    # Calculates cycle/sprint metrics
+    class CycleCalculator
+      def initialize(cycles, today: Date.today)
+        @cycles = cycles
+        @today = today
+      end
+
+      def calculate
+        {
+          current_cycle_velocity: current_cycle_velocity,
+          cycle_commitment_accuracy: cycle_commitment_accuracy,
+          cycle_carryover_count: cycle_carryover_count
+        }
+      end
+
+      def to_rows
+        rows = calculate.map do |metric, value|
+          [today.to_s, 'cycle_metrics', metric.to_s, value]
+        end
+
+        rows + cycle_details_rows
+      end
+
+      private
+
+      attr_reader :cycles, :today
+
+      def current_cycle_velocity
+        return 0 unless current_cycle
+
+        completed_points(current_cycle)
+      end
+
+      def cycle_commitment_accuracy
+        return 0 unless current_cycle
+
+        cycle_issues = current_cycle.dig('issues', 'nodes') || []
+        return 0 if cycle_issues.empty?
+
+        completed = cycle_issues.count { |i| i.dig('state', 'type') == 'completed' }
+        ((completed.to_f / cycle_issues.size) * 100).round(2)
+      end
+
+      def cycle_carryover_count
+        return 0 unless last_completed_cycle
+
+        uncompleted = last_completed_cycle.dig('uncompletedIssuesUponClose', 'nodes') || []
+        uncompleted.size
+      end
+
+      def cycle_details_rows
+        cycles.flat_map { |cycle| CycleDetailBuilder.new(cycle, today).to_rows }
+      end
+
+      def current_cycle
+        @current_cycle ||= cycles.find do |cycle|
+          starts = Date.parse(cycle['startsAt'])
+          ends = Date.parse(cycle['endsAt'])
+          today.between?(starts, ends)
+        end
+      end
+
+      def last_completed_cycle
+        @last_completed_cycle ||= cycles
+                                  .select { |c| c['completedAt'] }
+                                  .max_by { |c| c['completedAt'] }
+      end
+
+      def completed_points(cycle)
+        cycle_issues = cycle.dig('issues', 'nodes') || []
+        cycle_issues.sum do |issue|
+          issue.dig('state', 'type') == 'completed' ? (issue['estimate'] || 0) : 0
+        end
+      end
+    end
+
+    # Builds detail rows for a single cycle
+    class CycleDetailBuilder
+      METRICS = %i[
+        total_issues completed_issues bug_count velocity planned_points
+        completion_rate carryover progress duration_days tickets_per_day
+        assignee_count status
+      ].freeze
+
+      def initialize(cycle, today)
+        @cycle = cycle
+        @today = today
+      end
+
+      def to_rows
+        METRICS.map do |metric|
+          [cycle_date, 'cycle', "#{cycle_key}:#{metric}", send(metric)]
+        end
+      end
+
+      private
+
+      attr_reader :cycle, :today
+
+      def cycle_key
+        "#{team_name}:#{cycle_name}"
+      end
+
+      def cycle_name
+        cycle['name'] || "Cycle #{cycle['number']}"
+      end
+
+      def team_name
+        cycle.dig('team', 'name') || 'Unknown'
+      end
+
+      def cycle_date
+        return Date.parse(cycle['completedAt']).to_s if cycle['completedAt']
+        return ends_at.to_s if ends_at && ends_at <= today
+
+        today.to_s
+      end
+
+      def starts_at
+        @starts_at ||= cycle['startsAt'] ? Date.parse(cycle['startsAt']) : nil
+      end
+
+      def ends_at
+        @ends_at ||= cycle['endsAt'] ? Date.parse(cycle['endsAt']) : nil
+      end
+
+      def cycle_issues
+        @cycle_issues ||= cycle.dig('issues', 'nodes') || []
+      end
+
+      def total_issues
+        cycle_issues.size
+      end
+
+      def completed_issues
+        cycle_issues.count { |i| i.dig('state', 'type') == 'completed' }
+      end
+
+      def bug_count
+        cycle_issues.count { |i| issue_is_bug?(i) }
+      end
+
+      def velocity
+        cycle_issues.sum do |issue|
+          issue.dig('state', 'type') == 'completed' ? (issue['estimate'] || 0) : 0
+        end
+      end
+
+      def planned_points
+        cycle_issues.sum { |i| i['estimate'] || 0 }
+      end
+
+      def completion_rate
+        return 0 unless total_issues.positive?
+
+        ((completed_issues.to_f / total_issues) * 100).round(1)
+      end
+
+      def carryover
+        (cycle.dig('uncompletedIssuesUponClose', 'nodes') || []).size
+      end
+
+      def progress
+        ((cycle['progress'] || 0) * 100).round(1)
+      end
+
+      def duration_days
+        starts_at && ends_at ? (ends_at - starts_at).to_i : 0
+      end
+
+      def tickets_per_day
+        return 0 unless duration_days.positive?
+
+        (completed_issues.to_f / duration_days).round(2)
+      end
+
+      def assignee_count
+        cycle_issues.map { |i| i.dig('assignee', 'id') }.compact.uniq.size
+      end
+
+      def status
+        return 'completed' if cycle['completedAt']
+        return 'active' if starts_at && ends_at && today.between?(starts_at, ends_at)
+        return 'upcoming' if starts_at && today < starts_at
+
+        'past'
+      end
+
+      def issue_is_bug?(issue)
+        labels = (issue.dig('labels', 'nodes') || []).map { |l| l['name'].downcase }
+        labels.any? { |l| l.include?('bug') || l.include?('fix') }
+      end
+    end
+  end
+end

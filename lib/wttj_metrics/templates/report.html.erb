@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linear Metrics Dashboard - <%= @today %></title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #EAE4DE;
+      color: #151515;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    h1 {
+      font-size: 2.5rem;
+      color: #151515;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle { color: #585858; font-size: 1rem; }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .metric-card {
+      background: #FFFFFF;
+      border: 1px solid #DEDEDE;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      cursor: help;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+    .metric-card .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      width: 220px;
+      text-align: left;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      margin-top: 8px;
+    }
+    .metric-card .tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-bottom-color: #151515;
+    }
+    .metric-card:hover .tooltip { visibility: visible; opacity: 1; }
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #151515;
+    }
+    .metric-label { color: #585858; font-size: 0.9rem; margin-top: 0.5rem; }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: #FFFFFF;
+      border: 1px solid #DEDEDE;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .chart-card.full-width { grid-column: 1 / -1; }
+    .chart-title { font-size: 1.2rem; margin-bottom: 1rem; color: #151515; }
+    .chart-subtitle { font-size: 0.8rem; color: #585858; margin-top: -0.5rem; margin-bottom: 1rem; }
+    .filter-badge { display: inline-block; background: #FFCD00; color: #151515; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem; font-weight: 500; }
+    .chart-container { position: relative; height: 300px; }
+    .chart-container.tall { height: 400px; }
+    section { margin-bottom: 1rem; position: relative; }
+    .section-title {
+      font-size: 1.5rem;
+      margin: 2rem 0 1rem;
+      color: #151515;
+      border-bottom: 2px solid #FFCD00;
+      padding-bottom: 0.5rem;
+    }
+    footer { text-align: center; margin-top: 3rem; color: #585858; font-size: 0.9rem; }
+    .cycles-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; overflow: visible; }
+    .cycles-table th, .cycles-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #DEDEDE;
+    }
+    .cycles-table th {
+      background: #FFCD00;
+      font-weight: 600;
+      position: relative;
+      overflow: visible;
+      color: #151515;
+      position: relative;
+    }
+    .cycles-table th.has-tooltip { cursor: help; }
+    .cycles-table th .th-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.3;
+      width: 180px;
+      text-align: left;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      margin-top: 6px;
+      white-space: normal;
+    }
+    .cycles-table th .th-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-bottom-color: #151515;
+    }
+    .cycles-table th:hover .th-tooltip { visibility: visible; opacity: 1; }
+    .cycles-table tr:hover { background: rgba(255, 205, 0, 0.1); }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-active { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+    .status-upcoming { background: rgba(255, 205, 0, 0.3); color: #151515; }
+    .status-completed { background: rgba(88, 88, 88, 0.15); color: #585858; }
+    .status-past { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #DEDEDE;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #FFCD00;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.8rem; }
+      .subtitle { font-size: 0.9rem; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+      .metric-card { padding: 1rem; }
+      .metric-value { font-size: 1.8rem; }
+      .metric-label { font-size: 0.75rem; }
+      .section-title { font-size: 1.2rem; }
+      .chart-card { padding: 1rem; }
+      .chart-title { font-size: 1rem; }
+      .chart-container { height: 250px; }
+      .chart-container.tall { height: 300px; }
+      .cycles-table { font-size: 0.75rem; }
+      .cycles-table th, .cycles-table td { padding: 0.5rem; }
+      .status-badge { padding: 0.2rem 0.5rem; font-size: 0.65rem; }
+      .cycles-table th:nth-child(7), .cycles-table td:nth-child(7),
+      .cycles-table th:nth-child(8), .cycles-table td:nth-child(8) { display: none; }
+      .metric-card .tooltip { width: 180px; font-size: 0.7rem; padding: 0.5rem; }
+      .cycles-table th .th-tooltip { width: 140px; font-size: 0.65rem; }
+      .chart-card .metrics-grid[style*="grid-template-columns"] { grid-template-columns: 1fr 1fr !important; }
+    }
+    @media (max-width: 480px) {
+      body { padding: 0.75rem; }
+      h1 { font-size: 1.5rem; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+      .metric-card { padding: 0.75rem; }
+      .metric-value { font-size: 1.4rem; }
+      .metric-label { font-size: 0.65rem; }
+      .chart-container { height: 200px; }
+      .cycles-table { font-size: 0.65rem; }
+      .cycles-table th, .cycles-table td { padding: 0.35rem 0.25rem; }
+      .cycles-table th:nth-child(5), .cycles-table td:nth-child(5),
+      .cycles-table th:nth-child(6), .cycles-table td:nth-child(6),
+      .cycles-table th:nth-child(9), .cycles-table td:nth-child(9) { display: none; }
+      .chart-card .metrics-grid[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 768px) {
+      .chart-card:has(.cycles-table) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .cycles-table { min-width: 500px; }
+    }
+    /* Collapsible sections */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      padding-top: 1rem;
+    }
+    .section-header .section-title {
+      margin: 0;
+      flex: 1;
+    }
+    /* iOS-style toggle switch */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      margin-left: 1rem;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #DEDEDE;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: '';
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #FFCD00;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    .toggle-switch input:focus + .toggle-slider {
+      box-shadow: 0 0 0 2px rgba(255, 205, 0, 0.3);
+    }
+    .section-content {
+      max-height: 5000px;
+      overflow-x: visible;
+      overflow-y: hidden;
+      transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+      opacity: 1;
+      padding-top: 1rem;
+      padding-bottom: 3rem;
+    }
+    .section-content.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    .collapse-all-btn {
+      background: #FFCD00;
+      border: 1px solid #151515;
+      color: #151515;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      margin-top: 1rem;
+    }
+    .collapse-all-btn:hover {
+      background: #e6b800;
+      transform: translateY(-1px);
+    }
+    .chevron {
+      display: inline-block;
+      transition: transform 0.3s;
+      margin-right: 0.5rem;
+    }
+    .chevron.collapsed {
+      transform: rotate(-90deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>&#128202; Linear Metrics Dashboard</h1>
+      <p class="subtitle">Generated on <%= @today %></p>
+      <button class="collapse-all-btn" onclick="toggleAllSections()">
+        <span id="toggleAllIcon">▼</span> <span id="toggleAllText">Collapse All</span>
+      </button>
+    </header>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Key Metrics</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="metrics-grid">
+<% flow_metrics_presented.each do |presenter| %>
+        <div class="metric-card">
+          <span class="tooltip"><%= presenter.tooltip %></span>
+          <div class="metric-value"><%= presenter.value %><%= presenter.unit %></div>
+          <div class="metric-label"><%= presenter.label %></div>
+        </div>
+<% end %>
+<% cycle_metrics_presented.each do |presenter| %>
+        <div class="metric-card">
+          <span class="tooltip"><%= presenter.tooltip %></span>
+          <div class="metric-value"><%= presenter.value %><%= presenter.unit %></div>
+          <div class="metric-label"><%= presenter.label %></div>
+        </div>
+<% end %>
+<% team_metrics_presented.each do |presenter| %>
+        <div class="metric-card">
+          <span class="tooltip"><%= presenter.tooltip %></span>
+          <div class="metric-value"><%= presenter.value %><%= presenter.unit %></div>
+          <div class="metric-label"><%= presenter.label %></div>
+        </div>
+<% end %>
+      </div>
+      </div>
+    </section>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128027; Bug Tracking</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="charts-grid">
+        <div class="chart-card full-width">
+          <h3 class="chart-title">Bug Overview</h3>
+          <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr);">
+<% bug_metrics_presented.each do |presenter| %>
+            <div class="metric-card">
+              <span class="tooltip"><%= presenter.tooltip %></span>
+              <div class="metric-value"><%= presenter.value %><%= presenter.unit %></div>
+              <div class="metric-label"><%= presenter.label %></div>
+            </div>
+<% end %>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Bug Status</h3>
+          <div class="chart-container">
+            <canvas id="bugStatusChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Open Bugs by Priority</h3>
+          <div class="chart-container">
+            <canvas id="bugsPriorityChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card full-width">
+          <h3 class="chart-title">Bug Flow (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
+          <div class="chart-container tall">
+            <canvas id="bugFlowChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card full-width">
+          <h3 class="chart-title">Bugs Created by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
+          <div class="chart-container tall">
+            <canvas id="bugsByTeamChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card full-width">
+          <h3 class="chart-title">Bug Flow by Team<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
+          <table class="cycles-table">
+            <thead>
+              <tr>
+                <th>Team</th>
+                <th class="has-tooltip">Total Created<span class="th-tooltip">Total bugs ever created for this team</span></th>
+                <th class="has-tooltip">Closed<span class="th-tooltip">Bugs that have been resolved</span></th>
+                <th class="has-tooltip">Open<span class="th-tooltip">Bugs currently open</span></th>
+                <th class="has-tooltip">Resolution Rate<span class="th-tooltip">Percentage of bugs closed</span></th>
+              </tr>
+            </thead>
+            <tbody>
+<% bugs_by_team_presented.each do |presenter| %>
+              <tr>
+                <td><strong><%= presenter.name %></strong></td>
+                <td><%= presenter.created %></td>
+                <td><%= presenter.closed %></td>
+                <td><%= presenter.open %></td>
+                <td><span class="status-badge <%= presenter.resolution_rate_class %>"><%= presenter.resolution_rate_display %></span></td>
+              </tr>
+<% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </div>
+    </section>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128640; Ticket Flow (Last <%= @days_to_show %> Days)</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="charts-grid">
+        <div class="chart-card full-width">
+          <h3 class="chart-title">Tickets Created vs Completed<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
+          <div class="chart-container tall">
+            <canvas id="flowChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card full-width">
+          <h3 class="chart-title">State Transitions Distribution<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
+          <div class="chart-container tall">
+            <canvas id="transitionChart"></canvas>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Current Distribution</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-title">Status Distribution</h3>
+          <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Priority Distribution</h3>
+          <div class="chart-container">
+            <canvas id="priorityChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Issue Type Distribution</h3>
+          <div class="chart-container">
+            <canvas id="typeChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Top Assignees (WIP)</h3>
+          <div class="chart-container">
+            <canvas id="assigneeChart"></canvas>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128101; Team Comparison</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="chart-card">
+        <table class="cycles-table">
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th class="has-tooltip">Cycles (with data)<span class="th-tooltip">Number of cycles with actual work data vs total cycles</span></th>
+              <th class="has-tooltip">Avg Velocity<span class="th-tooltip">Average story points completed per cycle</span></th>
+              <th class="has-tooltip">Avg Tickets/Cycle<span class="th-tooltip">Average number of tickets completed per cycle</span></th>
+              <th class="has-tooltip">Avg Assignees<span class="th-tooltip">Average number of team members working per cycle</span></th>
+              <th class="has-tooltip">Avg Tickets/Day<span class="th-tooltip">Average tickets completed per day during cycles</span></th>
+              <th class="has-tooltip">Avg Completion<span class="th-tooltip">Average percentage of planned work completed</span></th>
+              <th class="has-tooltip">Total Carryover<span class="th-tooltip">Total issues carried over from previous cycles</span></th>
+            </tr>
+          </thead>
+          <tbody>
+<% team_stats.each do |team, stats| %>
+            <tr>
+              <td><strong><%= team %></strong></td>
+              <td><%= stats[:cycles_with_data] %>/<%= stats[:total_cycles] %></td>
+              <td><%= stats[:avg_velocity] %> pts</td>
+              <td><%= stats[:avg_tickets_per_cycle] %></td>
+              <td><%= stats[:avg_assignees] %></td>
+              <td><%= stats[:avg_tickets_per_day] %></td>
+              <td><%= stats[:avg_completion_rate] %>%</td>
+              <td><%= stats[:total_carryover] %></td>
+            </tr>
+<% end %>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </section>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128197; Cycles by Team</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+<% cycles_by_team_presented.each do |team, cycles| %>
+      <div class="chart-card" style="margin-bottom: 1.5rem;">
+        <h3 class="chart-title"><%= team %></h3>
+        <table class="cycles-table">
+          <thead>
+            <tr>
+              <th>Cycle</th>
+              <th>Status</th>
+              <th class="has-tooltip">Progress<span class="th-tooltip">Percentage of issues completed</span></th>
+              <th class="has-tooltip">Issues<span class="th-tooltip">Completed / Total issues</span></th>
+              <th class="has-tooltip">Bugs<span class="th-tooltip">Bug issues in this cycle</span></th>
+              <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
+              <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
+              <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
+              <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
+              <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
+            </tr>
+          </thead>
+          <tbody>
+<% cycles.each do |presenter| %>
+            <tr>
+              <td><%= presenter.name %></td>
+              <td><span class="status-badge <%= presenter.status_class %>"><%= presenter.status %></span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill" style="width: <%= presenter.progress %>%"></div></div>
+                <small><%= presenter.progress %>%</small>
+              </td>
+              <td><%= presenter.issues_display %></td>
+              <td><%= presenter.bug_count %></td>
+              <td><%= presenter.assignee_count %></td>
+              <td><%= presenter.velocity_display %></td>
+              <td><%= presenter.tickets_per_day %></td>
+              <td><%= presenter.completion_rate_display %></td>
+              <td><%= presenter.carryover %></td>
+            </tr>
+<% end %>
+          </tbody>
+        </table>
+      </div>
+<% end %>
+      </div>
+    </section>
+    
+    <footer>
+      <p>Data sourced from Linear API • Report generated by WTTJ Metrics Collector</p>
+    </footer>
+  </div>
+  
+  <script>
+    // Collapse/Expand functions
+    function toggleSection(header) {
+      const content = header.nextElementSibling;
+      const chevron = header.querySelector('.chevron');
+      const checkbox = header.querySelector('.toggle-switch input');
+      content.classList.toggle('collapsed');
+      chevron.classList.toggle('collapsed');
+      if (checkbox) checkbox.checked = !content.classList.contains('collapsed');
+      updateToggleAllButton();
+    }
+    
+    function toggleSectionByCheckbox(checkbox) {
+      const header = checkbox.closest('.section-header');
+      const content = header.nextElementSibling;
+      const chevron = header.querySelector('.chevron');
+      if (checkbox.checked) {
+        content.classList.remove('collapsed');
+        chevron.classList.remove('collapsed');
+      } else {
+        content.classList.add('collapsed');
+        chevron.classList.add('collapsed');
+      }
+      updateToggleAllButton();
+    }
+    
+    function toggleAllSections() {
+      const contents = document.querySelectorAll('.section-content');
+      const chevrons = document.querySelectorAll('.chevron');
+      const checkboxes = document.querySelectorAll('.toggle-switch input');
+      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
+      
+      contents.forEach(content => {
+        if (allCollapsed) {
+          content.classList.remove('collapsed');
+        } else {
+          content.classList.add('collapsed');
+        }
+      });
+      
+      chevrons.forEach(chevron => {
+        if (allCollapsed) {
+          chevron.classList.remove('collapsed');
+        } else {
+          chevron.classList.add('collapsed');
+        }
+      });
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = allCollapsed;
+      });
+      
+      updateToggleAllButton();
+    }
+    
+    function updateToggleAllButton() {
+      const contents = document.querySelectorAll('.section-content');
+      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
+      document.getElementById('toggleAllIcon').textContent = allCollapsed ? '▶' : '▼';
+      document.getElementById('toggleAllText').textContent = allCollapsed ? 'Expand All' : 'Collapse All';
+    }
+    
+    const colors = {
+      purple: 'rgba(88, 88, 88, 0.8)',
+      blue: 'rgba(59, 130, 246, 0.8)',
+      pink: 'rgba(236, 72, 153, 0.8)',
+      green: 'rgba(34, 197, 94, 0.8)',
+      orange: 'rgba(249, 115, 22, 0.8)',
+      yellow: 'rgba(255, 205, 0, 0.9)',
+      red: 'rgba(220, 38, 38, 0.8)',
+      cyan: 'rgba(6, 182, 212, 0.8)',
+      black: 'rgba(21, 21, 21, 0.8)',
+    };
+    
+    const colorPalette = [
+      colors.yellow, colors.black, colors.blue, colors.green,
+      colors.orange, colors.pink, colors.red, colors.cyan,
+    ];
+    
+    Chart.defaults.color = '#585858';
+    Chart.defaults.borderColor = '#DEDEDE';
+    
+<% flow = weekly_flow_data %>
+    // Flow Chart
+    const flowCtx = document.getElementById('flowChart').getContext('2d');
+    const createdRaw = <%= flow[:created_raw].to_json %>;
+    const completedRaw = <%= flow[:completed_raw].to_json %>;
+    
+    new Chart(flowCtx, {
+      type: 'bar',
+      data: {
+        labels: <%= flow[:labels].to_json %>,
+        datasets: [
+          { label: 'Created', data: <%= flow[:created_pct].to_json %>, backgroundColor: colors.black, rawData: createdRaw },
+          { label: 'Completed', data: <%= flow[:completed_pct].to_json %>, backgroundColor: colors.yellow, rawData: completedRaw }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const raw = ctx.dataset.rawData[ctx.dataIndex];
+                return `${ctx.dataset.label}: ${raw} tickets (${ctx.parsed.y.toFixed(1)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+    
+<% trans = transition_weekly_data %>
+    // Transition Chart
+    const transitionCtx = document.getElementById('transitionChart').getContext('2d');
+    const transitionColors = {
+      'Backlog': 'rgba(148, 163, 184, 0.8)',
+      'Todo': 'rgba(59, 130, 246, 0.8)',
+      'In Progress': 'rgba(255, 205, 0, 0.9)',
+      'In Review': 'rgba(88, 88, 88, 0.8)',
+      'Testing': 'rgba(249, 115, 22, 0.8)',
+      'Done': 'rgba(34, 197, 94, 0.8)',
+      'Canceled': 'rgba(220, 38, 38, 0.8)',
+    };
+    
+    new Chart(transitionCtx, {
+      type: 'bar',
+      data: {
+        labels: <%= trans[:labels].to_json %>,
+        datasets: [
+<% STATE_CATEGORIES.keys.each_with_index do |state, i| %>
+          { label: '<%= state %>', data: <%= trans[:datasets][state][:percentages].to_json %>, backgroundColor: transitionColors['<%= state %>'], rawData: <%= trans[:datasets][state][:raw].to_json %> }<%= i < STATE_CATEGORIES.keys.size - 1 ? ',' : '' %>
+<% end %>
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const raw = ctx.dataset.rawData[ctx.dataIndex];
+                return `${ctx.dataset.label}: ${raw} (${ctx.parsed.y.toFixed(1)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+<% sorted_bugs = bugs_by_priority.sort_by { |m| %w[Urgent High Medium Low].index(m[:metric]) || 99 } %>
+<% 
+  open_bugs_count = bug_metrics.find { |m| m[:metric] == 'open_bugs' }&.dig(:value).to_i
+  closed_bugs_count = bug_metrics.find { |m| m[:metric] == 'closed_bugs' }&.dig(:value).to_i
+%>
+    // Bug Status (Open vs Closed)
+    new Chart(document.getElementById('bugStatusChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Open', 'Closed'],
+        datasets: [{ data: [<%= open_bugs_count %>, <%= closed_bugs_count %>], backgroundColor: [colors.red, colors.green], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
+    });
+
+    // Bugs by Priority
+    const bugsPriorityColors = { 'Urgent': colors.red, 'High': colors.orange, 'Medium': colors.yellow, 'Low': colors.green, 'No priority': 'rgba(148, 163, 184, 0.8)' };
+    const bugsPriorityLabels = <%= sorted_bugs.map { |m| m[:metric] }.to_json %>;
+    const bugsPriorityData = <%= sorted_bugs.map { |m| m[:value].to_i }.to_json %>;
+    
+    new Chart(document.getElementById('bugsPriorityChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: bugsPriorityLabels,
+        datasets: [{ data: bugsPriorityData, backgroundColor: bugsPriorityLabels.map(l => bugsPriorityColors[l] || colors.cyan), borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
+    });
+
+    // Bug Flow Chart
+<% bug_flow = weekly_bug_flow_data %>
+    new Chart(document.getElementById('bugFlowChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: <%= bug_flow[:labels].to_json %>,
+        datasets: [
+          { label: 'Bugs Created', data: <%= bug_flow[:created_pct].to_json %>, backgroundColor: 'rgba(220, 38, 38, 0.8)', borderRadius: 0, raw: <%= bug_flow[:created].to_json %> },
+          { label: 'Bugs Closed', data: <%= bug_flow[:closed_pct].to_json %>, backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 0, raw: <%= bug_flow[:closed].to_json %> }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, max: 100, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { callback: v => v + '%' } }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.dataset.raw[ctx.dataIndex]} bugs (${ctx.parsed.y.toFixed(1)}%)`
+            }
+          }
+        }
+      }
+    });
+
+    // Bugs by Team Stacked Bar Chart (100%)
+<% bug_flow_by_team = weekly_bug_flow_by_team_data %>
+    // Extended color palette for dynamic team colors
+    const teamColorPalette = [
+      'rgba(59, 130, 246, 0.8)',   // Blue
+      'rgba(34, 197, 94, 0.8)',    // Green
+      'rgba(255, 205, 0, 0.9)',    // Yellow
+      'rgba(249, 115, 22, 0.8)',   // Orange
+      'rgba(168, 85, 247, 0.8)',   // Purple
+      'rgba(236, 72, 153, 0.8)',   // Pink
+      'rgba(6, 182, 212, 0.8)',    // Cyan
+      'rgba(220, 38, 38, 0.8)',    // Red
+      'rgba(132, 204, 22, 0.8)',   // Lime
+      'rgba(99, 102, 241, 0.8)',   // Indigo
+      'rgba(244, 63, 94, 0.8)',    // Rose
+      'rgba(20, 184, 166, 0.8)',   // Teal
+      'rgba(251, 146, 60, 0.8)',   // Amber
+      'rgba(139, 92, 246, 0.8)',   // Violet
+      'rgba(45, 212, 191, 0.8)',   // Emerald
+      'rgba(251, 191, 36, 0.8)',   // Gold
+    ];
+    
+    // Build teamColors dynamically from available teams
+    const allTeams = <%= bug_flow_by_team[:teams].keys.to_json %>;
+    const teamColors = {};
+    allTeams.forEach((team, idx) => {
+      teamColors[team] = teamColorPalette[idx % teamColorPalette.length];
+    });
+
+    // Calculate percentages for 100% stacked chart
+    const teamLabels = <%= bug_flow_by_team[:labels].to_json %>;
+    const teamRawData = {
+<% bug_flow_by_team[:teams].each_with_index do |(team, data), idx| %>
+      '<%= team %>': <%= data[:created].to_json %><%= idx < bug_flow_by_team[:teams].size - 1 ? ',' : '' %>
+<% end %>
+    };
+    
+    // Calculate totals per week and percentages
+    const weekTotals = teamLabels.map((_, i) => 
+      Object.values(teamRawData).reduce((sum, arr) => sum + (arr[i] || 0), 0)
+    );
+    
+    const teamPctData = {};
+    Object.keys(teamRawData).forEach(team => {
+      teamPctData[team] = teamRawData[team].map((val, i) => 
+        weekTotals[i] > 0 ? ((val / weekTotals[i]) * 100).toFixed(1) : 0
+      );
+    });
+
+    new Chart(document.getElementById('bugsByTeamChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: teamLabels,
+        datasets: Object.keys(teamRawData).map(team => ({
+          label: team,
+          data: teamPctData[team],
+          backgroundColor: teamColors[team] || 'rgba(148, 163, 184, 0.8)',
+          borderRadius: 0,
+          raw: teamRawData[team]
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, max: 100, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { callback: v => v + '%' } }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.dataset.raw[ctx.dataIndex]} bugs (${ctx.parsed.y}%)`
+            }
+          }
+        }
+      }
+    });
+
+    // Status Chart
+    const statusColors = { 'Backlog': 'rgba(148, 163, 184, 0.8)', 'To Do': 'rgba(59, 130, 246, 0.8)', 'In Progress': 'rgba(255, 205, 0, 0.9)', 'In Review': 'rgba(88, 88, 88, 0.8)', 'Done': 'rgba(34, 197, 94, 0.8)' };
+    const statusLabels = <%= status_chart_data.map { |d| d[:label] }.to_json %>;
+    const statusBreakdown = <%= status_chart_data.map { |d| d[:breakdown] }.to_json %>;
+    
+    new Chart(document.getElementById('statusChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: statusLabels,
+        datasets: [{ data: <%= status_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: statusLabels.map(l => statusColors[l] || colors.purple), borderWidth: 0 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const breakdown = statusBreakdown[ctx.dataIndex];
+                const lines = [`${ctx.label}: ${ctx.parsed} total`];
+                if (breakdown && breakdown.length > 0) {
+                  lines.push('───────');
+                  breakdown.forEach(b => lines.push(`  ${b.name}: ${b.count}`));
+                }
+                return lines;
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    // Priority Chart
+    new Chart(document.getElementById('priorityChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: <%= priority_chart_data.map { |d| d[:label] }.to_json %>,
+        datasets: [{ data: <%= priority_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: ['rgba(148, 163, 184, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(255, 205, 0, 0.9)', 'rgba(249, 115, 22, 0.8)', 'rgba(220, 38, 38, 0.8)'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
+    });
+    
+    // Type Chart
+    new Chart(document.getElementById('typeChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: <%= type_chart_data.map { |d| d[:label] }.to_json %>,
+        datasets: [{ data: <%= type_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(220, 38, 38, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(88, 88, 88, 0.8)'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
+    });
+    
+    // Assignee Chart
+    new Chart(document.getElementById('assigneeChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: <%= assignee_chart_data.map { |d| d[:label] }.to_json %>,
+        datasets: [{ label: 'Active Issues', data: <%= assignee_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: 'rgba(255, 205, 0, 0.9)', borderRadius: 4 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true } }
+      }
+    });
+  </script>
+</body>
+</html>
