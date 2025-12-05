@@ -2,7 +2,7 @@
 
 A Ruby CLI tool to collect metrics from [Linear](https://linear.app) and generate beautiful HTML/Excel reports. Built for Welcome to the Jungle engineering teams.
 
-![Ruby](https://img.shields.io/badge/Ruby-3.2+-red?logo=ruby)
+![Ruby](https://img.shields.io/badge/Ruby-3.4+-red?logo=ruby)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 ## Features
