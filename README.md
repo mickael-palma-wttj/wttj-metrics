@@ -250,9 +250,10 @@ By default, the report filters metrics to selected teams. You can control this v
 
 ### Customizing Default Teams
 
-To change the default teams, edit `SELECTED_TEAMS` in `lib/wttj_metrics/report_generator.rb`:
+To change the default teams, edit `SELECTED_TEAMS` in `lib/wttj_metrics/report_generator.rb`. Check the current defaults in that file as they may change over time.
 
 ```ruby
+# Example: Current default teams (check report_generator.rb for latest)
 SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourcing', 'Talents'].freeze
 ```
 
@@ -478,9 +479,10 @@ query($after: String) {
 - Bundler 2.x
 
 ```bash
-# Install Ruby (using rbenv - check CI config for current version)
-rbenv install 3.4.1  # Or your preferred 3.2+ version
-rbenv local 3.4.1
+# Install Ruby (using rbenv)
+# Check .ruby-version or .github/workflows/ci.yml for the current recommended version
+rbenv install 3.4  # Install latest 3.4.x or your preferred 3.2+ version
+rbenv local 3.4
 
 # Install Bundler
 gem install bundler
