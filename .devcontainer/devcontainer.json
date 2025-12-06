@@ -2,13 +2,17 @@
     "name": "WTTJ Metrics",
     "image": "mcr.microsoft.com/devcontainers/ruby:3.4",
     "features": {
-        "ghcr.io/devcontainers/features/github-cli:1": {}
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "20"
+        }
     },
-    "postCreateCommand": "bundle install",
+    "postCreateCommand": "bundle install && npm install && npx playwright install --with-deps chromium",
     "customizations": {
         "vscode": {
             "extensions": [
                 "shopify.ruby-lsp",
+                "ms-playwright.playwright"
             ],
             "settings": {
                 "editor.formatOnSave": true,

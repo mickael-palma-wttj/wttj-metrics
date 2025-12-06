@@ -33,11 +33,17 @@
 
 # Project specific
 /.playwright-mcp/
-/report/
+/report/report.html
 !/report/report.sample.html
 *.csv
 *.xlsx
-*.html
 /cache/
 .env
 .env.local
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+node_modules/
