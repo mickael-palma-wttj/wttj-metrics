@@ -53,8 +53,21 @@ module WttjMetrics
 
     def fetch_cycles
       cached('cycles_all') do
-        result = query(cycles_query)
-        result.dig('data', 'cycles', 'nodes') || []
+        cycles = []
+        cursor = nil
+
+        loop do
+          result = query(cycles_query, { after: cursor })
+          data = result.dig('data', 'cycles')
+
+          cycles.concat(data['nodes'])
+
+          break unless data.dig('pageInfo', 'hasNextPage')
+
+          cursor = data.dig('pageInfo', 'endCursor')
+        end
+
+        cycles
       end
     end
 
@@ -150,8 +163,12 @@ module WttjMetrics
 
     def cycles_query
       <<~GRAPHQL
-        query {
-          cycles(first: 100, orderBy: createdAt) {
+        query($after: String) {
+          cycles(first: 25, after: $after, orderBy: createdAt) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
             nodes {
               id
               name
@@ -164,6 +181,7 @@ module WttjMetrics
                 id
                 name
               }
+              scopeHistory
               issues {
                 nodes {
                   id

@@ -70,6 +70,36 @@ module WttjMetrics
         @cycle[:carryover] || 0
       end
 
+      def scope_change
+        @cycle[:scope_change] || 0
+      end
+
+      def initial_scope
+        @cycle[:initial_scope] || 0
+      end
+
+      def final_scope
+        @cycle[:final_scope] || 0
+      end
+
+      def scope_change_display
+        value = scope_change
+        sign = value.positive? ? '+' : ''
+        "#{sign}#{format_with_unit(value, '%')}"
+      end
+
+      def scope_change_tooltip
+        "Initial: #{initial_scope} issues → Final: #{final_scope} issues"
+      end
+
+      def scope_change_class
+        case scope_change
+        when -Float::INFINITY...0 then 'scope-decreased'
+        when 0 then 'scope-neutral'
+        else 'scope-increased'
+        end
+      end
+
       def to_h
         {
           name: name,
@@ -86,7 +116,10 @@ module WttjMetrics
           tickets_per_day: tickets_per_day,
           completion_rate: completion_rate,
           completion_rate_display: completion_rate_display,
-          carryover: carryover
+          carryover: carryover,
+          scope_change: scope_change,
+          scope_change_display: scope_change_display,
+          scope_change_class: scope_change_class
         }
       end
     end

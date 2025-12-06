@@ -156,6 +156,40 @@
       border-bottom-color: #151515;
     }
     .cycles-table th:hover .th-tooltip { visibility: visible; opacity: 1; }
+    .cycles-table td.has-tooltip { cursor: help; position: relative; }
+    .cycles-table td .cell-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.3;
+      width: 180px;
+      text-align: center;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      margin-bottom: 6px;
+      white-space: normal;
+    }
+    .cycles-table td .cell-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #151515;
+    }
+    .cycles-table td:hover .cell-tooltip { visibility: visible; opacity: 1; }
     .cycles-table tr:hover { background: rgba(255, 205, 0, 0.1); }
     .status-badge {
       display: inline-block;
@@ -169,6 +203,9 @@
     .status-upcoming { background: rgba(255, 205, 0, 0.3); color: #151515; }
     .status-completed { background: rgba(88, 88, 88, 0.15); color: #585858; }
     .status-past { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
+    .scope-increased { color: #dc2626; font-weight: 600; }
+    .scope-decreased { color: #16a34a; font-weight: 600; }
+    .scope-neutral { color: #585858; }
     .progress-bar {
       width: 100%;
       height: 8px;
@@ -579,6 +616,7 @@
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
               <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
+              <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
             </tr>
           </thead>
           <tbody>
@@ -597,6 +635,7 @@
               <td><%= presenter.tickets_per_day %></td>
               <td><%= presenter.completion_rate_display %></td>
               <td><%= presenter.carryover %></td>
+              <td class="<%= presenter.scope_change_class %> has-tooltip"><%= presenter.scope_change_display %><span class="cell-tooltip"><%= presenter.scope_change_tooltip %></span></td>
             </tr>
 <% end %>
           </tbody>

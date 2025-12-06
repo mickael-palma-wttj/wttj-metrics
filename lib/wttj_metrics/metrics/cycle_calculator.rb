@@ -83,7 +83,7 @@ module WttjMetrics
       METRICS = %i[
         total_issues completed_issues bug_count velocity planned_points
         completion_rate carryover progress duration_days tickets_per_day
-        assignee_count status
+        assignee_count status scope_change initial_scope final_scope
       ].freeze
 
       def initialize(cycle, today)
@@ -188,6 +188,32 @@ module WttjMetrics
         return 'upcoming' if starts_at && today < starts_at
 
         'past'
+      end
+
+      def scope_change
+        scope_history = cycle['scopeHistory'] || []
+        return 0.0 if scope_history.empty?
+
+        initial = initial_scope.to_f
+        final = final_scope.to_f
+
+        return 0.0 if initial.zero?
+
+        (((final - initial) / initial) * 100).round(1)
+      end
+
+      def initial_scope
+        scope_history = cycle['scopeHistory'] || []
+        return 0 if scope_history.empty?
+
+        scope_history.first.to_i
+      end
+
+      def final_scope
+        scope_history = cycle['scopeHistory'] || []
+        return 0 if scope_history.empty?
+
+        scope_history.last.to_i
       end
 
       def issue_is_bug?(issue)
