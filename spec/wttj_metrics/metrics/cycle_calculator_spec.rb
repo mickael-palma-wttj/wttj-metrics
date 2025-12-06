@@ -87,6 +87,7 @@ RSpec.describe WttjMetrics::Metrics::CycleCalculator do
             'startsAt' => '2024-12-01',
             'endsAt' => '2024-12-14',
             'progress' => 0.5,
+            'scopeChange' => 0.15,
             'team' => { 'name' => 'Team A' },
             'issues' => {
               'nodes' => [
@@ -113,6 +114,60 @@ RSpec.describe WttjMetrics::Metrics::CycleCalculator do
 
         expect(cycle_details).not_to be_empty
         expect(cycle_details.first[2]).to start_with('Team A:Sprint 1:')
+      end
+
+      it 'includes scope_change metric row' do
+        scope_change_row = rows.find { |r| r[1] == 'cycle' && r[2].include?('scope_change') }
+
+        expect(scope_change_row).not_to be_nil
+        expect(scope_change_row[3]).to eq(15.0)
+      end
+    end
+
+    context 'with cycle having zero scope change' do
+      let(:cycles) do
+        [
+          {
+            'name' => 'Sprint 1',
+            'number' => 1,
+            'startsAt' => '2024-12-01',
+            'endsAt' => '2024-12-14',
+            'progress' => 0.5,
+            'scopeChange' => 0,
+            'team' => { 'name' => 'Team A' },
+            'issues' => { 'nodes' => [] },
+            'uncompletedIssuesUponClose' => { 'nodes' => [] }
+          }
+        ]
+      end
+
+      it 'includes scope_change of zero' do
+        scope_change_row = rows.find { |r| r[1] == 'cycle' && r[2].include?('scope_change') }
+
+        expect(scope_change_row[3]).to eq(0.0)
+      end
+    end
+
+    context 'with cycle having no scope change data' do
+      let(:cycles) do
+        [
+          {
+            'name' => 'Sprint 1',
+            'number' => 1,
+            'startsAt' => '2024-12-01',
+            'endsAt' => '2024-12-14',
+            'progress' => 0.5,
+            'team' => { 'name' => 'Team A' },
+            'issues' => { 'nodes' => [] },
+            'uncompletedIssuesUponClose' => { 'nodes' => [] }
+          }
+        ]
+      end
+
+      it 'defaults scope_change to zero' do
+        scope_change_row = rows.find { |r| r[1] == 'cycle' && r[2].include?('scope_change') }
+
+        expect(scope_change_row[3]).to eq(0.0)
       end
     end
   end

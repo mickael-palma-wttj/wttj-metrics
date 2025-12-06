@@ -122,9 +122,9 @@ module WttjMetrics
 
     def add_team_comparison_sheet
       @workbook.add_worksheet(name: 'Team Comparison') do |sheet|
-        add_title_row(sheet, 'Team Comparison', columns: 5)
+        add_title_row(sheet, 'Team Comparison', columns: 6)
         headers = ['Team', 'Cycles (with data)', 'Avg Velocity (pts)',
-                   'Avg Tickets/Cycle', 'Avg Completion Rate (%)']
+                   'Avg Tickets/Cycle', 'Avg Completion Rate (%)', 'Avg Scope Change (%)']
         sheet.add_row headers, style: @header_style
 
         @data[:team_stats].each do |team, stats|
@@ -133,29 +133,30 @@ module WttjMetrics
             "#{stats[:cycles_with_data]}/#{stats[:total_cycles]}",
             stats[:avg_velocity],
             stats[:avg_tickets_per_cycle],
-            stats[:avg_completion_rate].round(1)
+            stats[:avg_completion_rate].round(1),
+            stats[:avg_scope_change]&.round(1) || 0
           ]
         end
 
-        sheet.column_widths 20, 18, 18, 18, 22
+        sheet.column_widths 20, 18, 18, 18, 22, 22
       end
     end
 
     def add_cycles_sheet
       @workbook.add_worksheet(name: 'Cycles by Team') do |sheet|
-        add_title_row(sheet, 'Cycles by Team', columns: 8)
+        add_title_row(sheet, 'Cycles by Team', columns: 9)
 
         @data[:cycles_by_team].each do |team, cycles|
           sheet.add_row [team], style: @header_style
           headers = ['Cycle', 'Status', 'Progress (%)', 'Issues (Done/Total)',
-                     'Velocity (pts)', 'Assignees', 'Tickets/Day', 'Carryover']
+                     'Velocity (pts)', 'Assignees', 'Tickets/Day', 'Scope Change (%)', 'Carryover']
           sheet.add_row headers, style: @header_style
 
           cycles.each { |c| sheet.add_row format_cycle_row(c) }
           sheet.add_row []
         end
 
-        sheet.column_widths 40, 12, 12, 18, 14, 12, 14, 12
+        sheet.column_widths 40, 12, 12, 18, 14, 12, 14, 18, 12
       end
     end
 
@@ -242,6 +243,7 @@ module WttjMetrics
         cycle[:velocity] || 0,
         cycle[:assignee_count] || 0,
         cycle[:tickets_per_day]&.round(2) || 0,
+        cycle[:scope_change]&.round(1) || 0,
         cycle[:carryover] || 0
       ]
     end

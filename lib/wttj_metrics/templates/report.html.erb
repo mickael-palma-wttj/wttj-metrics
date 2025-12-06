@@ -169,6 +169,9 @@
     .status-upcoming { background: rgba(255, 205, 0, 0.3); color: #151515; }
     .status-completed { background: rgba(88, 88, 88, 0.15); color: #585858; }
     .status-past { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
+    .scope-increase { color: #dc2626; font-weight: 600; }
+    .scope-decrease { color: #16a34a; font-weight: 600; }
+    .scope-neutral { color: #585858; }
     .progress-bar {
       width: 100%;
       height: 8px;
@@ -531,6 +534,7 @@
               <th class="has-tooltip">Avg Assignees<span class="th-tooltip">Average number of team members working per cycle</span></th>
               <th class="has-tooltip">Avg Tickets/Day<span class="th-tooltip">Average tickets completed per day during cycles</span></th>
               <th class="has-tooltip">Avg Completion<span class="th-tooltip">Average percentage of planned work completed</span></th>
+              <th class="has-tooltip">Avg Scope Change<span class="th-tooltip">Average change in sprint scope during cycles. Positive means scope increased.</span></th>
               <th class="has-tooltip">Total Carryover<span class="th-tooltip">Total issues carried over from previous cycles</span></th>
             </tr>
           </thead>
@@ -544,6 +548,7 @@
               <td><%= stats[:avg_assignees] %></td>
               <td><%= stats[:avg_tickets_per_day] %></td>
               <td><%= stats[:avg_completion_rate] %>%</td>
+              <td><span class="<%= stats[:avg_scope_change].zero? ? 'scope-neutral' : (stats[:avg_scope_change].positive? ? 'scope-increase' : 'scope-decrease') %>"><%= stats[:avg_scope_change] %>%</span></td>
               <td><%= stats[:total_carryover] %></td>
             </tr>
 <% end %>
@@ -578,6 +583,7 @@
               <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
               <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
+              <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope. Positive means scope increased during the cycle.</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
             </tr>
           </thead>
@@ -596,6 +602,7 @@
               <td><%= presenter.velocity_display %></td>
               <td><%= presenter.tickets_per_day %></td>
               <td><%= presenter.completion_rate_display %></td>
+              <td><span class="<%= presenter.scope_change_class %>"><%= presenter.scope_change_display %></span></td>
               <td><%= presenter.carryover %></td>
             </tr>
 <% end %>

@@ -28,7 +28,8 @@ module WttjMetrics
           avg_assignees: average(active_cycles, :assignee_count),
           avg_completion_rate: average(active_cycles, :completion_rate),
           avg_tickets_per_day: average(active_cycles, :tickets_per_day, precision: 2),
-          total_carryover: sum(active_cycles, :carryover)
+          total_carryover: sum(active_cycles, :carryover),
+          avg_scope_change: average(active_cycles, :scope_change)
         }
       end
 

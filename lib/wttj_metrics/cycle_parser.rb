@@ -20,7 +20,8 @@ module WttjMetrics
       'duration_days' => lambda(&:to_i),
       'tickets_per_day' => ->(v) { v.to_f.round(2) },
       'assignee_count' => lambda(&:to_i),
-      'status' => ->(v) { v.to_s.strip }
+      'status' => ->(v) { v.to_s.strip },
+      'scope_change' => ->(v) { v.to_f.round(1) }
     }.freeze
 
     def initialize(cycle_metrics, teams: nil)

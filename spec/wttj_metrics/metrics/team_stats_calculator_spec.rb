@@ -22,7 +22,8 @@ RSpec.describe WttjMetrics::Metrics::TeamStatsCalculator do
               assignee_count: 3,
               completion_rate: 80.0,
               tickets_per_day: 0.8,
-              carryover: 2
+              carryover: 2,
+              scope_change: 10.0
             },
             {
               status: 'completed',
@@ -32,7 +33,8 @@ RSpec.describe WttjMetrics::Metrics::TeamStatsCalculator do
               assignee_count: 4,
               completion_rate: 83.3,
               tickets_per_day: 1.0,
-              carryover: 2
+              carryover: 2,
+              scope_change: 20.0
             }
           ],
           'Team B' => [
@@ -44,7 +46,8 @@ RSpec.describe WttjMetrics::Metrics::TeamStatsCalculator do
               assignee_count: 2,
               completion_rate: 62.5,
               tickets_per_day: 0.5,
-              carryover: 3
+              carryover: 3,
+              scope_change: -5.0
             }
           ]
         }
@@ -63,6 +66,7 @@ RSpec.describe WttjMetrics::Metrics::TeamStatsCalculator do
         expect(team_a[:avg_tickets_per_cycle]).to eq(9.0)
         expect(team_a[:avg_assignees]).to eq(3.5)
         expect(team_a[:total_carryover]).to eq(4)
+        expect(team_a[:avg_scope_change]).to eq(15.0)
       end
 
       it 'calculates Team B stats correctly', :aggregate_failures do
@@ -70,6 +74,7 @@ RSpec.describe WttjMetrics::Metrics::TeamStatsCalculator do
 
         expect(team_b[:total_cycles]).to eq(1)
         expect(team_b[:avg_velocity]).to eq(15.0)
+        expect(team_b[:avg_scope_change]).to eq(-5.0)
       end
     end
 

@@ -70,6 +70,20 @@ module WttjMetrics
         @cycle[:carryover] || 0
       end
 
+      def scope_change
+        @cycle[:scope_change] || 0
+      end
+
+      def scope_change_display
+        format_with_unit(scope_change, '%')
+      end
+
+      def scope_change_class
+        return 'scope-neutral' if scope_change.zero?
+
+        scope_change.positive? ? 'scope-increase' : 'scope-decrease'
+      end
+
       def to_h
         {
           name: name,
@@ -86,7 +100,10 @@ module WttjMetrics
           tickets_per_day: tickets_per_day,
           completion_rate: completion_rate,
           completion_rate_display: completion_rate_display,
-          carryover: carryover
+          carryover: carryover,
+          scope_change: scope_change,
+          scope_change_display: scope_change_display,
+          scope_change_class: scope_change_class
         }
       end
     end

@@ -160,6 +160,7 @@ module WttjMetrics
               endsAt
               completedAt
               progress
+              scopeChange
               team {
                 id
                 name
@@ -175,6 +176,11 @@ module WttjMetrics
                   }
                   state {
                     type
+                  }
+                  labels {
+                    nodes {
+                      name
+                    }
                   }
                 }
               }
