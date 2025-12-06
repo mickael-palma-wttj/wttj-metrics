@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Scope Change Tracking**: Display scope change per cycle per team in reports
+  - Fetches `scopeChange` field from Linear API cycles query
+  - Shows scope change percentage in Cycles by Team table with color coding (red for increase, green for decrease)
+  - Adds average scope change column to Team Comparison table
+  - Includes scope change data in Excel exports
 - **Testing Framework**: RSpec with VCR and WebMock for API mocking
   - Spec support folder with shared configuration
   - 4-phase test pattern (Setup, Exercise, Verify, Teardown)

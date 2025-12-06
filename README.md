@@ -74,7 +74,7 @@ The generated HTML dashboard includes the following sections:
 | **Bugs** | Open bugs, resolution rate, bugs by priority, bug flow by team |
 | **Ticket Flow** | Created vs completed tickets over time, state transitions |
 | **Distributions** | Status, priority, type, and assignee breakdowns |
-| **Cycles** | Sprint metrics, velocity, commitment accuracy, team performance |
+| **Cycles** | Sprint metrics, velocity, commitment accuracy, scope change, team performance |
 
 ---
 
