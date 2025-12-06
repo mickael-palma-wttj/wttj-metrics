@@ -26,6 +26,14 @@ module WttjMetrics
       'bug_ratio' => 'Percentage of issues that are bugs'
     }.freeze
 
+    UNIT_MAPPINGS = {
+      'days' => ' days',
+      'throughput' => ' issues',
+      'accuracy' => '%',
+      'rate' => '%',
+      'hours' => 'h'
+    }.freeze
+
     def initialize(report_data)
       @data = report_data
       @package = Axlsx::Package.new
@@ -144,19 +152,19 @@ module WttjMetrics
 
     def add_cycles_sheet
       @workbook.add_worksheet(name: 'Cycles by Team') do |sheet|
-        add_title_row(sheet, 'Cycles by Team', columns: 8)
+        add_title_row(sheet, 'Cycles by Team', columns: 9)
 
         @data[:cycles_by_team].each do |team, cycles|
           sheet.add_row [team], style: @header_style
           headers = ['Cycle', 'Status', 'Progress (%)', 'Issues (Done/Total)',
-                     'Velocity (pts)', 'Assignees', 'Tickets/Day', 'Carryover']
+                     'Velocity (pts)', 'Assignees', 'Tickets/Day', 'Carryover', 'Scope Change (%)']
           sheet.add_row headers, style: @header_style
 
           cycles.each { |c| sheet.add_row format_cycle_row(c) }
           sheet.add_row []
         end
 
-        sheet.column_widths 40, 12, 12, 18, 14, 12, 14, 12
+        sheet.column_widths 40, 12, 12, 18, 14, 12, 14, 12, 16
       end
     end
 
@@ -202,21 +210,16 @@ module WttjMetrics
       yield.each { |row| sheet.add_row row }
     end
 
-    def add_metrics_rows(sheet, metrics, type)
+    def add_metrics_rows(sheet, metrics, _type)
       metrics.each do |m|
         label = m[:metric].tr('_', ' ').capitalize
-        unit = determine_unit(m[:metric], type)
+        unit = determine_unit(m[:metric])
         sheet.add_row [label, "#{m[:value].round(1)}#{unit}", METRIC_DESCRIPTIONS[m[:metric]] || '']
       end
     end
 
-    def determine_unit(metric, _type)
-      return ' days' if metric.include?('days')
-      return ' issues' if metric.include?('throughput')
-      return '%' if metric.include?('accuracy') || metric.include?('rate')
-      return 'h' if metric.include?('hours')
-
-      ''
+    def determine_unit(metric)
+      UNIT_MAPPINGS.find { |key, _| metric.include?(key) }&.last || ''
     end
 
     def format_bug_metric_row(metric)
@@ -243,7 +246,8 @@ module WttjMetrics
         cycle[:velocity] || 0,
         cycle[:assignee_count] || 0,
         cycle[:tickets_per_day]&.round(2) || 0,
-        cycle[:carryover] || 0
+        cycle[:carryover] || 0,
+        cycle[:scope_change]&.round(1) || 0
       ]
     end
   end
