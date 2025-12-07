@@ -70,7 +70,7 @@ RSpec.describe WttjMetrics::Data::CsvWriter do
 
     it 'adds headers if file does not exist' do
       new_temp_path = File.join(Dir.tmpdir, 'new_test_metrics.csv')
-      File.delete(new_temp_path) if File.exist?(new_temp_path)
+      FileUtils.rm_f(new_temp_path)
 
       new_writer = described_class.new(new_temp_path)
       new_writer.append_rows(initial_rows)
@@ -80,7 +80,7 @@ RSpec.describe WttjMetrics::Data::CsvWriter do
       expect(csv_data.first).to eq(%w[date category metric value])
       expect(csv_data.last).to eq(initial_rows.first)
 
-      File.delete(new_temp_path) if File.exist?(new_temp_path)
+      FileUtils.rm_f(new_temp_path)
     end
 
     it 'does not duplicate headers when appending' do

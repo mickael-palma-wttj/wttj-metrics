@@ -452,7 +452,7 @@
           </div>
         </div>
         <div class="chart-card full-width">
-          <h3 class="chart-title">Bug Flow by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <h3 class="chart-title">Bug Stats by Team (All Time)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <table class="cycles-table">
             <thead>

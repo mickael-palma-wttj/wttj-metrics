@@ -91,6 +91,40 @@ RSpec.describe WttjMetrics::Reports::ChartDataBuilder do
     end
   end
 
+  describe '#assignee_chart_data' do
+    let(:assignee_metrics) do
+      [
+        { metric: 'User A', value: 50 },
+        { metric: 'User B', value: 30 },
+        { metric: 'User C', value: 20 }
+      ]
+    end
+
+    before do
+      allow(parser).to receive(:metrics_for).with('assignee').and_return(assignee_metrics)
+    end
+
+    it 'returns assignees sorted by value descending' do
+      result = builder.assignee_chart_data
+      expect(result.size).to eq(3)
+      expect(result.first[:label]).to eq('User A')
+      expect(result.first[:value]).to eq(50)
+    end
+
+    context 'with more than 15 assignees' do
+      let(:assignee_metrics) do
+        (1..20).map do |i|
+          { metric: "User #{i}", value: (21 - i) }
+        end
+      end
+
+      it 'returns only top 15' do
+        result = builder.assignee_chart_data
+        expect(result.size).to eq(15)
+      end
+    end
+  end
+
   context 'with empty metrics' do
     before do
       allow(parser).to receive(:metrics_for).and_return([])
@@ -108,6 +142,11 @@ RSpec.describe WttjMetrics::Reports::ChartDataBuilder do
 
     it 'handles empty type metrics' do
       result = builder.type_chart_data
+      expect(result).to eq([])
+    end
+
+    it 'handles empty assignee metrics' do
+      result = builder.assignee_chart_data
       expect(result).to eq([])
     end
   end

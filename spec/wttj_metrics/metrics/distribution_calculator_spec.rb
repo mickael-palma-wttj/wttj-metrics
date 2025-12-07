@@ -133,4 +133,81 @@ RSpec.describe WttjMetrics::Metrics::DistributionCalculator do
       end
     end
   end
+
+  describe 'issue type classification' do
+    let(:base_issue) do
+      {
+        'state' => { 'name' => 'Backlog', 'type' => 'backlog' },
+        'priorityLabel' => nil,
+        'estimate' => nil,
+        'assignee' => nil
+      }
+    end
+
+    context 'with bug label variations' do
+      it 'classifies issues with bug label as Bug' do
+        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'bug' }] })
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Bug']).to eq(1)
+      end
+
+      it 'classifies issues with hotfix label as Bug' do
+        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'hotfix' }] })
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Bug']).to eq(1)
+      end
+
+      it 'classifies issues with fix label as Bug' do
+        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'fix' }] })
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Bug']).to eq(1)
+      end
+    end
+
+    context 'with tech debt label variations' do
+      it 'classifies issues with tech-debt label as Tech Debt' do
+        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'tech-debt' }] })
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Tech Debt']).to eq(1)
+      end
+
+      it 'classifies issues with refactor label as Tech Debt' do
+        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'refactor' }] })
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Tech Debt']).to eq(1)
+      end
+    end
+
+    context 'with feature label variations' do
+      it 'classifies issues with enhancement label as Feature' do
+        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'enhancement' }] })
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Feature']).to eq(1)
+      end
+    end
+
+    context 'with no matching labels' do
+      it 'classifies as Other' do
+        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'documentation' }] })
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Other']).to eq(1)
+      end
+    end
+
+    context 'with no labels' do
+      it 'classifies as Other' do
+        issue = base_issue.merge('labels' => { 'nodes' => [] })
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Other']).to eq(1)
+      end
+    end
+
+    context 'with nil labels' do
+      it 'classifies as Other' do
+        issue = base_issue.merge('labels' => nil)
+        result = described_class.new([issue]).calculate
+        expect(result[:type]['Other']).to eq(1)
+      end
+    end
+  end
 end

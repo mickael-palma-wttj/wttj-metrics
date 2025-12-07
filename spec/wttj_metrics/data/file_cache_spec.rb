@@ -12,7 +12,7 @@ RSpec.describe WttjMetrics::Data::FileCache do
   describe '#initialize' do
     it 'creates cache directory if it does not exist' do
       cache_dir = File.join(temp_dir, 'new_cache')
-      cache = described_class.new(cache_dir)
+      described_class.new(cache_dir)
       expect(Dir.exist?(cache_dir)).to be true
     end
 

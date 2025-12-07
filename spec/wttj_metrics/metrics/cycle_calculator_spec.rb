@@ -62,6 +62,62 @@ RSpec.describe WttjMetrics::Metrics::CycleCalculator do
       end
     end
 
+    context 'with cycle but no issues' do
+      let(:cycles) do
+        [
+          {
+            'name' => 'Sprint 1',
+            'startsAt' => '2024-12-01',
+            'endsAt' => '2024-12-14',
+            'issues' => { 'nodes' => [] }
+          }
+        ]
+      end
+
+      it 'returns zero for commitment accuracy' do
+        expect(result[:cycle_commitment_accuracy]).to eq(0)
+      end
+    end
+
+    context 'with issues but no estimate' do
+      let(:cycles) do
+        [
+          {
+            'name' => 'Sprint 1',
+            'startsAt' => '2024-12-01',
+            'endsAt' => '2024-12-14',
+            'issues' => {
+              'nodes' => [
+                { 'estimate' => nil, 'state' => { 'type' => 'completed' } }
+              ]
+            }
+          }
+        ]
+      end
+
+      it 'treats nil estimate as 0' do
+        expect(result[:current_cycle_velocity]).to eq(0)
+      end
+    end
+
+    context 'with no completed cycle' do
+      let(:cycles) do
+        [
+          {
+            'name' => 'Sprint 1',
+            'startsAt' => '2024-12-01',
+            'endsAt' => '2024-12-14',
+            'completedAt' => nil,
+            'issues' => { 'nodes' => [] }
+          }
+        ]
+      end
+
+      it 'returns zero carryover' do
+        expect(result[:cycle_carryover_count]).to eq(0)
+      end
+    end
+
     context 'with no cycles' do
       # Setup
       let(:cycles) { [] }

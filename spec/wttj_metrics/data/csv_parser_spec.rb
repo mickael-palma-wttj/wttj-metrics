@@ -87,4 +87,35 @@ RSpec.describe WttjMetrics::Data::CsvParser do
       expect(parser.timeseries_for('unknown_metric', since: '2024-12-01')).to eq([])
     end
   end
+
+  describe 'value parsing' do
+    let(:csv_with_cycles) { Tempfile.new(['cycles', '.csv']) }
+
+    before do
+      CSV.open(csv_with_cycles.path, 'w') do |csv|
+        csv << %w[date category metric value]
+        csv << ['2024-12-01', 'cycle', 'cycle_time', '{"state":"Done","days":5}']
+        csv << %w[2024-12-01 flow throughput 42.5]
+      end
+    end
+
+    after do
+      csv_with_cycles.close
+      csv_with_cycles.unlink
+    end
+
+    it 'parses cycle category values as strings' do
+      parser = described_class.new(csv_with_cycles.path)
+      cycle_metrics = parser.metrics_by_category['cycle']
+      expect(cycle_metrics.first[:value]).to be_a(String)
+      expect(cycle_metrics.first[:value]).to eq('{"state":"Done","days":5}')
+    end
+
+    it 'parses non-cycle values as floats' do
+      parser = described_class.new(csv_with_cycles.path)
+      flow_metrics = parser.metrics_by_category['flow']
+      expect(flow_metrics.first[:value]).to be_a(Float)
+      expect(flow_metrics.first[:value]).to eq(42.5)
+    end
+  end
 end

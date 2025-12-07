@@ -87,6 +87,55 @@ RSpec.describe WttjMetrics::Metrics::BugCalculator do
       end
     end
 
+    context 'with bugs without priority' do
+      # Setup
+      let(:issues) do
+        [
+          {
+            'createdAt' => '2024-11-15T10:00:00Z',
+            'state' => { 'type' => 'started' },
+            'priorityLabel' => nil,
+            'labels' => { 'nodes' => [{ 'name' => 'bug' }] }
+          }
+        ]
+      end
+
+      it 'categorizes as No priority' do
+        expect(result[:by_priority]).to eq({ 'No priority' => 1 })
+      end
+    end
+
+    context 'with closed bugs without completedAt' do
+      # Setup
+      let(:issues) do
+        [
+          {
+            'createdAt' => '2024-11-20T10:00:00Z',
+            'completedAt' => nil,
+            'state' => { 'type' => 'completed' },
+            'labels' => { 'nodes' => [{ 'name' => 'bug' }] }
+          }
+        ]
+      end
+
+      it 'excludes from bugs_closed_last_30d' do
+        expect(result[:closed_last_30d]).to eq(0)
+      end
+
+      it 'excludes from resolution time calculation' do
+        expect(result[:avg_resolution_days]).to eq(0)
+      end
+    end
+
+    context 'with no issues' do
+      # Setup
+      let(:issues) { [] }
+
+      it 'returns zero bug ratio' do
+        expect(result[:bug_ratio]).to eq(0)
+      end
+    end
+
     context 'with no bugs' do
       # Setup
       let(:issues) do

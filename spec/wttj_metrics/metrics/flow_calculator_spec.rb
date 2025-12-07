@@ -69,6 +69,50 @@ RSpec.describe WttjMetrics::Metrics::FlowCalculator do
       end
     end
 
+    context 'with completed issues but no startedAt' do
+      # Setup
+      let(:issues) do
+        [
+          {
+            'createdAt' => '2024-12-01T10:00:00Z',
+            'startedAt' => nil,
+            'completedAt' => '2024-12-04T10:00:00Z',
+            'state' => { 'type' => 'completed' }
+          }
+        ]
+      end
+
+      it 'returns zero cycle time when no startedAt' do
+        expect(result[:avg_cycle_time_days]).to eq(0)
+      end
+
+      it 'still calculates lead time' do
+        expect(result[:avg_lead_time_days]).to be > 0
+      end
+    end
+
+    context 'with old completed issues outside weekly window' do
+      # Setup
+      let(:issues) do
+        [
+          {
+            'createdAt' => '2024-11-01T10:00:00Z',
+            'startedAt' => '2024-11-02T10:00:00Z',
+            'completedAt' => '2024-11-20T10:00:00Z',
+            'state' => { 'type' => 'completed' }
+          }
+        ]
+      end
+
+      it 'excludes old issues from weekly throughput' do
+        expect(result[:weekly_throughput]).to eq(0)
+      end
+
+      it 'includes old issues in cycle time calculation' do
+        expect(result[:avg_cycle_time_days]).to be > 0
+      end
+    end
+
     context 'with no issues' do
       # Setup
       let(:issues) { [] }

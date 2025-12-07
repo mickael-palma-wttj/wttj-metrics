@@ -164,7 +164,7 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
     let(:output_path) { File.join(Dir.tmpdir, 'test_report.html') }
 
     after do
-      File.delete(output_path) if File.exist?(output_path)
+      FileUtils.rm_f(output_path)
     end
 
     it 'generates an HTML file' do
@@ -185,7 +185,7 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
     let(:output_path) { File.join(Dir.tmpdir, 'test_report.xlsx') }
 
     after do
-      File.delete(output_path) if File.exist?(output_path)
+      FileUtils.rm_f(output_path)
     end
 
     it 'generates an Excel file' do
@@ -196,6 +196,98 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
     it 'creates a non-empty Excel file' do
       generator.generate_excel(output_path)
       expect(File.size(output_path)).to be > 0
+    end
+  end
+
+  describe '#cycles_parsed' do
+    it 'returns parsed cycles as hash' do
+      expect(generator.cycles_parsed).to be_a(Hash)
+    end
+
+    it 'filters cycles by cutoff date' do
+      allow(generator).to receive(:cutoff_date).and_return('2024-12-01')
+      expect(generator.cycles_parsed).to be_a(Hash)
+    end
+  end
+
+  describe '#cycles_by_team' do
+    it 'returns cycles organized by team' do
+      expect(generator.cycles_by_team).to be_a(Hash)
+    end
+
+    it 'filters cycles by cutoff date' do
+      allow(generator).to receive(:cutoff_date).and_return('2024-12-01')
+      expect(generator.cycles_by_team).to be_a(Hash)
+    end
+  end
+
+  describe '#bugs_by_team_presented' do
+    let(:teams) { ['ATS'] }
+
+    it 'returns presented bug team stats' do
+      expect(generator.bugs_by_team_presented).to be_an(Array)
+    end
+  end
+
+  describe '#cycle_metrics_presented' do
+    it 'returns presented cycle metrics' do
+      expect(generator.cycle_metrics_presented).to be_an(Array)
+    end
+  end
+
+  describe '#team_metrics_presented' do
+    it 'returns presented team metrics' do
+      expect(generator.team_metrics_presented).to be_an(Array)
+    end
+  end
+
+  describe '#bug_metrics_presented' do
+    it 'returns presented bug metrics' do
+      expect(generator.bug_metrics_presented).to be_an(Array)
+    end
+  end
+
+  describe '#bugs_by_priority' do
+    it 'returns bugs grouped by priority' do
+      expect(generator.bugs_by_priority).to be_an(Array)
+    end
+  end
+
+  describe '#weekly_flow_data' do
+    it 'returns weekly flow data structure' do
+      data = generator.weekly_flow_data
+      expect(data).to have_key(:labels)
+      expect(data).to have_key(:created_pct)
+      expect(data).to have_key(:completed_pct)
+    end
+  end
+
+  describe '#weekly_bug_flow_data' do
+    it 'returns weekly bug flow data structure' do
+      data = generator.weekly_bug_flow_data
+      expect(data).to have_key(:labels)
+      expect(data).to have_key(:created)
+      expect(data).to have_key(:closed)
+    end
+  end
+
+  describe '#transition_weekly_data' do
+    it 'returns transition data structure' do
+      data = generator.transition_weekly_data
+      expect(data).to have_key(:labels)
+      expect(data).to have_key(:datasets)
+    end
+  end
+
+  describe '#team_stats' do
+    it 'returns team statistics' do
+      expect(generator.team_stats).to be_a(Hash)
+    end
+  end
+
+  describe '#cycles_by_team_presented' do
+    it 'returns presented cycles by team' do
+      expect(generator.cycles_by_team_presented).to be_a(Hash)
     end
   end
 end
