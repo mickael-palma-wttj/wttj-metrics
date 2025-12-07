@@ -45,10 +45,8 @@ RSpec.describe WttjMetrics::CLI do
       allow(WttjMetrics::Data::CsvWriter).to receive(:new).and_return(csv_writer)
       allow(WttjMetrics::Data::FileCache).to receive(:new).and_return(cache)
 
-      allow(linear_client).to receive(:fetch_all_issues).and_return(issues)
-      allow(linear_client).to receive(:fetch_cycles).and_return(cycles)
-      allow(linear_client).to receive(:fetch_team_members).and_return(team_members)
-      allow(linear_client).to receive(:fetch_workflow_states).and_return(workflow_states)
+      allow(linear_client).to receive_messages(fetch_all_issues: issues, fetch_cycles: cycles,
+                                               fetch_team_members: team_members, fetch_workflow_states: workflow_states)
       allow(calculator).to receive(:calculate_all).and_return(rows)
       allow(csv_writer).to receive(:write_rows)
       allow(cache).to receive(:clear!)
@@ -168,7 +166,7 @@ RSpec.describe WttjMetrics::CLI do
     end
 
     after do
-      File.unlink(csv_file) if File.exist?(csv_file)
+      FileUtils.rm_f(csv_file)
     end
 
     context 'with valid CSV file' do

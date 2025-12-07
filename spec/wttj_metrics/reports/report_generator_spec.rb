@@ -302,7 +302,7 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
 
     it 'includes data for selected teams' do
       data = generator.weekly_bug_flow_by_team_data
-      data[:teams].keys.each do |team|
+      data[:teams].each_key do |team|
         expect(generator.selected_teams).to include(team)
       end
     end

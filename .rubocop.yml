@@ -48,7 +48,25 @@ Style/FrozenStringLiteralComment:
 
 # RSpec - relaxed settings for aggregate_failures style
 RSpec/MultipleExpectations:
-  Max: 5
+  Max: 15
 
 RSpec/ExampleLength:
-  Max: 10
+  Max: 25
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 15
+
+RSpec/NestedGroups:
+  Max: 5
+
+# Allow expect().to receive() pattern for setting up mocks
+RSpec/MessageSpies:
+  Enabled: false
+
+# Allow multiple top-level describes for related classes
+RSpec/MultipleDescribes:
+  Enabled: false
+
+# Allow stubbing subject when testing private methods
+RSpec/SubjectStub:
+  Enabled: false
