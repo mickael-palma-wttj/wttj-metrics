@@ -1,0 +1,42 @@
+# frozen_string_literal: true
+
+require 'fileutils'
+require 'json'
+
+module WttjMetrics
+  module Data
+    # File-based cache for API responses
+    class FileCache
+      DEFAULT_MAX_AGE_HOURS = 24
+
+      def initialize(cache_dir = nil)
+        @cache_dir = cache_dir || File.join(WttjMetrics.root, 'tmp', 'cache')
+        FileUtils.mkdir_p(@cache_dir)
+      end
+
+      def fetch(key, max_age_hours: DEFAULT_MAX_AGE_HOURS)
+        cache_file = File.join(@cache_dir, "#{key}.json")
+
+        if File.exist?(cache_file)
+          age_hours = (Time.now - File.mtime(cache_file)) / 3600.0
+          if age_hours < max_age_hours
+            puts "   📦 Using cached #{key} (#{age_hours.round(1)}h old)"
+            return JSON.parse(File.read(cache_file))
+          end
+        end
+
+        data = yield
+        File.write(cache_file, JSON.pretty_generate(data))
+        data
+      end
+
+      def clear!
+        FileUtils.rm_rf(@cache_dir)
+        FileUtils.mkdir_p(@cache_dir)
+        puts '   🗑️  Cache cleared'
+      end
+
+      attr_reader :cache_dir
+    end
+  end
+end

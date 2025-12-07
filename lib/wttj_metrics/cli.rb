@@ -11,14 +11,14 @@ module WttjMetrics
   class CacheCommands < Thor
     desc 'clear', 'Clear the cache'
     def clear
-      cache = FileCache.new
+      cache = Data::FileCache.new
       cache.clear!
       puts '✅ Cache cleared'
     end
 
     desc 'path', 'Show cache directory path'
     def path
-      cache = FileCache.new
+      cache = Data::FileCache.new
       puts cache.cache_dir
     end
   end
@@ -38,10 +38,10 @@ module WttjMetrics
 
       puts "🚀 Starting Linear Metrics Collection - #{Date.today}"
 
-      cache = options[:cache] ? FileCache.new : nil
+      cache = options[:cache] ? Data::FileCache.new : nil
       cache&.clear! if options[:clear_cache]
 
-      linear = LinearClient.new(cache: cache)
+      linear = Sources::Linear::Client.new(cache: cache)
 
       puts '📊 Fetching data from Linear...'
 
@@ -54,12 +54,12 @@ module WttjMetrics
       puts "   Found #{cycles.size} cycles"
 
       puts '🔢 Calculating metrics...'
-      calculator = MetricsCalculator.new(issues, cycles, team_members, workflow_states)
+      calculator = Metrics::Calculator.new(issues, cycles, team_members, workflow_states)
       rows = calculator.calculate_all
 
       csv_path = options[:output]
       puts "📝 Writing #{rows.size} metrics to CSV: #{csv_path}"
-      csv_writer = CsvWriter.new(csv_path)
+      csv_writer = Data::CsvWriter.new(csv_path)
       csv_writer.write_rows(rows)
 
       puts '✅ Metrics collected and saved successfully!'
@@ -88,7 +88,7 @@ module WttjMetrics
       # Determine teams: --all-teams means nil (no filter), otherwise use --teams or default
       teams = options[:all_teams] ? :all : options[:teams]
 
-      generator = ReportGenerator.new(csv_file, days: options[:days], teams: teams)
+      generator = Reports::ReportGenerator.new(csv_file, days: options[:days], teams: teams)
       generator.generate_html(options[:output])
 
       return unless options[:excel]

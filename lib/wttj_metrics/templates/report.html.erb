@@ -362,7 +362,7 @@
   <div class="container">
     <header>
       <h1>&#128202; Linear Metrics Dashboard</h1>
-      <p class="subtitle">Generated on <%= @today %></p>
+      <p class="subtitle">Generated on <%= @today %> • Last <%= days_to_show %> days (<%= cutoff_date %> to <%= @today %>)</p>
       <button class="collapse-all-btn" onclick="toggleAllSections()">
         <span id="toggleAllIcon">▼</span> <span id="toggleAllText">Collapse All</span>
       </button>
@@ -437,14 +437,14 @@
             <canvas id="bugsPriorityChart"></canvas>
           </div>
         </div>
-        <div class="chart-card full-width">
+        <div class="chart-card">
           <h3 class="chart-title">Bug Flow (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="bugFlowChart"></canvas>
           </div>
         </div>
-        <div class="chart-card full-width">
+        <div class="chart-card">
           <h3 class="chart-title">Bugs Created by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
@@ -452,7 +452,7 @@
           </div>
         </div>
         <div class="chart-card full-width">
-          <h3 class="chart-title">Bug Flow by Team<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <h3 class="chart-title">Bug Flow by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <table class="cycles-table">
             <thead>
@@ -491,14 +491,14 @@
       </div>
       <div class="section-content">
       <div class="charts-grid">
-        <div class="chart-card full-width">
+        <div class="chart-card">
           <h3 class="chart-title">Tickets Created vs Completed<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="flowChart"></canvas>
           </div>
         </div>
-        <div class="chart-card full-width">
+        <div class="chart-card">
           <h3 class="chart-title">State Transitions Distribution<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
