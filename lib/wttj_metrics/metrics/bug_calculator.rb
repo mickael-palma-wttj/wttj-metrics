@@ -23,16 +23,16 @@ module WttjMetrics
         stats = calculate
         rows = []
 
-        rows << [today.to_s, 'bugs', 'total_bugs', stats[:total]]
-        rows << [today.to_s, 'bugs', 'open_bugs', stats[:open]]
-        rows << [today.to_s, 'bugs', 'closed_bugs', stats[:closed]]
-        rows << [today.to_s, 'bugs', 'bugs_created_last_30d', stats[:created_last_30d]]
-        rows << [today.to_s, 'bugs', 'bugs_closed_last_30d', stats[:closed_last_30d]]
-        rows << [today.to_s, 'bugs', 'avg_bug_resolution_days', stats[:avg_resolution_days]]
-        rows << [today.to_s, 'bugs', 'bug_ratio', stats[:bug_ratio]]
+        rows << [today_str, 'bugs', 'total_bugs', stats[:total]]
+        rows << [today_str, 'bugs', 'open_bugs', stats[:open]]
+        rows << [today_str, 'bugs', 'closed_bugs', stats[:closed]]
+        rows << [today_str, 'bugs', 'bugs_created_last_30d', stats[:created_last_30d]]
+        rows << [today_str, 'bugs', 'bugs_closed_last_30d', stats[:closed_last_30d]]
+        rows << [today_str, 'bugs', 'avg_bug_resolution_days', stats[:avg_resolution_days]]
+        rows << [today_str, 'bugs', 'bug_ratio', stats[:bug_ratio]]
 
         stats[:by_priority].each do |priority, count|
-          rows << [today.to_s, 'bugs_by_priority', priority.to_s, count]
+          rows << [today_str, 'bugs_by_priority', priority.to_s, count]
         end
 
         rows
@@ -50,6 +50,10 @@ module WttjMetrics
 
       def closed_bugs
         @closed_bugs ||= bugs.select { |b| COMPLETED_STATES.include?(b.dig('state', 'type')) }
+      end
+
+      def today_str
+        @today_str ||= today.to_s
       end
 
       def thirty_days_ago

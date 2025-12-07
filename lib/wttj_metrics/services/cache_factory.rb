@@ -4,14 +4,16 @@ module WttjMetrics
   module Services
     # Factory for creating cache instances
     class CacheFactory
-      def self.build(enabled: true)
-        return nil unless enabled
-
+      def self.enabled
         Data::FileCache.new
       end
 
+      def self.disabled
+        nil
+      end
+
       def self.default
-        build(enabled: true)
+        enabled
       end
     end
   end

@@ -35,7 +35,7 @@ module WttjMetrics
       end
 
       def cache_strategy
-        cache = CacheFactory.build(enabled: options.cache_enabled)
+        cache = options.cache_enabled ? CacheFactory.enabled : CacheFactory.disabled
         cache&.clear! if options.clear_cache
         cache
       end
