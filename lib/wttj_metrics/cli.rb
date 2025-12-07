@@ -3,28 +3,41 @@
 require 'date'
 require 'fileutils'
 require 'thor'
+require 'logger'
 
 module WttjMetrics
   VERSION = '1.0.0'
 
   # Cache management subcommands
   class CacheCommands < Thor
+    def initialize(*args)
+      super
+      @logger = Logger.new($stdout)
+      @logger.formatter = proc { |_severity, _datetime, _progname, msg| "#{msg}\n" }
+    end
+
     desc 'clear', 'Clear the cache'
     def clear
       cache = Data::FileCache.new
       cache.clear!
-      puts '✅ Cache cleared'
+      @logger.info '✅ Cache cleared'
     end
 
     desc 'path', 'Show cache directory path'
     def path
       cache = Data::FileCache.new
-      puts cache.cache_dir
+      @logger.info cache.cache_dir
     end
   end
 
   # Command Line Interface using Thor
   class CLI < Thor
+    def initialize(*args)
+      super
+      @logger = Logger.new($stdout)
+      @logger.formatter = proc { |_severity, _datetime, _progname, msg| "#{msg}\n" }
+    end
+
     def self.exit_on_failure?
       true
     end
@@ -36,38 +49,38 @@ module WttjMetrics
     def collect
       Config.validate!
 
-      puts "🚀 Starting Linear Metrics Collection - #{Date.today}"
+      @logger.info "🚀 Starting Linear Metrics Collection - #{Date.today}"
 
       cache = options[:cache] ? Data::FileCache.new : nil
       cache&.clear! if options[:clear_cache]
 
       linear = Sources::Linear::Client.new(cache: cache)
 
-      puts '📊 Fetching data from Linear...'
+      @logger.info '📊 Fetching data from Linear...'
 
       issues = linear.fetch_all_issues
       cycles = linear.fetch_cycles
       team_members = linear.fetch_team_members
       workflow_states = linear.fetch_workflow_states
 
-      puts "   Found #{issues.size} issues"
-      puts "   Found #{cycles.size} cycles"
+      @logger.info "   Found #{issues.size} issues"
+      @logger.info "   Found #{cycles.size} cycles"
 
-      puts '🔢 Calculating metrics...'
+      @logger.info '🔢 Calculating metrics...'
       calculator = Metrics::Calculator.new(issues, cycles, team_members, workflow_states)
       rows = calculator.calculate_all
 
       csv_path = options[:output]
-      puts "📝 Writing #{rows.size} metrics to CSV: #{csv_path}"
+      @logger.info "📝 Writing #{rows.size} metrics to CSV: #{csv_path}"
       csv_writer = Data::CsvWriter.new(csv_path)
       csv_writer.write_rows(rows)
 
-      puts '✅ Metrics collected and saved successfully!'
+      @logger.info '✅ Metrics collected and saved successfully!'
 
-      puts "\nMetrics Summary:"
+      @logger.info "\nMetrics Summary:"
       summary_categories = %w[flow cycle_metrics team issues]
       summary = rows.select { |r| summary_categories.include?(r[1]) }.first(6)
-      summary.each { |row| puts "  - #{row[2]}: #{row[3]}" }
+      summary.each { |row| @logger.info "  - #{row[2]}: #{row[3]}" }
     end
 
     desc 'report CSV_FILE', 'Generate HTML report from CSV metrics'
@@ -100,7 +113,7 @@ module WttjMetrics
 
     desc 'version', 'Show version'
     def version
-      puts "wttj-metrics v#{WttjMetrics::VERSION}"
+      @logger.info "wttj-metrics v#{WttjMetrics::VERSION}"
     end
 
     desc 'cache SUBCOMMAND', 'Manage cache'

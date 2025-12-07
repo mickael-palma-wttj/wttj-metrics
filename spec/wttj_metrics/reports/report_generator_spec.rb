@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'tempfile'
+require 'csv'
 
 RSpec.describe WttjMetrics::Reports::ReportGenerator do
   subject(:generator) { described_class.new(csv_path, days: 90, teams: teams) }
@@ -288,6 +289,185 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
   describe '#cycles_by_team_presented' do
     it 'returns presented cycles by team' do
       expect(generator.cycles_by_team_presented).to be_a(Hash)
+    end
+  end
+
+  describe '#weekly_bug_flow_by_team_data' do
+    it 'returns weekly bug flow data by team' do
+      data = generator.weekly_bug_flow_by_team_data
+      expect(data).to have_key(:labels)
+      expect(data).to have_key(:teams)
+      expect(data[:teams]).to be_a(Hash)
+    end
+
+    it 'includes data for selected teams' do
+      data = generator.weekly_bug_flow_by_team_data
+      data[:teams].keys.each do |team|
+        expect(generator.selected_teams).to include(team)
+      end
+    end
+  end
+
+  describe '#cutoff_date' do
+    it 'calculates cutoff date based on days_to_show' do
+      cutoff = generator.send(:cutoff_date)
+      expected = (Date.today - 90).to_s
+      expect(cutoff).to eq(expected)
+    end
+  end
+
+  describe '#discover_all_teams' do
+    it 'extracts unique team names from bugs_by_team metrics' do
+      teams = generator.send(:discover_all_teams)
+      expect(teams).to be_an(Array)
+      # May be empty if no bugs_by_team data in test CSV
+    end
+
+    it 'excludes Unknown team' do
+      teams = generator.send(:discover_all_teams)
+      expect(teams).not_to include('Unknown')
+    end
+  end
+
+  describe '#build_bugs_by_team' do
+    let(:teams) { ['ATS'] }
+
+    it 'returns hash with team bug stats' do
+      result = generator.send(:build_bugs_by_team)
+      expect(result).to be_a(Hash)
+    end
+
+    it 'includes only selected teams' do
+      result = generator.send(:build_bugs_by_team)
+      expect(result.keys).to all(be_in(teams))
+    end
+
+    it 'includes created, closed, and open counts' do
+      result = generator.send(:build_bugs_by_team)
+      if result.any?
+        expect(result.values.first).to have_key(:created)
+        expect(result.values.first).to have_key(:closed)
+        expect(result.values.first).to have_key(:open)
+      end
+    end
+
+    it 'sorts teams by open bugs descending' do
+      result = generator.send(:build_bugs_by_team)
+      open_counts = result.values.map { |v| v[:open] }
+      expect(open_counts).to eq(open_counts.sort.reverse)
+    end
+  end
+
+  describe '#build_week_counts' do
+    it 'returns empty hash for empty metrics' do
+      result = generator.send(:build_week_counts, [])
+      expect(result).to eq({})
+    end
+
+    it 'groups metrics by week' do
+      metrics = [
+        { date: '2024-12-01', value: 5 },
+        { date: '2024-12-02', value: 3 }
+      ]
+      result = generator.send(:build_week_counts, metrics)
+      expect(result).to be_a(Hash)
+      expect(result.values.sum).to eq(8)
+    end
+  end
+
+  describe '#build_html' do
+    it 'uses ERB template when available' do
+      html = generator.send(:build_html)
+      expect(html).to include('<!DOCTYPE')
+      expect(html).to include('html')
+    end
+
+    it 'uses fallback when template missing' do
+      allow(File).to receive(:exist?).and_return(false)
+      html = generator.send(:build_html_fallback)
+      expect(html).to include('<!DOCTYPE html')
+      expect(html).to include('Linear Metrics Dashboard')
+    end
+  end
+
+  describe '#excel_report_data' do
+    it 'returns hash with all required keys' do
+      data = generator.send(:excel_report_data)
+      expect(data).to have_key(:today)
+      expect(data).to have_key(:days_to_show)
+      expect(data).to have_key(:flow_metrics)
+      expect(data).to have_key(:cycle_metrics)
+      expect(data).to have_key(:team_metrics)
+      expect(data).to have_key(:bug_metrics)
+      expect(data).to have_key(:bugs_by_priority)
+      expect(data).to have_key(:status_chart_data)
+      expect(data).to have_key(:priority_dist)
+      expect(data).to have_key(:type_dist)
+      expect(data).to have_key(:assignee_dist)
+      expect(data).to have_key(:team_stats)
+      expect(data).to have_key(:cycles_by_team)
+      expect(data).to have_key(:weekly_flow_data)
+      expect(data).to have_key(:raw_data)
+    end
+  end
+
+  describe 'TransitionDataBuilder' do
+    let(:transition_metrics) do
+      [
+        { date: '2024-12-01', metric: 'ATS:Todo', value: 10 },
+        { date: '2024-12-01', metric: 'ATS:Done', value: 5 },
+        { date: '2024-12-02', metric: 'ATS:In Progress', value: 8 }
+      ]
+    end
+    let(:builder) { WttjMetrics::Reports::TransitionDataBuilder.new(transition_metrics, '2024-12-01', teams: ['ATS']) }
+
+    describe '#build' do
+      it 'returns hash with labels and datasets' do
+        result = builder.build
+        expect(result).to have_key(:labels)
+        expect(result).to have_key(:datasets)
+      end
+
+      it 'includes all state categories' do
+        result = builder.build
+        WttjMetrics::ReportGenerator::STATE_CATEGORIES.each_key do |state|
+          expect(result[:datasets]).to have_key(state)
+        end
+      end
+
+      it 'includes percentages and raw values' do
+        result = builder.build
+        result[:datasets].each_value do |data|
+          expect(data).to have_key(:percentages)
+          expect(data).to have_key(:raw)
+        end
+      end
+    end
+
+    describe 'with nil transition metrics' do
+      let(:builder) { WttjMetrics::Reports::TransitionDataBuilder.new(nil, '2024-12-01') }
+
+      it 'handles nil metrics gracefully' do
+        result = builder.build
+        expect(result).to have_key(:labels)
+        expect(result).to have_key(:datasets)
+      end
+    end
+
+    describe 'without team filter' do
+      let(:transition_metrics) do
+        [
+          { date: '2024-12-01', metric: 'Todo', value: 10 },
+          { date: '2024-12-01', metric: 'Done', value: 5 }
+        ]
+      end
+      let(:builder) { WttjMetrics::Reports::TransitionDataBuilder.new(transition_metrics, '2024-12-01', teams: nil) }
+
+      it 'processes non-team-specific metrics' do
+        result = builder.build
+        expect(result).to have_key(:labels)
+        expect(result).to have_key(:datasets)
+      end
     end
   end
 end

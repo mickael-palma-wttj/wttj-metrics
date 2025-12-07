@@ -88,17 +88,37 @@ RSpec.describe WttjMetrics::CLI do
       end
 
       it 'outputs success messages' do
-        expect { cli.collect }.to output(/Starting Linear Metrics Collection/).to_stdout
-        expect { cli.collect }.to output(/Fetching data from Linear/).to_stdout
-        expect { cli.collect }.to output(/Found 2 issues/).to_stdout
-        expect { cli.collect }.to output(/Found 1 cycles/).to_stdout
-        expect { cli.collect }.to output(/Calculating metrics/).to_stdout
-        expect { cli.collect }.to output(/Metrics collected and saved successfully/).to_stdout
+        output = StringIO.new
+        logger = Logger.new(output)
+        allow(Logger).to receive(:new).and_return(logger)
+
+        cli = described_class.new
+        allow(cli).to receive(:options).and_return({ cache: true, clear_cache: false, output: 'tmp/metrics.csv' })
+
+        cli.collect
+
+        logged_output = output.string
+        expect(logged_output).to match(/Starting Linear Metrics Collection/)
+        expect(logged_output).to match(/Fetching data from Linear/)
+        expect(logged_output).to match(/Found 2 issues/)
+        expect(logged_output).to match(/Found 1 cycles/)
+        expect(logged_output).to match(/Calculating metrics/)
+        expect(logged_output).to match(/Metrics collected and saved successfully/)
       end
 
       it 'outputs metrics summary' do
-        expect { cli.collect }.to output(/Metrics Summary:/).to_stdout
-        expect { cli.collect }.to output(/throughput: 10/).to_stdout
+        output = StringIO.new
+        logger = Logger.new(output)
+        allow(Logger).to receive(:new).and_return(logger)
+
+        cli = described_class.new
+        allow(cli).to receive(:options).and_return({ cache: true, clear_cache: false, output: 'tmp/metrics.csv' })
+
+        cli.collect
+
+        logged_output = output.string
+        expect(logged_output).to match(/Metrics Summary:/)
+        expect(logged_output).to match(/throughput: 10/)
       end
     end
 

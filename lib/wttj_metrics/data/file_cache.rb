@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'json'
+require 'logger'
 
 module WttjMetrics
   module Data
@@ -12,6 +13,8 @@ module WttjMetrics
       def initialize(cache_dir = nil)
         @cache_dir = cache_dir || File.join(WttjMetrics.root, 'tmp', 'cache')
         FileUtils.mkdir_p(@cache_dir)
+        @logger = Logger.new($stdout)
+        @logger.formatter = proc { |_severity, _datetime, _progname, msg| "#{msg}\n" }
       end
 
       def fetch(key, max_age_hours: DEFAULT_MAX_AGE_HOURS)
@@ -20,7 +23,7 @@ module WttjMetrics
         if File.exist?(cache_file)
           age_hours = (Time.now - File.mtime(cache_file)) / 3600.0
           if age_hours < max_age_hours
-            puts "   📦 Using cached #{key} (#{age_hours.round(1)}h old)"
+            @logger.info "   📦 Using cached #{key} (#{age_hours.round(1)}h old)"
             return JSON.parse(File.read(cache_file))
           end
         end
@@ -33,7 +36,7 @@ module WttjMetrics
       def clear!
         FileUtils.rm_rf(@cache_dir)
         FileUtils.mkdir_p(@cache_dir)
-        puts '   🗑️  Cache cleared'
+        @logger.info '   🗑️  Cache cleared'
       end
 
       attr_reader :cache_dir
