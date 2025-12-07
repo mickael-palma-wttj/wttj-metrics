@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 4-phase test pattern (Setup, Exercise, Verify, Teardown)
   - `aggregate_failures` for grouped expectations
   - Named subjects for clarity
+  - 389 test examples with 70.2% branch coverage, 86.25% line coverage
 - **Metrics Module**: Extracted specialized calculators from MetricsCalculator
   - `Metrics::Base` - Template base class with shared methods
   - `Metrics::FlowCalculator` - Cycle time, lead time, throughput, WIP
@@ -23,6 +24,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Metrics::TeamCalculator` - Completion rate, blocked time
   - `Metrics::TimeseriesCollector` - Time-series data for charts
   - `Metrics::TeamStatsCalculator` - Aggregate team statistics
+- **Service Objects**: Extracted CLI business logic following SRP and Sandi Metz rules
+  - `Services::MetricsCollector` - Orchestrates metrics collection workflow
+  - `Services::DataFetcher` - Handles Linear API data fetching
+  - `Services::MetricsSummaryLogger` - Formats and displays metrics summary
+  - `Services::DirectoryPreparer` - Ensures output directories exist
+  - `Services::ReportService` - Generates HTML and Excel reports
+  - `Services::CacheFactory` - Centralizes cache instantiation
+- **Value Objects**: Encapsulate command options
+  - `Values::CollectOptions` - Collect command options with cache strategy
+  - `Values::ReportOptions` - Report command options with team filtering
+- **Logger Infrastructure**:
+  - `Helpers::LoggerMixin` - Shared logger configuration across CLI classes
+  - Structured logging with custom formatter (removes timestamps for clean CLI output)
+  - Test output redirected to `tmp/test.log` for clean test runs
+- **VSCode Debugging**: RSpec debugging configurations in `.vscode/launch.json`
 - **APP_ROOT constant**: Global path constant for file references
 - **rubocop-rspec**: RSpec-specific linting rules
 - **openssl gem**: Explicit SSL/TLS support dependency
@@ -33,20 +49,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MetricsCalculator**: Refactored from 500+ lines to ~60 line facade
   - Now delegates to specialized calculator classes
   - Follows Single Responsibility Principle
+- **CLI**: Major refactoring from 123 lines to 67 lines
+  - All methods now under 10 lines (Sandi Metz rules)
+  - Replaced `puts` with structured Logger
+  - Extracted business logic to service objects
+  - `collect` method reduced from 33 lines to 3 lines
+  - `report` method reduced from 18 lines to 3 lines
 - **LinearClient**: Replaced HTTParty with Net::HTTP standard library
   - Reduced external dependencies
   - Uses native Ruby HTTP client with SSL support
+- **FileCache**: Migrated from `puts` to Logger for structured output
+- **ReportGenerator**: Migrated from `puts` to Logger for structured output
 - **RuboCop Configuration**: Updated to use `plugins` instead of `require`
   - Added relaxed RSpec cop settings for aggregate_failures style
+  - Increased limits: MultipleExpectations (15), ExampleLength (25), MultipleMemoizedHelpers (15)
 - **CycleParser**: `DEFAULT_TEAMS` now references `ReportGenerator::SELECTED_TEAMS` (single source of truth)
 - **Team Configuration**: Added both `ATS` and `Global ATS` to selected teams
   - `ATS` for cycle data
   - `Global ATS` for bugs data
 
+### Refactored
+
+- **Architecture**: Applied Ruby best practices and design patterns
+  - **DRY (Don't Repeat Yourself)**: Eliminated logger duplication, extracted repeated logic
+  - **SRP (Single Responsibility Principle)**: Each class/method has single responsibility
+  - **KISS (Keep It Simple)**: Simplified complex conditionals, clear method names
+  - **Sandi Metz Rules**: All methods <10 lines, classes <100 lines, <4 parameters
+  - **Service Object Pattern**: Business logic extracted from CLI into dedicated services
+  - **Value Object Pattern**: Options encapsulated, eliminated hash drilling
+  - **Factory Method Pattern**: Centralized cache instantiation
+  - **Mixin Pattern**: Shared logger behavior via `Helpers::LoggerMixin`
+  - **Command Pattern**: Unified `.call` interface for services
+  - **Tell Don't Ask**: Objects handle their own logic
+  - **Law of Demeter**: Reduced coupling through value objects
+- **Code Organization**: Proper namespace hierarchy
+  - `WttjMetrics::Helpers::` for mixins and view helpers
+  - `WttjMetrics::Services::` for business logic services
+  - `WttjMetrics::Values::` for value objects
+  - Follows Zeitwerk autoloading conventions
+
 ### Fixed
 
 - **csv gem**: Added explicit dependency for Ruby 3.4+ compatibility
 - **STATE_CATEGORIES**: Fixed namespace reference in TransitionDataBuilder
+- **CI Compatibility**: `tmp` directory auto-created during test runs
+  - Prevents failures in CI environments where tmp doesn't exist
+  - Test logger output properly redirected
 
 ## [0.1.0] - 2024-12-01
 

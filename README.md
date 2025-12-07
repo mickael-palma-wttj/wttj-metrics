@@ -328,13 +328,16 @@ wttj-metrics/
 ├── lib/
 │   ├── wttj_metrics.rb           # Main module, config, autoloading
 │   └── wttj_metrics/
-│       ├── cli.rb                # Thor CLI commands
-│       ├── linear_client.rb      # Linear API client (Net::HTTP)
-│       ├── file_cache.rb         # JSON file-based caching
-│       ├── csv_writer.rb         # CSV output writer
-│       ├── metrics_calculator.rb # Facade for metric calculations
-│       ├── metrics/              # Specialized calculators
-│       │   ├── base.rb           # Template base class
+│       ├── cli.rb                # Thor CLI commands (refactored)
+│       ├── data/                 # Data layer
+│       │   ├── csv_parser.rb    # CSV parsing
+│       │   ├── csv_writer.rb    # CSV output writer
+│       │   └── file_cache.rb    # JSON file-based caching
+│       ├── sources/              # External data sources
+│       │   └── linear/
+│       │       └── client.rb    # Linear API client (Net::HTTP)
+│       ├── metrics/              # Specialized metric calculators
+│       │   ├── base.rb          # Template base class
 │       │   ├── bug_calculator.rb
 │       │   ├── cycle_calculator.rb
 │       │   ├── distribution_calculator.rb
@@ -342,16 +345,26 @@ wttj-metrics/
 │       │   ├── team_calculator.rb
 │       │   ├── team_stats_calculator.rb
 │       │   └── timeseries_collector.rb
-│       ├── report_generator.rb   # HTML/Excel report orchestrator
-│       ├── chart_data_builder.rb # Chart.js data preparation
-│       ├── cycle_parser.rb       # Cycle/sprint data parser
-│       ├── excel_report_builder.rb
-│       ├── metrics_parser.rb     # CSV metrics parser
-│       ├── weekly_data_aggregator.rb
-│       ├── helpers/              # View helpers
+│       ├── reports/              # Report generation
+│       │   ├── chart_data_builder.rb
+│       │   ├── excel_report_builder.rb
+│       │   ├── report_generator.rb
+│       │   └── weekly_data_aggregator.rb
+│       ├── helpers/              # Mixins and view helpers
+│       │   ├── logger_mixin.rb  # Shared logger configuration
 │       │   ├── date_helper.rb
 │       │   ├── formatting_helper.rb
 │       │   └── issue_helper.rb
+│       ├── services/             # Business logic services
+│       │   ├── metrics_collector.rb
+│       │   ├── data_fetcher.rb
+│       │   ├── metrics_summary_logger.rb
+│       │   ├── directory_preparer.rb
+│       │   ├── report_service.rb
+│       │   └── cache_factory.rb
+│       ├── values/               # Value objects
+│       │   ├── collect_options.rb
+│       │   └── report_options.rb
 │       ├── presenters/           # Data presenters for views
 │       │   ├── base_presenter.rb
 │       │   ├── bug_metric_presenter.rb
@@ -361,17 +374,27 @@ wttj-metrics/
 │       │   ├── flow_metric_presenter.rb
 │       │   └── team_metric_presenter.rb
 │       └── templates/
-│           └── report.html.erb   # HTML report template
-├── spec/                         # RSpec tests
+│           └── report.html.erb  # HTML report template
+├── spec/                         # RSpec tests (389 examples)
 │   ├── cassettes/                # VCR HTTP recordings
-│   ├── support/                  # Test helpers
-│   └── wttj_metrics/             # Unit tests
+│   ├── support/                  # Test helpers & configuration
+│   └── wttj_metrics/             # Unit tests (70.2% branch coverage)
+├── tmp/                          # Temporary files & cache
+│   ├── metrics.csv              # Default metrics output
+│   ├── test.log                 # Test logger output
+│   └── cache/                   # API response cache
+├── report/                       # Generated reports
+│   ├── report.html              # HTML dashboard
+│   └── report.xlsx              # Excel report (optional)
 ├── .devcontainer/                # VS Code dev container config
+├── .vscode/                      # VS Code settings & launch configs
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                # GitHub Actions CI
+│       └── ci.yml               # GitHub Actions CI
 ├── Gemfile
 ├── Gemfile.lock
+├── .rubocop.yml                 # RuboCop configuration
+├── .reek.yml                    # Reek configuration
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -380,12 +403,15 @@ wttj-metrics/
 
 | Component | Responsibility |
 |-----------|----------------|
-| **CLI** | Thor-based command interface, option parsing |
+| **CLI** | Thor-based command interface, delegates to services |
+| **Services::*** | Business logic services (MetricsCollector, DataFetcher, ReportService, etc.) |
+| **Values::*** | Value objects encapsulating command options |
 | **LinearClient** | GraphQL API communication, pagination, caching |
 | **MetricsCalculator** | Facade coordinating specialized calculators |
 | **Metrics::*** | Single-responsibility metric calculators |
 | **ReportGenerator** | Report orchestration, template rendering |
 | **Presenters** | Data formatting for HTML/Excel display |
+| **Helpers::LoggerMixin** | Shared logger configuration |
 | **FileCache** | JSON-based response caching |
 
 ### Data Flow
@@ -508,7 +534,12 @@ The dev container provides:
 
 ### Code Style
 
-This project uses RuboCop for code style enforcement:
+This project follows Ruby best practices and design patterns:
+
+- **Sandi Metz Rules**: Methods <10 lines, classes <100 lines, <4 parameters
+- **Design Patterns**: Service Object, Value Object, Factory Method, Mixin, Command
+- **SOLID Principles**: SRP, DRY, KISS, Tell Don't Ask, Law of Demeter
+- **RuboCop**: Automated style enforcement
 
 ```bash
 # Run RuboCop
@@ -540,11 +571,19 @@ bundle exec rspec
 open coverage/index.html
 ```
 
+#### Test Coverage
+
+- **389 test examples**, all passing
+- **Branch coverage**: 70.2% (172/245 branches)
+- **Line coverage**: 86.25% (1386/1607 lines)
+- SimpleCov generates detailed coverage reports
+
 #### Test Patterns
 
 - **4-phase test pattern**: Setup, Exercise, Verify, Teardown
 - **`aggregate_failures`**: Group related expectations
 - **Named subjects**: Clear test naming
+- **Test output**: Redirected to `tmp/test.log` for clean runs
 
 ### Running Locally
 
