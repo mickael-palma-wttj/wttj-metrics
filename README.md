@@ -305,6 +305,8 @@ SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourci
 
 ## Architecture
 
+The codebase follows **Clean Architecture** principles with clear separation of concerns:
+
 ### System Overview
 
 ```
@@ -331,14 +333,18 @@ wttj-metrics/
 │   ├── wttj_metrics.rb           # Main module, config, autoloading
 │   └── wttj_metrics/
 │       ├── cli.rb                # Thor CLI commands (refactored)
-│       ├── data/                 # Data layer
+│       ├── data/                 # Data layer (README included)
+│       │   ├── README.md        # Data layer documentation
 │       │   ├── csv_parser.rb    # CSV parsing
 │       │   ├── csv_writer.rb    # CSV output writer
 │       │   └── file_cache.rb    # JSON file-based caching
-│       ├── sources/              # External data sources
+│       ├── sources/              # External data sources (README included)
+│       │   ├── README.md        # Sources documentation
 │       │   └── linear/
-│       │       └── client.rb    # Linear API client (Net::HTTP)
-│       ├── metrics/              # Specialized metric calculators
+│       │       ├── client.rb    # Linear API client (Net::HTTP)
+│       │       └── query_builder.rb # GraphQL query construction
+│       ├── metrics/              # Specialized metric calculators (README included)
+│       │   ├── README.md        # Metrics documentation
 │       │   ├── base.rb          # Template base class
 │       │   ├── bug_calculator.rb
 │       │   ├── cycle_calculator.rb
@@ -347,17 +353,23 @@ wttj-metrics/
 │       │   ├── team_calculator.rb
 │       │   ├── team_stats_calculator.rb
 │       │   └── timeseries_collector.rb
-│       ├── reports/              # Report generation
-│       │   ├── chart_data_builder.rb
-│       │   ├── excel_report_builder.rb
-│       │   ├── report_generator.rb
-│       │   └── weekly_data_aggregator.rb
-│       ├── helpers/              # Mixins and view helpers
+│       ├── reports/              # Report generation (README included, refactored)
+│       │   ├── README.md                 # Reports documentation
+│       │   ├── report_generator.rb       # Main orchestrator
+│       │   ├── metric_accessor.rb        # Memoized metric access
+│       │   ├── team_filter.rb            # Team selection logic
+│       │   ├── bugs_by_team_builder.rb   # Bug aggregation
+│       │   ├── chart_data_builder.rb     # Chart data prep
+│       │   ├── excel_report_builder.rb   # Excel generation
+│       │   └── weekly_data_aggregator.rb # Weekly aggregation
+│       ├── helpers/              # Mixins and view helpers (README included)
+│       │   ├── README.md        # Helpers documentation
 │       │   ├── logger_mixin.rb  # Shared logger configuration
 │       │   ├── date_helper.rb
 │       │   ├── formatting_helper.rb
 │       │   └── issue_helper.rb
-│       ├── services/             # Business logic services (8 service objects)
+│       ├── services/             # Business logic services (README included)
+│       │   ├── README.md                 # Services documentation
 │       │   ├── metrics_collector.rb      # Orchestrates collection workflow
 │       │   ├── data_fetcher.rb           # Fetches Linear API data
 │       │   ├── metrics_summary_logger.rb # Formats metrics summary
@@ -366,10 +378,12 @@ wttj-metrics/
 │       │   ├── cache_factory.rb          # Cache instantiation
 │       │   ├── team_metrics_aggregator.rb # Aggregates team metrics
 │       │   └── presenter_mapper.rb       # Maps to presenters
-│       ├── values/               # Value objects
+│       ├── values/               # Value objects (README included)
+│       │   ├── README.md        # Value objects documentation
 │       │   ├── collect_options.rb
 │       │   └── report_options.rb
-│       ├── presenters/           # Data presenters for views
+│       ├── presenters/           # Data presenters for views (README included)
+│       │   ├── README.md        # Presenters documentation
 │       │   ├── base_presenter.rb
 │       │   ├── bug_metric_presenter.rb
 │       │   ├── bug_team_presenter.rb
@@ -377,6 +391,9 @@ wttj-metrics/
 │       │   ├── cycle_presenter.rb
 │       │   ├── flow_metric_presenter.rb
 │       │   └── team_metric_presenter.rb
+│       └── templates/            # ERB templates (README included)
+│           ├── README.md        # Templates documentation
+│           └── report.html.erb  # HTML report template
 ├── spec/                         # RSpec tests (485 examples)
 │   ├── cassettes/                # VCR HTTP recordings
 │   ├── support/                  # Test helpers & configuration
@@ -406,8 +423,11 @@ wttj-metrics/
 ├── .rubocop.yml                 # RuboCop configuration
 ├── .reek.yml                    # Reek configuration
 ├── CHANGELOG.md
-└── README.md
+├── REFACTORING_ANALYSIS.md      # Comprehensive refactoring guide
+└── README.md                    # This file
 ```
+
+> **📚 Documentation**: Each `lib/wttj_metrics/` subfolder contains a comprehensive README.md explaining its architecture, classes, usage patterns, and design principles.
 
 ### Key Components
 
@@ -420,6 +440,9 @@ wttj-metrics/
 | **MetricsCalculator** | Facade coordinating specialized calculators |
 | **Metrics::*** | Single-responsibility metric calculators |
 | **ReportGenerator** | Report orchestration, template rendering |
+| **MetricAccessor** | Memoized metric retrieval from CSV parser |
+| **TeamFilter** | Team selection and discovery logic |
+| **BugsByTeamBuilder** | Bug statistic aggregation by team |
 | **Presenters** | Data formatting for HTML/Excel display |
 | **Helpers::LoggerMixin** | Shared logger configuration |
 | **FileCache** | JSON-based response caching |
@@ -750,9 +773,26 @@ Use conventional commits:
 ### Code Guidelines
 
 - Follow existing code style (enforced by RuboCop)
+- Follow **Sandi Metz rules**: Classes < 100 lines, methods < 10 lines, max 4 parameters
+- Apply **SOLID principles**: Single Responsibility, Open/Closed, etc.
+- Use **Ruby idioms**: Prefer `Enumerable` methods, blocks, and keyword arguments
 - Add tests for new functionality
 - Update documentation as needed
 - Keep changes focused and minimal
+
+### Code Quality
+
+The codebase follows Ruby best practices and design patterns:
+
+- **Single Responsibility Principle**: Each class has one reason to change
+- **Service Objects**: Business logic encapsulated in service classes
+- **Value Objects**: Immutable objects for options and configuration
+- **Presenters**: Formatting logic separate from business logic
+- **Builder Pattern**: Complex object construction (BugsByTeamBuilder)
+- **Strategy Pattern**: Flexible behavior (TeamFilter)
+- **Facade Pattern**: Simplified interfaces (ReportGenerator)
+
+See [REFACTORING_ANALYSIS.md](REFACTORING_ANALYSIS.md) for detailed architecture insights.
 
 ### Pull Request Checklist
 
