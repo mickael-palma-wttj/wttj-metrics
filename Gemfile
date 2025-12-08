@@ -16,6 +16,8 @@ group :development do
   gem 'rubocop', '~> 1.68', require: false # Style linting
   gem 'rubocop-performance', '~> 1.23', require: false # Performance cops
   gem 'rubocop-rspec', '~> 3.8', require: false # RSpec cops
+  gem 'ruby-lsp', require: false
+  gem 'ruby-lsp-rspec', require: false
 end
 
 group :test do

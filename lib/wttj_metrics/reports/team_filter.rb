@@ -36,7 +36,7 @@ module WttjMetrics
       def discover_all_teams
         @parser.metrics_for('bugs_by_team')
                .map { |m| m[:metric].split(':').first }
-               .reject { |team| team.nil? || team == 'Unknown' }
+               .reject { |team| team.nil? || team.empty? || team == 'Unknown' }
                .uniq
                .sort
       end

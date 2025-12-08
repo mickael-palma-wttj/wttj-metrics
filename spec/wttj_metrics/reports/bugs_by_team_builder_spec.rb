@@ -148,7 +148,7 @@ RSpec.describe WttjMetrics::Reports::BugsByTeamBuilder do
 
       it 'includes teams with zero open bugs' do
         result = builder.build
-        expect(result['ATS']).to be_present
+        expect(result['ATS']).not_to be_nil
         expect(result['ATS'][:open]).to eq(0)
       end
     end
@@ -174,7 +174,7 @@ RSpec.describe WttjMetrics::Reports::BugsByTeamBuilder do
 
       it 'handles teams with special characters' do
         result = special_builder.build
-        expect(result['Platform & Tools']).to be_present
+        expect(result['Platform & Tools']).not_to be_nil
         expect(result['Platform & Tools'][:created]).to eq(5)
       end
     end
