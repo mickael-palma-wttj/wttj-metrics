@@ -161,7 +161,7 @@ module WttjMetrics
       def completion_rate
         return 0 unless total_issues.positive?
 
-        ((completed_issues.to_f / total_issues) * PERCENTAGE_MULTIPLIER).round(1)
+        ((completed_issues.to_f / total_issues) * PERCENTAGE_MULTIPLIER).round
       end
 
       def carryover
@@ -169,7 +169,9 @@ module WttjMetrics
       end
 
       def progress
-        ((cycle['progress'] || 0) * PERCENTAGE_MULTIPLIER).round(1)
+        return 0 unless total_issues.positive?
+
+        ((completed_issues.to_f / total_issues) * PERCENTAGE_MULTIPLIER).round
       end
 
       def duration_days

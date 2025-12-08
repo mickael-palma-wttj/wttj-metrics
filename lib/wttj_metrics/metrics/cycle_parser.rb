@@ -15,14 +15,14 @@ module WttjMetrics
         'bug_count' => lambda(&:to_i),
         'velocity' => lambda(&:to_i),
         'planned_points' => lambda(&:to_i),
-        'completion_rate' => ->(v) { v.to_f.round(1) },
+        'completion_rate' => ->(v) { v.to_f.round },
         'carryover' => lambda(&:to_i),
-        'progress' => ->(v) { v.to_f.round(1) },
+        'progress' => ->(v) { v.to_f.round },
         'duration_days' => lambda(&:to_i),
-        'tickets_per_day' => ->(v) { v.to_f.round(2) },
+        'tickets_per_day' => ->(v) { v.to_f.round },
         'assignee_count' => lambda(&:to_i),
         'status' => ->(v) { v.to_s.strip },
-        'scope_change' => ->(v) { v.to_f.round(1) },
+        'scope_change' => ->(v) { v.to_f.round },
         'initial_scope' => lambda(&:to_i),
         'final_scope' => lambda(&:to_i)
       }.freeze
