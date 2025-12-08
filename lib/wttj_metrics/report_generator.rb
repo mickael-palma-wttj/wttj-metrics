@@ -4,11 +4,14 @@ require 'erb'
 require 'date'
 require 'json'
 require 'logger'
+require 'forwardable'
 
 module WttjMetrics
   # Generates HTML and Excel reports from CSV metrics data
   # Facade pattern: Coordinates multiple specialized classes
   class ReportGenerator
+    extend Forwardable
+
     SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourcing', 'Talents'].freeze
 
     STATE_CATEGORIES = {
@@ -32,6 +35,12 @@ module WttjMetrics
 
     attr_reader :data, :metrics_by_category, :days_to_show, :today, :selected_teams, :all_teams_mode
 
+    # Delegate metric access to MetricAccessor
+    def_delegators :@metric_accessor, :flow_metrics, :flow_metrics_presented, :cycle_metrics,
+                   :cycle_metrics_presented, :team_metrics, :team_metrics_presented,
+                   :bug_metrics, :bug_metrics_presented, :bugs_by_priority,
+                   :status_dist, :priority_dist, :type_dist, :assignee_dist
+
     def initialize(csv_path, days: 90, teams: nil)
       @csv_path = csv_path
       @days_to_show = days
@@ -42,18 +51,18 @@ module WttjMetrics
       @logger = Logger.new($stdout)
       @logger.formatter = proc { |_severity, _datetime, _progname, msg| "#{msg}\n" }
 
-      # Handle teams parameter: :all means discover all teams, nil means default, array means custom
-      @all_teams_mode = teams == :all
-      @selected_teams = if teams == :all
-                          discover_all_teams
-                        else
-                          teams || SELECTED_TEAMS
-                        end
+      # Initialize team filter
+      @team_filter = Reports::TeamFilter.new(@parser, teams: teams)
+      @all_teams_mode = @team_filter.all_teams_mode?
+      @selected_teams = @team_filter.selected_teams
+
+      # Initialize metric accessor
+      @metric_accessor = Reports::MetricAccessor.new(@parser)
     end
 
     def generate_html(output_path)
-      html = build_html
-      File.write(output_path, html)
+      generator = Reports::HtmlGenerator.new(self)
+      generator.generate(output_path)
       @logger.info "✅ HTML report generated: #{output_path}"
     end
 
@@ -63,53 +72,8 @@ module WttjMetrics
       @logger.info "✅ Excel report generated: #{output_path}"
     end
 
-    # Metric accessors with presenters (memoized)
-    def flow_metrics
-      @flow_metrics ||= @parser.metrics_for('flow')
-    end
-
-    def flow_metrics_presented
-      @flow_metrics_presented ||= Services::PresenterMapper.map_to_presenters(
-        flow_metrics, Presenters::FlowMetricPresenter
-      )
-    end
-
-    def cycle_metrics
-      @cycle_metrics ||= @parser.metrics_for('cycle_metrics')
-    end
-
-    def cycle_metrics_presented
-      @cycle_metrics_presented ||= Services::PresenterMapper.map_to_presenters(
-        cycle_metrics, Presenters::CycleMetricPresenter
-      )
-    end
-
-    def team_metrics
-      @team_metrics ||= @parser.metrics_for('team')
-    end
-
-    def team_metrics_presented
-      @team_metrics_presented ||= Services::PresenterMapper.map_to_presenters(
-        team_metrics, Presenters::TeamMetricPresenter
-      )
-    end
-
-    def bug_metrics
-      @bug_metrics ||= @parser.metrics_for('bugs')
-    end
-
-    def bug_metrics_presented
-      @bug_metrics_presented ||= Services::PresenterMapper.map_to_presenters(
-        bug_metrics, Presenters::BugMetricPresenter
-      )
-    end
-
-    def bugs_by_priority
-      @bugs_by_priority ||= @parser.metrics_for('bugs_by_priority')
-    end
-
     def bugs_by_team
-      @bugs_by_team ||= build_bugs_by_team
+      @bugs_by_team ||= Reports::BugsByTeamBuilder.new(@parser, @selected_teams).build
     end
 
     def bugs_by_team_presented
@@ -118,34 +82,16 @@ module WttjMetrics
       )
     end
 
-    def status_dist
-      @status_dist ||= @parser.metrics_for('status')
-    end
-
-    def priority_dist
-      @priority_dist ||= @parser.metrics_for('priority')
-    end
-
-    def type_dist
-      @type_dist ||= @parser.metrics_for('type')
-    end
-
-    def assignee_dist
-      @assignee_dist ||= @parser.metrics_for('assignee')
-                                .sort_by { |m| -m[:value] }
-                                .first(15)
-    end
-
     def weekly_flow_data
       @weekly_flow_data ||= build_weekly_flow_data
     end
 
     def weekly_bug_flow_data
-      @weekly_bug_flow_data ||= build_weekly_bug_flow_data
+      @weekly_bug_flow_data ||= bug_flow_builder.build_flow_data
     end
 
     def weekly_bug_flow_by_team_data
-      @weekly_bug_flow_by_team_data ||= build_weekly_bug_flow_by_team_data
+      @weekly_bug_flow_by_team_data ||= bug_flow_builder.build_by_team_data(weekly_bug_flow_data[:labels])
     end
 
     def transition_weekly_data
@@ -153,19 +99,19 @@ module WttjMetrics
     end
 
     def status_chart_data
-      @status_chart_data ||= Reports::ChartDataBuilder.new(@parser).status_chart_data
+      @status_chart_data ||= chart_builder.status_chart_data
     end
 
     def priority_chart_data
-      transform_to_chart_data(priority_dist)
+      @priority_chart_data ||= chart_builder.priority_chart_data
     end
 
     def type_chart_data
-      transform_to_chart_data(type_dist)
+      @type_chart_data ||= chart_builder.type_chart_data
     end
 
     def assignee_chart_data
-      transform_to_chart_data(assignee_dist)
+      @assignee_chart_data ||= chart_builder.assignee_chart_data
     end
 
     def cycles_parsed
@@ -192,147 +138,32 @@ module WttjMetrics
       @cutoff_date ||= (Date.today - @days_to_show).to_s
     end
 
-    def discover_all_teams
-      @parser.metrics_for('bugs_by_team')
-             .map { |m| m[:metric].split(':').first }
-             .reject { |team| team.nil? || team == 'Unknown' }
-             .uniq
-             .sort
+    def chart_builder
+      @chart_builder ||= Reports::ChartDataBuilder.new(@parser)
     end
 
-    def transform_to_chart_data(distribution)
-      distribution.map { |m| { label: m[:metric], value: m[:value].to_i } }
+    def bug_flow_builder
+      @bug_flow_builder ||= Reports::WeeklyBugFlowBuilder.new(@parser, @selected_teams, cutoff_date)
     end
 
     def create_cycle_parser(metrics)
       Metrics::CycleParser.new(metrics, teams: @selected_teams)
     end
 
-    def build_bugs_by_team
-      raw_data = @parser.metrics_for('bugs_by_team')
-      teams = {}
-
-      raw_data.each do |m|
-        team, stat = parse_team_metric(m[:metric])
-        next unless @selected_teams.include?(team)
-
-        teams[team] ||= default_team_stats
-        teams[team][stat.to_sym] = parse_stat_value(stat, m[:value])
-      end
-
-      teams.sort_by { |_, v| -v[:open] }.to_h
-    end
-
-    def parse_team_metric(metric)
-      metric.split(':')
-    end
-
-    def default_team_stats
-      { created: 0, closed: 0, open: 0, mttr: 0 }
-    end
-
-    def parse_stat_value(stat, value)
-      stat == 'mttr' ? value.to_f : value.to_i
-    end
-
     def build_weekly_flow_data
-      aggregate_weekly_data('tickets_created', 'tickets_completed', %i[created completed])
-    end
-
-    def build_weekly_bug_flow_data
-      result = aggregate_weekly_data('bugs_created', 'bugs_closed', %i[created closed])
-      remap_bug_flow_keys(result)
-    end
-
-    def remap_bug_flow_keys(result)
-      {
-        labels: result[:labels],
-        created: result[:created_raw],
-        closed: result[:closed_raw],
-        created_pct: result[:created_pct],
-        closed_pct: result[:closed_pct]
-      }
-    end
-
-    def aggregate_weekly_data(prefix_created, prefix_completed, label_keys)
       team_aggregator = Services::TeamMetricsAggregator.new(@parser, @selected_teams, cutoff_date)
-      aggregated = team_aggregator.aggregate_timeseries(prefix_created, prefix_completed)
+      aggregated = team_aggregator.aggregate_timeseries('tickets_created', 'tickets_completed')
 
       weekly_aggregator = WeeklyDataAggregator.new(cutoff_date)
       weekly_aggregator.aggregate_pair(
         aggregated[:created],
         aggregated[:completed],
-        labels: label_keys
+        labels: %i[created completed]
       )
-    end
-
-    def build_weekly_bug_flow_by_team_data
-      base_labels = weekly_bug_flow_data[:labels]
-      team_data = build_team_bug_data(base_labels)
-
-      { labels: base_labels, teams: team_data }
-    end
-
-    def build_team_bug_data(base_labels)
-      @selected_teams.each_with_object({}) do |team, data|
-        created = @parser.timeseries_for("bugs_created_#{team}", since: cutoff_date)
-        week_counts = build_week_counts(created)
-        values = base_labels.map { |label| week_counts[label] || 0 }
-
-        data[team] = { created: values, closed: [] }
-      end
-    end
-
-    def build_week_counts(metrics)
-      return {} if metrics.empty?
-
-      metrics.each_with_object(Hash.new(0)) do |m, counts|
-        week_label = calculate_week_label(m[:date])
-        counts[week_label] += m[:value].to_i
-      end
-    end
-
-    def calculate_week_label(date_string)
-      date = Date.parse(date_string)
-      monday = date - ((date.wday - 1) % 7)
-      monday.strftime('%b %d')
     end
 
     def build_transition_data
       TransitionDataBuilder.new(@metrics_by_category['transition_to'], cutoff_date, teams: @selected_teams).build
-    end
-
-    def state_to_category
-      @state_to_category ||= STATE_CATEGORIES.each_with_object({}) do |(cat, states), lookup|
-        states.each { |s| lookup[s] = cat }
-      end
-    end
-
-    def build_html
-      template_path = template_file_path
-      File.exist?(template_path) ? render_template(template_path) : build_html_fallback
-    end
-
-    def template_file_path
-      File.join(WttjMetrics.root, 'lib', 'wttj_metrics', 'templates', 'report.html.erb')
-    end
-
-    def render_template(path)
-      ERB.new(File.read(path)).result(binding)
-    end
-
-    def build_html_fallback
-      <<~HTML
-        <!DOCTYPE html>
-        <html>
-        <head><title>Linear Metrics - #{@today}</title></head>
-        <body>
-          <h1>Linear Metrics Dashboard</h1>
-          <p>Generated: #{@today}</p>
-          <p>Please run with the proper template file.</p>
-        </body>
-        </html>
-      HTML
     end
 
     def excel_report_data

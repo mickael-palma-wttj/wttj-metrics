@@ -5,10 +5,12 @@ This directory contains classes responsible for report generation, data aggregat
 ## Architecture
 
 The reports layer consists of:
-- **ReportGenerator**: Main orchestrator for HTML report generation
+- **ReportGenerator**: Main orchestrator that coordinates all report generation
+- **HtmlGenerator**: Renders HTML reports using ERB templates
 - **MetricAccessor**: Provides cached access to parsed metrics with memoization
 - **TeamFilter**: Handles team filtering and discovery logic
 - **BugsByTeamBuilder**: Aggregates bug statistics by team
+- **WeeklyBugFlowBuilder**: Builds weekly bug flow data aggregated by team
 - **ChartDataBuilder**: Prepares data for Chart.js visualizations
 - **WeeklyDataAggregator**: Aggregates time-series data into weekly buckets
 - **ExcelReportBuilder**: Generates Excel reports (alternative output format)
@@ -378,6 +380,60 @@ generator = ReportGenerator.new('tmp/metrics.csv', days: 90)
 generator.generate('tmp/report.html')
 ```
 
+### HtmlGenerator
+
+Handles HTML report generation using ERB templates.
+
+**Responsibilities:**
+- Render ERB templates with report data
+- Generate fallback HTML when template is missing
+- Write HTML content to files
+
+**Key Methods:**
+```ruby
+generator = HtmlGenerator.new(report_generator)
+
+# Generate and write HTML
+generator.generate('tmp/report.html')
+# => Writes rendered HTML to file
+
+# Build HTML content
+html = generator.build_html
+# => Returns HTML string
+```
+
+**Benefits:**
+- **Separation**: HTML rendering isolated from data preparation
+- **Testability**: Template rendering can be tested independently
+- **Flexibility**: Easy to add alternative template formats
+
+### WeeklyBugFlowBuilder
+
+Builds weekly bug flow data aggregated by team.
+
+**Responsibilities:**
+- Aggregate bug creation/closure data by week
+- Group data by team for team-specific charts
+- Calculate week labels and counts
+
+**Key Methods:**
+```ruby
+builder = WeeklyBugFlowBuilder.new(parser, selected_teams, cutoff_date)
+
+# Build overall bug flow data
+flow_data = builder.build_flow_data
+# => { labels: [...], created: [...], closed: [...], created_pct: [...], closed_pct: [...] }
+
+# Build team-specific bug flow data
+team_data = builder.build_by_team_data(flow_data[:labels])
+# => { labels: [...], teams: { 'ATS' => { created: [...], closed: [] }, ... } }
+```
+
+**Benefits:**
+- **Focus**: Single responsibility for bug flow aggregation
+- **Reusability**: Can be used for different time ranges
+- **Clarity**: Clear separation from general report logic
+
 ### Chart Data Format
 ```ruby
 # For Chart.js consumption
@@ -412,13 +468,33 @@ generator.generate('tmp/report.html')
 3. Pre-filter issues before passing to calculators
 4. Reuse parser instance for multiple operations
 
+## File Organization
+
+```
+lib/wttj_metrics/reports/
+├── bugs_by_team_builder.rb       # Bug statistics aggregation by team
+├── chart_data_builder.rb         # Chart.js data preparation
+├── excel_report_builder.rb       # Excel report generation
+├── html_generator.rb             # HTML rendering with ERB templates
+├── metric_accessor.rb            # Cached metric access
+├── report_generator.rb           # Main orchestrator (294 lines, 34 methods)
+├── team_filter.rb                # Team filtering and discovery
+├── weekly_bug_flow_builder.rb    # Weekly bug flow aggregation
+└── weekly_data_aggregator.rb     # Time-series weekly aggregation
+```
+
 ## Testing
 
 All report classes have test coverage:
 - `spec/wttj_metrics/reports/report_generator_spec.rb`
+- `spec/wttj_metrics/reports/html_generator_spec.rb`
+- `spec/wttj_metrics/reports/metric_accessor_spec.rb`
+- `spec/wttj_metrics/reports/team_filter_spec.rb`
+- `spec/wttj_metrics/reports/bugs_by_team_builder_spec.rb`
+- `spec/wttj_metrics/reports/weekly_bug_flow_builder_spec.rb`
 - `spec/wttj_metrics/reports/chart_data_builder_spec.rb`
 - `spec/wttj_metrics/reports/weekly_data_aggregator_spec.rb`
-- `spec/wttj_metrics/reports/excel_report_builder_spec.rb` (if implemented)
+- `spec/wttj_metrics/reports/excel_report_builder_spec.rb`
 
 Run tests:
 ```bash
