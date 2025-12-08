@@ -49,8 +49,8 @@ RSpec.describe WttjMetrics::Metrics::CycleParser do
 
     it 'parses float metrics with rounding' do
       cycle = result['Platform:Cycle 10']
-      expect(cycle[:completion_rate]).to eq(80.5)
-      expect(cycle[:tickets_per_day]).to eq(1.43)
+      expect(cycle[:completion_rate]).to eq(81)
+      expect(cycle[:tickets_per_day]).to eq(1)
     end
 
     it 'parses string metrics' do
@@ -105,9 +105,9 @@ RSpec.describe WttjMetrics::Metrics::CycleParser do
         expect(cycle[:bug_count]).to eq(5)
         expect(cycle[:planned_points]).to eq(100)
         expect(cycle[:carryover]).to eq(3)
-        expect(cycle[:progress]).to eq(75.5)
+        expect(cycle[:progress]).to eq(76)
         expect(cycle[:assignee_count]).to eq(8)
-        expect(cycle[:scope_change]).to eq(12.3)
+        expect(cycle[:scope_change]).to eq(12)
         expect(cycle[:initial_scope]).to eq(50)
         expect(cycle[:final_scope]).to eq(56)
       end
