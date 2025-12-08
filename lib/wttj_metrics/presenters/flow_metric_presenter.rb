@@ -7,6 +7,7 @@ module WttjMetrics
       TOOLTIPS = {
         'avg_cycle_time_days' => "Average time from when work starts on an issue until it's completed.",
         'avg_lead_time_days' => 'Average time from issue creation to completion.',
+        'avg_review_time_days' => 'Average time spent in review states (code review, testing, validation).',
         'weekly_throughput' => 'Number of issues completed in the last 7 days.',
         'current_wip' => 'Work In Progress: issues currently being worked on.'
       }.freeze
