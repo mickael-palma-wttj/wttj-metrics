@@ -8,7 +8,7 @@ test.describe('Key Metrics Section', () => {
 
     test('displays all key metric cards', async ({ page }) => {
         const metricCards = page.locator('.metrics-grid').first().locator('.metric-card');
-        await expect(metricCards).toHaveCount(9);
+        await expect(metricCards).toHaveCount(10);
     });
 
     test('each metric card has value and label', async ({ page }) => {
