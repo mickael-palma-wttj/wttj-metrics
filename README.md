@@ -70,10 +70,10 @@ The generated HTML dashboard includes the following sections:
 
 | Section | Description |
 |---------|-------------|
-| **Key Metrics** | Cycle time, lead time, WIP, throughput, completion rate |
-| **Bugs** | Open bugs, resolution rate, bugs by priority, bug flow by team |
+| **Key Metrics** | Cycle time, lead time, review time, WIP, throughput, completion rate |
+| **Bugs** | Open bugs, resolution rate, MTTR by team, bugs by priority, bug flow by team |
 | **Ticket Flow** | Created vs completed tickets over time, state transitions |
-| **Distributions** | Status, priority, type, and assignee breakdowns |
+| **Distributions** | Status, priority, type (7 categories), and assignee breakdowns |
 | **Cycles** | Sprint metrics, velocity, commitment accuracy, team performance |
 
 ---
@@ -267,6 +267,7 @@ SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourci
 |--------|---------|-------------|
 | **Cycle Time** | `completedAt - startedAt` | Time from work started to completed (in days) |
 | **Lead Time** | `completedAt - createdAt` | Time from creation to completion (in days) |
+| **Review Time** | `sum(time in review states)` | Average time spent in review, validation, testing, or merge states (in days) |
 | **Throughput** | `count(completed issues) / period` | Issues completed per time period |
 | **WIP (Work in Progress)** | `count(in_progress issues)` | Issues currently being worked on |
 | **Completion Rate** | `completed / (completed + cancelled) × 100` | Percentage of issues completed vs cancelled |
@@ -277,6 +278,7 @@ SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourci
 |--------|---------|-------------|
 | **Open Bugs** | `count(bugs where state != done/cancelled)` | Currently open bug issues |
 | **Bug Resolution Time** | `avg(completedAt - createdAt)` for bugs | Average time to resolve bugs |
+| **MTTR (Mean Time To Resolve)** | `avg(completedAt - createdAt)` per team | Average bug resolution time by team (in days) |
 | **Bug Creation Rate** | `count(bugs created) / period` | Bugs created per time period |
 | **Bugs by Priority** | `group_by(priority)` | Distribution of bugs by priority level |
 | **Bugs by Team** | `group_by(team)` | Bug counts per team |
@@ -296,7 +298,7 @@ SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourci
 |--------|-------------|
 | **Status Distribution** | Breakdown of issues by workflow state |
 | **Priority Distribution** | Issues grouped by priority (Urgent, High, Medium, Low, None) |
-| **Type Distribution** | Issues by label/type (Bug, Feature, Improvement, etc.) |
+| **Type Distribution** | Issues by 7 categories (Feature, Bug, Improvement, Tech Debt, Task, Documentation, Other) with intelligent label and title-based classification |
 | **Assignee Distribution** | Top 15 assignees by issue count |
 
 ---
@@ -355,13 +357,15 @@ wttj-metrics/
 │       │   ├── date_helper.rb
 │       │   ├── formatting_helper.rb
 │       │   └── issue_helper.rb
-│       ├── services/             # Business logic services
-│       │   ├── metrics_collector.rb
-│       │   ├── data_fetcher.rb
-│       │   ├── metrics_summary_logger.rb
-│       │   ├── directory_preparer.rb
-│       │   ├── report_service.rb
-│       │   └── cache_factory.rb
+│       ├── services/             # Business logic services (8 service objects)
+│       │   ├── metrics_collector.rb      # Orchestrates collection workflow
+│       │   ├── data_fetcher.rb           # Fetches Linear API data
+│       │   ├── metrics_summary_logger.rb # Formats metrics summary
+│       │   ├── directory_preparer.rb     # Ensures directories exist
+│       │   ├── report_service.rb         # Generates reports
+│       │   ├── cache_factory.rb          # Cache instantiation
+│       │   ├── team_metrics_aggregator.rb # Aggregates team metrics
+│       │   └── presenter_mapper.rb       # Maps to presenters
 │       ├── values/               # Value objects
 │       │   ├── collect_options.rb
 │       │   └── report_options.rb
@@ -373,10 +377,16 @@ wttj-metrics/
 │       │   ├── cycle_presenter.rb
 │       │   ├── flow_metric_presenter.rb
 │       │   └── team_metric_presenter.rb
-│       └── templates/
-│           └── report.html.erb  # HTML report template
-├── spec/                         # RSpec tests (389 examples)
+├── spec/                         # RSpec tests (485 examples)
 │   ├── cassettes/                # VCR HTTP recordings
+│   ├── support/                  # Test helpers & configuration
+│   └── wttj_metrics/             # Unit tests (87.76% line coverage)
+├── e2e/                          # Playwright e2e tests (77 tests)
+│   ├── accessibility.spec.ts    # WCAG compliance tests
+│   ├── charts.spec.ts           # Chart rendering tests
+│   ├── key-metrics.spec.ts      # Key metrics validation
+│   ├── mobile.spec.ts           # Mobile responsiveness
+│   └── *.spec.ts                # Other e2e test suites
 │   ├── support/                  # Test helpers & configuration
 │   └── wttj_metrics/             # Unit tests (70.2% branch coverage)
 ├── tmp/                          # Temporary files & cache
@@ -573,10 +583,34 @@ open coverage/index.html
 
 #### Test Coverage
 
-- **389 test examples**, all passing
-- **Branch coverage**: 70.2% (172/245 branches)
-- **Line coverage**: 86.25% (1386/1607 lines)
+- **485 test examples** (RSpec unit tests), all passing
+- **77 e2e tests** (Playwright), all passing
+- **Branch coverage**: 66.08% (187/283 branches)
+- **Line coverage**: 87.76% (1635/1863 lines)
 - SimpleCov generates detailed coverage reports
+
+#### E2E Testing
+
+End-to-end tests use Playwright to verify the generated HTML reports:
+
+```bash
+# Run e2e tests
+npm test
+
+# Run specific test file
+npx playwright test e2e/key-metrics.spec.ts
+
+# Show last test report
+npx playwright show-report
+```
+
+E2E test coverage includes:
+- Accessibility (WCAG compliance, keyboard navigation)
+- Charts and visualizations
+- Mobile responsiveness
+- Data integrity validation
+- Tooltips and interactions
+- Visual regression testing
 
 #### Test Patterns
 

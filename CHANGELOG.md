@@ -9,12 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Average Review Time Metric**: New metric in Key Metrics section showing average time spent in review states
+  - Calculates time in states matching "review", "validate", "test", or "merge"
+  - Displayed as days with tooltip explanation
+  - Added to FlowCalculator with proper calculation logic
+- **Mean Time To Resolve (MTTR)**: New metric for bugs by team
+  - Tracks resolution time for closed bugs by team
+  - Displayed in "Bug Stats by Team (All Time)" table
+  - Added to TimeseriesCollector and BugTeamPresenter
+- **Enhanced Issue Type Classification**: Improved from 4 to 7 categories
+  - New categories: Feature, Bug, Improvement, Tech Debt, Task, Documentation, Other
+  - Title-based fallback classification when labels are missing
+  - Pattern matching with regex for accurate categorization
+  - Reduced "Other" classification from 88% to 73%
+- **Comprehensive Service Specs**: 96 service object tests (71 new tests)
+  - `CacheFactory` specs (8 tests) - cache instantiation
+  - `DirectoryPreparer` specs (8 tests) - directory creation
+  - `DataFetcher` specs (12 tests) - Linear API integration
+  - `MetricsSummaryLogger` specs (11 tests) - summary logging
+  - `MetricsCollector` specs (16 tests) - collection workflow
+  - `ReportService` specs (16 tests) - report generation
+  - `TeamMetricsAggregator` specs (10 tests) - metrics aggregation
+  - `PresenterMapper` specs (15 tests) - presenter instantiation
+- **E2E Testing Framework**: Playwright tests for HTML reports
+  - 77 e2e tests covering accessibility, charts, mobile, data integrity
+  - Visual regression testing with snapshots
+  - Cross-browser testing support
+- **Service Objects**: Additional report generation services
+  - `Services::TeamMetricsAggregator` - Aggregates team timeseries metrics
+  - `Services::PresenterMapper` - Maps data to presenter objects (DRY presenter instantiation)
 - **Testing Framework**: RSpec with VCR and WebMock for API mocking
   - Spec support folder with shared configuration
   - 4-phase test pattern (Setup, Exercise, Verify, Teardown)
   - `aggregate_failures` for grouped expectations
   - Named subjects for clarity
-  - 389 test examples with 70.2% branch coverage, 86.25% line coverage
+  - 485 test examples with 66.08% branch coverage, 87.76% line coverage
 - **Metrics Module**: Extracted specialized calculators from MetricsCalculator
   - `Metrics::Base` - Template base class with shared methods
   - `Metrics::FlowCalculator` - Cycle time, lead time, throughput, WIP
@@ -31,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Services::DirectoryPreparer` - Ensures output directories exist
   - `Services::ReportService` - Generates HTML and Excel reports
   - `Services::CacheFactory` - Centralizes cache instantiation
+  - `Services::TeamMetricsAggregator` - Aggregates team metrics by date
+  - `Services::PresenterMapper` - DRY presenter object instantiation
 - **Value Objects**: Encapsulate command options
   - `Values::CollectOptions` - Collect command options with cache strategy
   - `Values::ReportOptions` - Report command options with team filtering
@@ -42,11 +73,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **APP_ROOT constant**: Global path constant for file references
 - **rubocop-rspec**: RSpec-specific linting rules
 - **openssl gem**: Explicit SSL/TLS support dependency
-- **Team filtering**: Filter badges showing selected teams in report sections
-
 ### Changed
 
+- **FlowCalculator**: Applied DRY refactoring
+  - Extracted `average_duration` and `average_from_collection` helpers
+  - Added constants: DAYS_IN_WEEK, REVIEW_STATE_PATTERN, AVERAGE_PRECISION
+  - Introduced template method pattern for `calculate_state_durations`
+- **ReportGenerator**: Major refactoring (479→464 lines)
+  - Extracted 15+ helper methods for improved readability
+  - Removed require_relative statements (Zeitwerk autoloading)
+  - Uses TeamMetricsAggregator and PresenterMapper service objects
+  - Simplified discover_all_teams with functional chain
+- **DistributionCalculator**: Enhanced type classification
+  - Expanded from 4 to 7 issue type categories
+  - Added title-based pattern matching as fallback
+  - Pattern methods: bug_pattern?, feature_pattern?, improvement_pattern?, etc.
+  - Title methods: title_indicates_bug?, title_indicates_feature?, etc.
+- **Chart Colors**: Updated type distribution pie chart for 7 categories
 - **MetricsCalculator**: Refactored from 500+ lines to ~60 line facade
+  - Now delegates to specialized calculator classes
+  - Follows Single Responsibility Principle0+ lines to ~60 line facade
   - Now delegates to specialized calculator classes
   - Follows Single Responsibility Principle
 - **CLI**: Major refactoring from 123 lines to 67 lines
@@ -71,9 +117,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Refactored
 
 - **Architecture**: Applied Ruby best practices and design patterns
-  - **DRY (Don't Repeat Yourself)**: Eliminated logger duplication, extracted repeated logic
-  - **SRP (Single Responsibility Principle)**: Each class/method has single responsibility
-  - **KISS (Keep It Simple)**: Simplified complex conditionals, clear method names
+### Fixed
+
+- **E2E Tests**: Updated key metrics count from 9 to 10 in Playwright tests
+- **RuboCop**: Disabled RSpec/VerifiedDoubles cop (acceptable for simple value objects)
+- **Bug Pattern**: Added "hotfix" label to bug classification regex
+- **Line Length**: Fixed RuboCop violations with multi-line regex patterns
+- **csv gem**: Added explicit dependency for Ruby 3.4+ compatibilityr method names
   - **Sandi Metz Rules**: All methods <10 lines, classes <100 lines, <4 parameters
   - **Service Object Pattern**: Business logic extracted from CLI into dedicated services
   - **Value Object Pattern**: Options encapsulated, eliminated hash drilling

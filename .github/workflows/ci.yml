@@ -113,7 +113,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps
 
       - name: Generate report
         env:
@@ -123,7 +123,7 @@ jobs:
           ./bin/wttj-metrics report tmp/metrics.csv --days 365
 
       - name: Run Playwright tests
-        run: npx playwright test --project=chromium
+        run: npm test
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
