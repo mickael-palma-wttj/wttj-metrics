@@ -4,10 +4,12 @@ module WttjMetrics
   module Helpers
     # Common formatting helpers for display values
     module FormattingHelper
+      PERCENTAGE_MULTIPLIER = 100
+
       def format_percentage(value, total)
         return 0 if total.zero?
 
-        ((value.to_f / total) * 100).round(1)
+        ((value.to_f / total) * PERCENTAGE_MULTIPLIER).round(1)
       end
 
       def format_with_unit(value, unit)

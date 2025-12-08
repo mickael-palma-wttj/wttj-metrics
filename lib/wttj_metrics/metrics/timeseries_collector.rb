@@ -77,6 +77,15 @@ module WttjMetrics
 
         if COMPLETED_STATES.include?(issue.dig('state', 'type'))
           @bugs_by_team[team][:closed] += 1
+
+          # Calculate resolution time for MTTR
+          if issue['completedAt']
+            created = parse_date(issue['createdAt'])
+            completed = parse_date(issue['completedAt'])
+            resolution_days = (completed - created).to_f
+            @bugs_by_team[team][:resolution_times] ||= []
+            @bugs_by_team[team][:resolution_times] << resolution_days
+          end
         else
           @bugs_by_team[team][:open] += 1
         end
@@ -129,6 +138,11 @@ module WttjMetrics
           rows << [today.to_s, 'bugs_by_team', "#{team}:created", stats[:created]]
           rows << [today.to_s, 'bugs_by_team', "#{team}:closed", stats[:closed]]
           rows << [today.to_s, 'bugs_by_team', "#{team}:open", stats[:open]]
+
+          # Calculate MTTR (Mean Time To Resolve)
+          resolution_times = stats[:resolution_times] || []
+          mttr = resolution_times.empty? ? 0 : (resolution_times.sum / resolution_times.size).round(1)
+          rows << [today.to_s, 'bugs_by_team', "#{team}:mttr", mttr]
         end
 
         @bugs_created_by_team.each do |date, teams|

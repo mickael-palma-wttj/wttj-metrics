@@ -188,7 +188,7 @@ RSpec.describe WttjMetrics::Metrics::DistributionCalculator do
 
     context 'with no matching labels' do
       it 'classifies as Other' do
-        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'documentation' }] })
+        issue = base_issue.merge('labels' => { 'nodes' => [{ 'name' => 'random-label' }] })
         result = described_class.new([issue]).calculate
         expect(result[:type]['Other']).to eq(1)
       end

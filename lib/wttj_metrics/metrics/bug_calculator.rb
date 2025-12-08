@@ -5,6 +5,8 @@ module WttjMetrics
     # Calculates bug-related metrics
     class BugCalculator < Base
       COMPLETED_STATES = %w[completed canceled].freeze
+      DAYS_IN_MONTH = 30
+      PERCENTAGE_MULTIPLIER = 100
 
       def calculate
         {
@@ -57,7 +59,7 @@ module WttjMetrics
       end
 
       def thirty_days_ago
-        @thirty_days_ago ||= today - 30
+        @thirty_days_ago ||= today - DAYS_IN_MONTH
       end
 
       def bugs_created_last_30_days
@@ -88,7 +90,7 @@ module WttjMetrics
       def bug_ratio
         return 0 if issues.empty?
 
-        ((bugs.size.to_f / issues.size) * 100).round(1)
+        ((bugs.size.to_f / issues.size) * PERCENTAGE_MULTIPLIER).round(1)
       end
 
       def bugs_by_priority

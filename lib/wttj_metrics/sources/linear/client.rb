@@ -32,57 +32,27 @@ module WttjMetrics
         end
 
         def fetch_all_issues(states: nil)
-          cache_key = 'issues_all'
-
-          cached(cache_key) do
-            issues = []
-            cursor = nil
-
-            loop do
-              result = query(issues_query(states), { after: cursor })
-              data = result.dig('data', 'issues')
-
-              issues.concat(data['nodes'])
-
-              break unless data.dig('pageInfo', 'hasNextPage')
-
-              cursor = data.dig('pageInfo', 'endCursor')
-            end
-
-            issues
+          cached('issues_all') do
+            paginate(QueryBuilder.issues(states: states), 'issues')
           end
         end
 
         def fetch_cycles
           cached('cycles_all') do
-            cycles = []
-            cursor = nil
-
-            loop do
-              result = query(cycles_query, { after: cursor })
-              data = result.dig('data', 'cycles')
-
-              cycles.concat(data['nodes'])
-
-              break unless data.dig('pageInfo', 'hasNextPage')
-
-              cursor = data.dig('pageInfo', 'endCursor')
-            end
-
-            cycles
+            paginate(QueryBuilder.cycles, 'cycles')
           end
         end
 
         def fetch_team_members
           cached('team_members_all') do
-            result = query(team_members_query)
+            result = query(QueryBuilder.team_members)
             result.dig('data', 'users', 'nodes') || []
           end
         end
 
         def fetch_workflow_states
           cached('workflow_states_all') do
-            result = query(workflow_states_query)
+            result = query(QueryBuilder.workflow_states)
             result.dig('data', 'workflowStates', 'nodes') || []
           end
         end
@@ -95,6 +65,25 @@ module WttjMetrics
           @cache.fetch(key, &)
         end
 
+        def paginate(graphql_query, resource_key)
+          items = []
+          cursor = nil
+
+          loop do
+            result = query(graphql_query, { after: cursor })
+            data = result.dig('data', resource_key)
+
+            items.concat(data['nodes'])
+
+            break unless data.dig('pageInfo', 'hasNextPage')
+
+            cursor = data.dig('pageInfo', 'endCursor')
+          end
+
+          items
+        end
+
+        # Deprecated - remove after transition complete
         def issues_query(states)
           filter = []
           filter << "state: { name: { in: #{states.to_json} } }" if states
@@ -144,7 +133,7 @@ module WttjMetrics
                       name
                     }
                   }
-                  history(first: 50) {
+                  history(first: #{HISTORY_PAGE_SIZE}) {
                     nodes {
                       createdAt
                       fromState {

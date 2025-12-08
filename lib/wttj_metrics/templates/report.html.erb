@@ -461,6 +461,7 @@
                 <th class="has-tooltip">Total Created<span class="th-tooltip">Total bugs ever created for this team</span></th>
                 <th class="has-tooltip">Closed<span class="th-tooltip">Bugs that have been resolved</span></th>
                 <th class="has-tooltip">Open<span class="th-tooltip">Bugs currently open</span></th>
+                <th class="has-tooltip">MTTR<span class="th-tooltip">Mean Time To Resolve (avg days to fix bugs)</span></th>
                 <th class="has-tooltip">Resolution Rate<span class="th-tooltip">Percentage of bugs closed</span></th>
               </tr>
             </thead>
@@ -471,6 +472,7 @@
                 <td><%= presenter.created %></td>
                 <td><%= presenter.closed %></td>
                 <td><%= presenter.open %></td>
+                <td><%= presenter.mttr_display %></td>
                 <td><span class="status-badge <%= presenter.resolution_rate_class %>"><%= presenter.resolution_rate_display %></span></td>
               </tr>
 <% end %>
@@ -1001,7 +1003,7 @@
       type: 'doughnut',
       data: {
         labels: <%= type_chart_data.map { |d| d[:label] }.to_json %>,
-        datasets: [{ data: <%= type_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(220, 38, 38, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(88, 88, 88, 0.8)'], borderWidth: 0 }]
+        datasets: [{ data: <%= type_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'], borderWidth: 0 }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
     });

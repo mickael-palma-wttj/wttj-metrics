@@ -6,6 +6,9 @@ module WttjMetrics
     class BugTeamPresenter
       include Helpers::FormattingHelper
 
+      EXCELLENT_RESOLUTION_RATE = 80
+      GOOD_RESOLUTION_RATE = 50
+
       def initialize(team, stats)
         @team = team
         @stats = stats
@@ -38,13 +41,23 @@ module WttjMetrics
       end
 
       def resolution_rate_class
-        if resolution_rate >= 80
+        if resolution_rate >= EXCELLENT_RESOLUTION_RATE
           'status-active'
-        elsif resolution_rate >= 50
+        elsif resolution_rate >= GOOD_RESOLUTION_RATE
           'status-upcoming'
         else
           'status-past'
         end
+      end
+
+      def mttr
+        @stats[:mttr] || 0
+      end
+
+      def mttr_display
+        return 'N/A' if mttr.zero?
+
+        format_with_unit(mttr, 'd')
       end
 
       def to_h

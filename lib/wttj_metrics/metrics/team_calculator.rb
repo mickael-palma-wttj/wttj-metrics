@@ -4,6 +4,9 @@ module WttjMetrics
   module Metrics
     # Calculates team performance metrics
     class TeamCalculator < Base
+      DAYS_IN_MONTH = 30
+      PERCENTAGE_MULTIPLIER = 100
+
       def calculate
         {
           completion_rate: completion_rate,
@@ -24,11 +27,11 @@ module WttjMetrics
         return 0 if recent.empty?
 
         completed = recent.count { |i| i['completedAt'] }
-        ((completed.to_f / recent.size) * 100).round(2)
+        ((completed.to_f / recent.size) * PERCENTAGE_MULTIPLIER).round(2)
       end
 
       def recent_issues
-        thirty_days_ago = (today - 30).to_datetime
+        thirty_days_ago = (today - DAYS_IN_MONTH).to_datetime
 
         issues.select do |issue|
           created = parse_datetime(issue['createdAt'])

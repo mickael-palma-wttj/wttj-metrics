@@ -4,6 +4,8 @@ module WttjMetrics
   module Metrics
     # Calculates cycle/sprint metrics
     class CycleCalculator
+      PERCENTAGE_MULTIPLIER = 100
+
       def initialize(cycles, today: Date.today)
         @cycles = cycles
         @today = today
@@ -42,7 +44,7 @@ module WttjMetrics
         return 0 if cycle_issues.empty?
 
         completed = cycle_issues.count { |i| i.dig('state', 'type') == 'completed' }
-        ((completed.to_f / cycle_issues.size) * 100).round(2)
+        ((completed.to_f / cycle_issues.size) * PERCENTAGE_MULTIPLIER).round(2)
       end
 
       def cycle_carryover_count
@@ -80,6 +82,8 @@ module WttjMetrics
 
     # Builds detail rows for a single cycle
     class CycleDetailBuilder
+      PERCENTAGE_MULTIPLIER = 100
+
       METRICS = %i[
         total_issues completed_issues bug_count velocity planned_points
         completion_rate carryover progress duration_days tickets_per_day
@@ -157,7 +161,7 @@ module WttjMetrics
       def completion_rate
         return 0 unless total_issues.positive?
 
-        ((completed_issues.to_f / total_issues) * 100).round(1)
+        ((completed_issues.to_f / total_issues) * PERCENTAGE_MULTIPLIER).round(1)
       end
 
       def carryover
@@ -165,7 +169,7 @@ module WttjMetrics
       end
 
       def progress
-        ((cycle['progress'] || 0) * 100).round(1)
+        ((cycle['progress'] || 0) * PERCENTAGE_MULTIPLIER).round(1)
       end
 
       def duration_days
@@ -199,7 +203,7 @@ module WttjMetrics
 
         return 0.0 if initial.zero?
 
-        (((final - initial) / initial) * 100).round(1)
+        (((final - initial) / initial) * PERCENTAGE_MULTIPLIER).round(1)
       end
 
       def initial_scope

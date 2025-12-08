@@ -29,6 +29,8 @@ module WttjMetrics
   class CLI < Thor
     include Helpers::LoggerMixin
 
+    DEFAULT_REPORT_DAYS = 90
+
     def self.exit_on_failure?
       true
     end
@@ -44,7 +46,7 @@ module WttjMetrics
 
     desc 'report CSV_FILE', 'Generate HTML report from CSV metrics'
     option :output, aliases: '-o', type: :string, default: 'report/report.html', desc: 'HTML output file path'
-    option :days, aliases: '-d', type: :numeric, default: 90, desc: 'Number of days to show in charts'
+    option :days, aliases: '-d', type: :numeric, default: DEFAULT_REPORT_DAYS, desc: 'Number of days to show in charts'
     option :teams, aliases: '-t', type: :array,
                    desc: 'Teams to include (default: ATS, Marketplace, Platform, ROI, Sourcing)'
     option :all_teams, type: :boolean, default: false, desc: 'Include all teams (no filter)'
