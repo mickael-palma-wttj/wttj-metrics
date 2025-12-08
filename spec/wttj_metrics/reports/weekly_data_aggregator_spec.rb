@@ -81,13 +81,13 @@ RSpec.describe WttjMetrics::Reports::WeeklyDataAggregator do
 
     it 'calculates percentages correctly', :aggregate_failures do
       # Exercise & Verify
-      # Week 1: 10/(10+6) = 62.5%, 6/(10+6) = 37.5%
-      expect(result[:created_pct].first).to eq(62.5)
-      expect(result[:completed_pct].first).to eq(37.5)
+      # Week 1: 10/(10+6) = 62.5% → 63%, 6/(10+6) = 37.5% → 38%
+      expect(result[:created_pct].first).to eq(63)
+      expect(result[:completed_pct].first).to eq(38)
 
       # Week 2: 8/(8+12) = 40%, 12/(8+12) = 60%
-      expect(result[:created_pct].last).to eq(40.0)
-      expect(result[:completed_pct].last).to eq(60.0)
+      expect(result[:created_pct].last).to eq(40)
+      expect(result[:completed_pct].last).to eq(60)
     end
 
     context 'with only one metric having data' do

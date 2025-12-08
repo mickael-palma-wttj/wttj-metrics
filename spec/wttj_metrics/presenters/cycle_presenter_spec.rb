@@ -164,6 +164,48 @@ RSpec.describe WttjMetrics::Presenters::CyclePresenter do
     end
   end
 
+  describe '#completion_rate_class' do
+    context 'with high completion rate (>= 80%)' do
+      let(:cycle) { { name: 'Cycle 1', completion_rate: 85.0 } }
+
+      it 'returns completion-high' do
+        expect(presenter.completion_rate_class).to eq('completion-high')
+      end
+    end
+
+    context 'with medium completion rate (50-79%)' do
+      let(:cycle) { { name: 'Cycle 1', completion_rate: 65.0 } }
+
+      it 'returns completion-medium' do
+        expect(presenter.completion_rate_class).to eq('completion-medium')
+      end
+    end
+
+    context 'with low completion rate (< 50%)' do
+      let(:cycle) { { name: 'Cycle 1', completion_rate: 30.0 } }
+
+      it 'returns completion-low' do
+        expect(presenter.completion_rate_class).to eq('completion-low')
+      end
+    end
+
+    context 'with exactly 80%' do
+      let(:cycle) { { name: 'Cycle 1', completion_rate: 80.0 } }
+
+      it 'returns completion-high' do
+        expect(presenter.completion_rate_class).to eq('completion-high')
+      end
+    end
+
+    context 'with exactly 50%' do
+      let(:cycle) { { name: 'Cycle 1', completion_rate: 50.0 } }
+
+      it 'returns completion-medium' do
+        expect(presenter.completion_rate_class).to eq('completion-medium')
+      end
+    end
+  end
+
   describe '#carryover' do
     it 'returns the carryover count' do
       expect(presenter.carryover).to eq(2)

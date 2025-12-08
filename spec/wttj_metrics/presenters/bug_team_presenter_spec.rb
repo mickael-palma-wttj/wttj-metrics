@@ -74,7 +74,7 @@ RSpec.describe WttjMetrics::Presenters::BugTeamPresenter do
       let(:stats) { { created: 3, closed: 1, open: 2 } }
 
       it 'calculates correct percentage' do
-        expect(presenter.resolution_rate).to eq(33.3)
+        expect(presenter.resolution_rate).to eq(33)
       end
     end
   end
@@ -83,7 +83,7 @@ RSpec.describe WttjMetrics::Presenters::BugTeamPresenter do
     let(:stats) { { created: 10, closed: 8, open: 2 } }
 
     it 'formats resolution rate with percentage symbol' do
-      expect(presenter.resolution_rate_display).to eq('80.0%')
+      expect(presenter.resolution_rate_display).to eq('80%')
     end
   end
 
@@ -148,8 +148,8 @@ RSpec.describe WttjMetrics::Presenters::BugTeamPresenter do
         created: 10,
         closed: 8,
         open: 2,
-        resolution_rate: 80.0,
-        resolution_rate_display: '80.0%',
+        resolution_rate: 80,
+        resolution_rate_display: '80%',
         resolution_rate_class: 'status-active'
       )
     end

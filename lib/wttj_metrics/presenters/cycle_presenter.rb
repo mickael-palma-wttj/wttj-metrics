@@ -66,6 +66,14 @@ module WttjMetrics
         format_with_unit(completion_rate, '%')
       end
 
+      def completion_rate_class
+        case completion_rate
+        when 80..Float::INFINITY then 'completion-high'
+        when 50...80 then 'completion-medium'
+        else 'completion-low'
+        end
+      end
+
       def carryover
         @cycle[:carryover] || 0
       end

@@ -9,7 +9,7 @@ module WttjMetrics
       def format_percentage(value, total)
         return 0 if total.zero?
 
-        ((value.to_f / total) * PERCENTAGE_MULTIPLIER).round(1)
+        ((value.to_f / total) * PERCENTAGE_MULTIPLIER).round
       end
 
       def format_with_unit(value, unit)

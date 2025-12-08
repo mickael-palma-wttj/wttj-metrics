@@ -206,6 +206,9 @@
     .scope-increased { color: #dc2626; font-weight: 600; }
     .scope-decreased { color: #16a34a; font-weight: 600; }
     .scope-neutral { color: #585858; }
+    .completion-high { color: #16a34a; font-weight: 600; }
+    .completion-medium { color: #585858; font-weight: 600; }
+    .completion-low { color: #dc2626; font-weight: 600; }
     .progress-bar {
       width: 100%;
       height: 8px;
@@ -219,6 +222,9 @@
       border-radius: 4px;
       transition: width 0.3s;
     }
+    .progress-fill.completion-high { background: #16a34a; }
+    .progress-fill.completion-medium { background: #FFCD00; }
+    .progress-fill.completion-low { background: #dc2626; }
     @media (max-width: 768px) {
       body { padding: 1rem; }
       h1 { font-size: 1.8rem; }
@@ -356,6 +362,31 @@
     .chevron.collapsed {
       transform: rotate(-90deg);
     }
+    /* Sortable table headers */
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 1.5rem !important;
+    }
+    .sortable:hover {
+      background: rgba(255, 205, 0, 0.1);
+    }
+    .sortable::after {
+      content: '⇅';
+      position: absolute;
+      right: 0.5rem;
+      opacity: 0.3;
+      font-size: 0.8rem;
+    }
+    .sortable.asc::after {
+      content: '▲';
+      opacity: 1;
+    }
+    .sortable.desc::after {
+      content: '▼';
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -454,15 +485,15 @@
         <div class="chart-card full-width">
           <h3 class="chart-title">Bug Stats by Team (All Time)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
-          <table class="cycles-table">
+          <table class="cycles-table" id="bugStatsTable">
             <thead>
               <tr>
-                <th>Team</th>
-                <th class="has-tooltip">Total Created<span class="th-tooltip">Total bugs ever created for this team</span></th>
-                <th class="has-tooltip">Closed<span class="th-tooltip">Bugs that have been resolved</span></th>
-                <th class="has-tooltip">Open<span class="th-tooltip">Bugs currently open</span></th>
-                <th class="has-tooltip">MTTR<span class="th-tooltip">Mean Time To Resolve (avg days to fix bugs)</span></th>
-                <th class="has-tooltip">Resolution Rate<span class="th-tooltip">Percentage of bugs closed</span></th>
+                <th class="sortable" onclick="sortBugStatsTable(0, 'string')">Team</th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(1, 'number')">Total Created<span class="th-tooltip">Total bugs ever created for this team</span></th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(2, 'number')">Closed<span class="th-tooltip">Bugs that have been resolved</span></th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(3, 'number')">Open<span class="th-tooltip">Bugs currently open</span></th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(4, 'number')">MTTR<span class="th-tooltip">Mean Time To Resolve (avg days to fix bugs)</span></th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(5, 'number')">Resolution Rate<span class="th-tooltip">Percentage of bugs closed</span></th>
               </tr>
             </thead>
             <tbody>
@@ -583,7 +614,10 @@
               <td><%= stats[:avg_tickets_per_cycle] %></td>
               <td><%= stats[:avg_assignees] %></td>
               <td><%= stats[:avg_tickets_per_day] %></td>
-              <td><%= stats[:avg_completion_rate] %>%</td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill <%= stats[:avg_completion_rate] >= 80 ? 'completion-high' : stats[:avg_completion_rate] >= 50 ? 'completion-medium' : 'completion-low' %>" style="width: <%= stats[:avg_completion_rate] %>%"></div></div>
+                <small><%= stats[:avg_completion_rate] %>%</small>
+              </td>
               <td><%= stats[:total_carryover] %></td>
               <td class="<%= stats[:avg_scope_change] > 0 ? 'scope-increased' : stats[:avg_scope_change] < 0 ? 'scope-decreased' : 'scope-neutral' %>"><%= stats[:avg_scope_change] > 0 ? '+' : '' %><%= stats[:avg_scope_change] %>%</td>
             </tr>
@@ -618,7 +652,6 @@
               <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
               <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
-              <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
               <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
             </tr>
@@ -629,7 +662,7 @@
               <td><%= presenter.name %></td>
               <td><span class="status-badge <%= presenter.status_class %>"><%= presenter.status %></span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: <%= presenter.progress %>%"></div></div>
+                <div class="progress-bar"><div class="progress-fill <%= presenter.completion_rate_class %>" style="width: <%= presenter.progress %>%"></div></div>
                 <small><%= presenter.progress %>%</small>
               </td>
               <td><%= presenter.issues_display %></td>
@@ -637,7 +670,6 @@
               <td><%= presenter.assignee_count %></td>
               <td><%= presenter.velocity_display %></td>
               <td><%= presenter.tickets_per_day %></td>
-              <td><%= presenter.completion_rate_display %></td>
               <td><%= presenter.carryover %></td>
               <td class="<%= presenter.scope_change_class %> has-tooltip"><%= presenter.scope_change_display %><span class="cell-tooltip"><%= presenter.scope_change_tooltip %></span></td>
             </tr>
@@ -715,6 +747,56 @@
       document.getElementById('toggleAllIcon').textContent = allCollapsed ? '▶' : '▼';
       document.getElementById('toggleAllText').textContent = allCollapsed ? 'Expand All' : 'Collapse All';
     }
+    
+    // Table sorting function for Bug Stats
+    let bugStatsCurrentSort = { column: -1, direction: 'asc' }; // Initialize with no column selected
+    
+    function sortBugStatsTable(columnIndex, type) {
+      const table = document.getElementById('bugStatsTable');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const headers = table.querySelectorAll('th');
+      
+      // Determine sort direction
+      let direction = 'asc';
+      if (bugStatsCurrentSort.column === columnIndex) {
+        direction = bugStatsCurrentSort.direction === 'asc' ? 'desc' : 'asc';
+      }
+      
+      // Sort rows
+      rows.sort((a, b) => {
+        let aVal = a.cells[columnIndex].textContent.trim();
+        let bVal = b.cells[columnIndex].textContent.trim();
+        
+        if (type === 'number') {
+          // Extract numeric value (handle N/A, percentages, badges, etc.)
+          aVal = aVal === 'N/A' ? -1 : parseFloat(aVal.replace(/[^0-9.-]/g, '')) || 0;
+          bVal = bVal === 'N/A' ? -1 : parseFloat(bVal.replace(/[^0-9.-]/g, '')) || 0;
+          return direction === 'asc' ? aVal - bVal : bVal - aVal;
+        } else {
+          // String comparison
+          return direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+      });
+      
+      // Re-append sorted rows
+      rows.forEach(row => tbody.appendChild(row));
+      
+      // Update header indicators
+      headers.forEach(h => h.classList.remove('asc', 'desc'));
+      headers[columnIndex].classList.add(direction);
+      
+      // Store current sort state
+      bugStatsCurrentSort = { column: columnIndex, direction };
+    }
+    
+    // Initialize default sort on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      if (document.getElementById('bugStatsTable')) {
+        sortBugStatsTable(5, 'number'); // Sort by Resolution Rate (column 5)
+        sortBugStatsTable(5, 'number'); // Toggle to descending
+      }
+    });
     
     const colors = {
       purple: 'rgba(88, 88, 88, 0.8)',

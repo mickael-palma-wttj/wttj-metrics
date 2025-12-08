@@ -203,7 +203,7 @@ module WttjMetrics
           next unless @selected_teams.include?(team)
 
           teams[team] ||= { created: 0, closed: 0, open: 0, mttr: 0 }
-          teams[team][stat.to_sym] = stat == 'mttr' ? m[:value].to_f : m[:value].to_i
+          teams[team][stat.to_sym] = stat == 'mttr' ? m[:value].to_f.round : m[:value].to_i
         end
 
         teams.sort_by { |_, v| -v[:open] }.to_h

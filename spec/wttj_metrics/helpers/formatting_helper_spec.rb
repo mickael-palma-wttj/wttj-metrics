@@ -10,12 +10,12 @@ RSpec.describe WttjMetrics::Helpers::FormattingHelper do
   end
 
   describe '#format_percentage' do
-    it 'calculates percentage rounded to one decimal' do
-      expect(helper.format_percentage(25, 100)).to eq(25.0)
+    it 'calculates percentage rounded to integer' do
+      expect(helper.format_percentage(25, 100)).to eq(25)
     end
 
     it 'handles partial values' do
-      expect(helper.format_percentage(1, 3)).to eq(33.3)
+      expect(helper.format_percentage(1, 3)).to eq(33)
     end
 
     it 'returns 0 when total is zero' do
