@@ -132,7 +132,7 @@ RSpec.describe WttjMetrics::Presenters::CyclePresenter do
 
   describe '#tickets_per_day' do
     it 'returns tickets per day' do
-      expect(presenter.tickets_per_day).to eq(1.43)
+      expect(presenter.tickets_per_day).to eq(1)
     end
 
     context 'when nil' do
@@ -146,7 +146,7 @@ RSpec.describe WttjMetrics::Presenters::CyclePresenter do
 
   describe '#completion_rate' do
     it 'returns the completion rate' do
-      expect(presenter.completion_rate).to eq(80.0)
+      expect(presenter.completion_rate).to eq(80)
     end
 
     context 'when nil' do
@@ -160,7 +160,7 @@ RSpec.describe WttjMetrics::Presenters::CyclePresenter do
 
   describe '#completion_rate_display' do
     it 'formats with percentage unit' do
-      expect(presenter.completion_rate_display).to eq('80.0%')
+      expect(presenter.completion_rate_display).to eq('80%')
     end
   end
 
@@ -180,7 +180,7 @@ RSpec.describe WttjMetrics::Presenters::CyclePresenter do
 
   describe '#scope_change' do
     it 'returns the scope change value' do
-      expect(presenter.scope_change).to eq(15.5)
+      expect(presenter.scope_change).to eq(16)
     end
 
     context 'when nil' do
@@ -197,7 +197,7 @@ RSpec.describe WttjMetrics::Presenters::CyclePresenter do
       let(:cycle) { { name: 'Cycle 1', scope_change: 15.5 } }
 
       it 'includes plus sign' do
-        expect(presenter.scope_change_display).to eq('+15.5%')
+        expect(presenter.scope_change_display).to eq('+16%')
       end
     end
 
@@ -205,7 +205,7 @@ RSpec.describe WttjMetrics::Presenters::CyclePresenter do
       let(:cycle) { { name: 'Cycle 1', scope_change: -10.0 } }
 
       it 'includes minus sign from value' do
-        expect(presenter.scope_change_display).to eq('-10.0%')
+        expect(presenter.scope_change_display).to eq('-10%')
       end
     end
 
@@ -266,12 +266,12 @@ RSpec.describe WttjMetrics::Presenters::CyclePresenter do
         assignee_count: 8,
         velocity: 42,
         velocity_display: '42 pts',
-        tickets_per_day: 1.43,
-        completion_rate: 80.0,
-        completion_rate_display: '80.0%',
+        tickets_per_day: 1,
+        completion_rate: 80,
+        completion_rate_display: '80%',
         carryover: 2,
-        scope_change: 15.5,
-        scope_change_display: '+15.5%',
+        scope_change: 16,
+        scope_change_display: '+16%',
         scope_change_class: 'scope-increased'
       )
     end

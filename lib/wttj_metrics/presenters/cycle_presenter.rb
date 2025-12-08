@@ -43,11 +43,11 @@ module WttjMetrics
       end
 
       def assignee_count
-        @cycle[:assignee_count] || 0
+        (@cycle[:assignee_count] || 0).round
       end
 
       def velocity
-        @cycle[:velocity] || 0
+        (@cycle[:velocity] || 0).round
       end
 
       def velocity_display
@@ -55,11 +55,11 @@ module WttjMetrics
       end
 
       def tickets_per_day
-        @cycle[:tickets_per_day] || 0
+        (@cycle[:tickets_per_day] || 0).round
       end
 
       def completion_rate
-        @cycle[:completion_rate] || 0
+        (@cycle[:completion_rate] || 0).round
       end
 
       def completion_rate_display
@@ -71,7 +71,7 @@ module WttjMetrics
       end
 
       def scope_change
-        @cycle[:scope_change] || 0
+        (@cycle[:scope_change] || 0).round
       end
 
       def initial_scope

@@ -23,13 +23,13 @@ module WttjMetrics
         {
           total_cycles: cycles.size,
           cycles_with_data: active_cycles.size,
-          avg_velocity: average(active_cycles, :velocity),
-          avg_tickets_per_cycle: average(active_cycles, :completed_issues),
-          avg_assignees: average(active_cycles, :assignee_count),
-          avg_completion_rate: average(active_cycles, :completion_rate),
-          avg_tickets_per_day: average(active_cycles, :tickets_per_day, precision: 2),
+          avg_velocity: average(active_cycles, :velocity, precision: 0),
+          avg_tickets_per_cycle: average(active_cycles, :completed_issues, precision: 0),
+          avg_assignees: average(active_cycles, :assignee_count, precision: 0),
+          avg_completion_rate: average(active_cycles, :completion_rate, precision: 0),
+          avg_tickets_per_day: average(active_cycles, :tickets_per_day, precision: 0),
           total_carryover: sum(active_cycles, :carryover),
-          avg_scope_change: average(active_cycles, :scope_change)
+          avg_scope_change: average(active_cycles, :scope_change, precision: 0)
         }
       end
 

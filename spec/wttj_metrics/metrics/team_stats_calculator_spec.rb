@@ -59,9 +59,9 @@ RSpec.describe WttjMetrics::Metrics::TeamStatsCalculator do
 
         expect(team_a[:total_cycles]).to eq(2)
         expect(team_a[:cycles_with_data]).to eq(2)
-        expect(team_a[:avg_velocity]).to eq(25.0)
-        expect(team_a[:avg_tickets_per_cycle]).to eq(9.0)
-        expect(team_a[:avg_assignees]).to eq(3.5)
+        expect(team_a[:avg_velocity]).to eq(25)
+        expect(team_a[:avg_tickets_per_cycle]).to eq(9)
+        expect(team_a[:avg_assignees]).to eq(4)
         expect(team_a[:total_carryover]).to eq(4)
       end
 

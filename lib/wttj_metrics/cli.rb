@@ -44,7 +44,7 @@ module WttjMetrics
       Services::MetricsCollector.new(opts, logger).call
     end
 
-    desc 'report CSV_FILE', 'Generate HTML report from CSV metrics'
+    desc 'report [CSV_FILE]', 'Generate HTML report from CSV metrics'
     option :output, aliases: '-o', type: :string, default: 'report/report.html', desc: 'HTML output file path'
     option :days, aliases: '-d', type: :numeric, default: DEFAULT_REPORT_DAYS, desc: 'Number of days to show in charts'
     option :teams, aliases: '-t', type: :array,
@@ -52,7 +52,7 @@ module WttjMetrics
     option :all_teams, type: :boolean, default: false, desc: 'Include all teams (no filter)'
     option :excel, aliases: '-x', type: :boolean, default: false, desc: 'Also generate Excel spreadsheet'
     option :excel_path, type: :string, default: 'report/report.xlsx', desc: 'Excel output file path'
-    def report(csv_file)
+    def report(csv_file = 'tmp/metrics.csv')
       opts = Values::ReportOptions.new(options)
       Services::ReportService.new(csv_file, opts, logger).call
     end
