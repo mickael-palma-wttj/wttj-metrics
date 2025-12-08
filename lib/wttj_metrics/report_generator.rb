@@ -69,7 +69,9 @@ module WttjMetrics
     end
 
     def flow_metrics_presented
-      @flow_metrics_presented ||= flow_metrics.map { |m| Presenters::FlowMetricPresenter.new(m) }
+      @flow_metrics_presented ||= Services::PresenterMapper.map_to_presenters(
+        flow_metrics, Presenters::FlowMetricPresenter
+      )
     end
 
     def cycle_metrics
@@ -77,7 +79,9 @@ module WttjMetrics
     end
 
     def cycle_metrics_presented
-      @cycle_metrics_presented ||= cycle_metrics.map { |m| Presenters::CycleMetricPresenter.new(m) }
+      @cycle_metrics_presented ||= Services::PresenterMapper.map_to_presenters(
+        cycle_metrics, Presenters::CycleMetricPresenter
+      )
     end
 
     def team_metrics
@@ -85,7 +89,9 @@ module WttjMetrics
     end
 
     def team_metrics_presented
-      @team_metrics_presented ||= team_metrics.map { |m| Presenters::TeamMetricPresenter.new(m) }
+      @team_metrics_presented ||= Services::PresenterMapper.map_to_presenters(
+        team_metrics, Presenters::TeamMetricPresenter
+      )
     end
 
     def bug_metrics
@@ -93,7 +99,9 @@ module WttjMetrics
     end
 
     def bug_metrics_presented
-      @bug_metrics_presented ||= bug_metrics.map { |m| Presenters::BugMetricPresenter.new(m) }
+      @bug_metrics_presented ||= Services::PresenterMapper.map_to_presenters(
+        bug_metrics, Presenters::BugMetricPresenter
+      )
     end
 
     def bugs_by_priority
@@ -105,7 +113,9 @@ module WttjMetrics
     end
 
     def bugs_by_team_presented
-      @bugs_by_team_presented ||= bugs_by_team.map { |team, stats| Presenters::BugTeamPresenter.new(team, stats) }
+      @bugs_by_team_presented ||= Services::PresenterMapper.map_team_stats_to_presenters(
+        bugs_by_team, Presenters::BugTeamPresenter
+      )
     end
 
     def status_dist
@@ -147,31 +157,29 @@ module WttjMetrics
     end
 
     def priority_chart_data
-      priority_dist.map { |m| { label: m[:metric], value: m[:value].to_i } }
+      transform_to_chart_data(priority_dist)
     end
 
     def type_chart_data
-      type_dist.map { |m| { label: m[:metric], value: m[:value].to_i } }
+      transform_to_chart_data(type_dist)
     end
 
     def assignee_chart_data
-      assignee_dist.map { |m| { label: m[:metric], value: m[:value].to_i } }
+      transform_to_chart_data(assignee_dist)
     end
 
     def cycles_parsed
-      @cycles_parsed ||= Metrics::CycleParser.new(@parser.metrics_for('cycle', date: nil),
-                                                  teams: @selected_teams).parse
+      @cycles_parsed ||= create_cycle_parser(@parser.metrics_for('cycle', date: nil)).parse
     end
 
     def cycles_by_team
-      @cycles_by_team ||= Metrics::CycleParser.new(@metrics_by_category['cycle'],
-                                                   teams: @selected_teams).by_team
+      @cycles_by_team ||= create_cycle_parser(@metrics_by_category['cycle']).by_team
     end
 
     def cycles_by_team_presented
-      @cycles_by_team_presented ||= cycles_by_team.transform_values do |cycles|
-        cycles.map { |c| Presenters::CyclePresenter.new(c) }
-      end
+      @cycles_by_team_presented ||= Services::PresenterMapper.map_hash_to_presenters(
+        cycles_by_team, Presenters::CyclePresenter
+      )
     end
 
     def team_stats
@@ -185,13 +193,19 @@ module WttjMetrics
     end
 
     def discover_all_teams
-      # Extract unique team names from bugs_by_team metrics (format: "Team:stat")
-      teams = Set.new
-      @parser.metrics_for('bugs_by_team').each do |m|
-        team = m[:metric].split(':').first
-        teams << team if team && team != 'Unknown'
-      end
-      teams.to_a.sort
+      @parser.metrics_for('bugs_by_team')
+             .map { |m| m[:metric].split(':').first }
+             .reject { |team| team.nil? || team == 'Unknown' }
+             .uniq
+             .sort
+    end
+
+    def transform_to_chart_data(distribution)
+      distribution.map { |m| { label: m[:metric], value: m[:value].to_i } }
+    end
+
+    def create_cycle_parser(metrics)
+      Metrics::CycleParser.new(metrics, teams: @selected_teams)
     end
 
     def build_bugs_by_team
@@ -199,70 +213,38 @@ module WttjMetrics
       teams = {}
 
       raw_data.each do |m|
-        team, stat = m[:metric].split(':')
+        team, stat = parse_team_metric(m[:metric])
         next unless @selected_teams.include?(team)
 
-        teams[team] ||= { created: 0, closed: 0, open: 0 }
-        teams[team][stat.to_sym] = m[:value].to_i
+        teams[team] ||= default_team_stats
+        teams[team][stat.to_sym] = parse_stat_value(stat, m[:value])
       end
 
       teams.sort_by { |_, v| -v[:open] }.to_h
     end
 
+    def parse_team_metric(metric)
+      metric.split(':')
+    end
+
+    def default_team_stats
+      { created: 0, closed: 0, open: 0, mttr: 0 }
+    end
+
+    def parse_stat_value(stat, value)
+      stat == 'mttr' ? value.to_f : value.to_i
+    end
+
     def build_weekly_flow_data
-      aggregator = WeeklyDataAggregator.new(cutoff_date)
-
-      # Aggregate tickets only from selected teams
-      created_by_date = Hash.new(0)
-      completed_by_date = Hash.new(0)
-
-      @selected_teams.each do |team|
-        @parser.timeseries_for("tickets_created_#{team}", since: cutoff_date).each do |m|
-          created_by_date[m[:date]] += m[:value].to_i
-        end
-        @parser.timeseries_for("tickets_completed_#{team}", since: cutoff_date).each do |m|
-          completed_by_date[m[:date]] += m[:value].to_i
-        end
-      end
-
-      # Convert back to array format expected by aggregator
-      created = created_by_date.map { |date, value| { date: date, value: value } }
-      completed = completed_by_date.map { |date, value| { date: date, value: value } }
-
-      result = aggregator.aggregate_pair(created, completed, labels: %i[created completed])
-
-      # Remap keys for backwards compatibility
-      {
-        labels: result[:labels],
-        created_pct: result[:created_pct],
-        completed_pct: result[:completed_pct],
-        created_raw: result[:created_raw],
-        completed_raw: result[:completed_raw]
-      }
+      aggregate_weekly_data('tickets_created', 'tickets_completed', %i[created completed])
     end
 
     def build_weekly_bug_flow_data
-      aggregator = WeeklyDataAggregator.new(cutoff_date)
+      result = aggregate_weekly_data('bugs_created', 'bugs_closed', %i[created closed])
+      remap_bug_flow_keys(result)
+    end
 
-      # Aggregate bugs only from selected teams
-      created_by_date = Hash.new(0)
-      closed_by_date = Hash.new(0)
-
-      @selected_teams.each do |team|
-        @parser.timeseries_for("bugs_created_#{team}", since: cutoff_date).each do |m|
-          created_by_date[m[:date]] += m[:value].to_i
-        end
-        @parser.timeseries_for("bugs_closed_#{team}", since: cutoff_date).each do |m|
-          closed_by_date[m[:date]] += m[:value].to_i
-        end
-      end
-
-      # Convert back to array format expected by aggregator
-      created = created_by_date.map { |date, value| { date: date, value: value } }
-      closed = closed_by_date.map { |date, value| { date: date, value: value } }
-
-      result = aggregator.aggregate_pair(created, closed, labels: %i[created closed])
-
+    def remap_bug_flow_keys(result)
       {
         labels: result[:labels],
         created: result[:created_raw],
@@ -272,47 +254,48 @@ module WttjMetrics
       }
     end
 
+    def aggregate_weekly_data(prefix_created, prefix_completed, label_keys)
+      team_aggregator = Services::TeamMetricsAggregator.new(@parser, @selected_teams, cutoff_date)
+      aggregated = team_aggregator.aggregate_timeseries(prefix_created, prefix_completed)
+
+      weekly_aggregator = WeeklyDataAggregator.new(cutoff_date)
+      weekly_aggregator.aggregate_pair(
+        aggregated[:created],
+        aggregated[:completed],
+        labels: label_keys
+      )
+    end
+
     def build_weekly_bug_flow_by_team_data
-      # Use the same labels as the main bug flow chart for consistency
       base_labels = weekly_bug_flow_data[:labels]
+      team_data = build_team_bug_data(base_labels)
 
-      team_data = {}
+      { labels: base_labels, teams: team_data }
+    end
 
-      @selected_teams.each do |team|
+    def build_team_bug_data(base_labels)
+      @selected_teams.each_with_object({}) do |team, data|
         created = @parser.timeseries_for("bugs_created_#{team}", since: cutoff_date)
-
-        # Build a hash of week -> count from the team's data
         week_counts = build_week_counts(created)
-
-        # Map to the base labels, filling zeros for missing weeks
         values = base_labels.map { |label| week_counts[label] || 0 }
 
-        team_data[team] = {
-          created: values,
-          closed: [] # Not used in current chart
-        }
+        data[team] = { created: values, closed: [] }
       end
-
-      {
-        labels: base_labels,
-        teams: team_data
-      }
     end
 
     def build_week_counts(metrics)
       return {} if metrics.empty?
 
-      week_counts = Hash.new(0)
-
-      metrics.each do |m|
-        date = Date.parse(m[:date])
-        # Calculate Monday of the week (handles all edge cases including Week 00)
-        monday = date - ((date.wday - 1) % 7)
-        label = monday.strftime('%b %d')
-        week_counts[label] += m[:value].to_i
+      metrics.each_with_object(Hash.new(0)) do |m, counts|
+        week_label = calculate_week_label(m[:date])
+        counts[week_label] += m[:value].to_i
       end
+    end
 
-      week_counts
+    def calculate_week_label(date_string)
+      date = Date.parse(date_string)
+      monday = date - ((date.wday - 1) % 7)
+      monday.strftime('%b %d')
     end
 
     def build_transition_data
@@ -326,14 +309,16 @@ module WttjMetrics
     end
 
     def build_html
-      template_path = File.join(WttjMetrics.root, 'lib', 'wttj_metrics', 'templates', 'report.html.erb')
+      template_path = template_file_path
+      File.exist?(template_path) ? render_template(template_path) : build_html_fallback
+    end
 
-      if File.exist?(template_path)
-        template = ERB.new(File.read(template_path))
-        template.result(binding)
-      else
-        build_html_fallback
-      end
+    def template_file_path
+      File.join(WttjMetrics.root, 'lib', 'wttj_metrics', 'templates', 'report.html.erb')
+    end
+
+    def render_template(path)
+      ERB.new(File.read(path)).result(binding)
     end
 
     def build_html_fallback

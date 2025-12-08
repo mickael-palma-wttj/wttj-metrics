@@ -70,3 +70,7 @@ RSpec/MultipleDescribes:
 # Allow stubbing subject when testing private methods
 RSpec/SubjectStub:
   Enabled: false
+
+# Allow using double() for simple value objects/structs
+RSpec/VerifiedDoubles:
+  Enabled: false
