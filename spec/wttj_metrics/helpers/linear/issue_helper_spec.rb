@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Helpers::IssueHelper do
+RSpec.describe WttjMetrics::Helpers::Linear::IssueHelper do
   subject(:helper) { test_class.new }
 
   let(:test_class) do
     Class.new do
-      include WttjMetrics::Helpers::IssueHelper
+      include WttjMetrics::Helpers::Linear::IssueHelper
     end
   end
   let(:bug_issue) do

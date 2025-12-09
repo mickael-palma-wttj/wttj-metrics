@@ -14,8 +14,8 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
   end
 
   let(:cache) { instance_double(WttjMetrics::Data::FileCache, clear!: nil) }
-  let(:data_fetcher) { instance_double(WttjMetrics::Services::DataFetcher, call: fetched_data) }
-  let(:calculator) { instance_double(WttjMetrics::Metrics::Calculator, calculate_all: calculated_rows) }
+  let(:data_fetcher) { instance_double(WttjMetrics::Services::Linear::DataFetcher, call: fetched_data) }
+  let(:calculator) { instance_double(WttjMetrics::Metrics::Linear::Calculator, calculate_all: calculated_rows) }
   let(:csv_writer) { instance_double(WttjMetrics::Data::CsvWriter, write_rows: nil) }
   let(:summary_logger) { instance_double(WttjMetrics::Services::MetricsSummaryLogger, call: nil) }
 
@@ -38,8 +38,8 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
   before do
     allow(WttjMetrics::Config).to receive(:validate!)
     allow(WttjMetrics::Services::CacheFactory).to receive_messages(enabled: cache, disabled: nil)
-    allow(WttjMetrics::Services::DataFetcher).to receive(:new).and_return(data_fetcher)
-    allow(WttjMetrics::Metrics::Calculator).to receive(:new).and_return(calculator)
+    allow(WttjMetrics::Services::Linear::DataFetcher).to receive(:new).and_return(data_fetcher)
+    allow(WttjMetrics::Metrics::Linear::Calculator).to receive(:new).and_return(calculator)
     allow(WttjMetrics::Data::CsvWriter).to receive(:new).and_return(csv_writer)
     allow(WttjMetrics::Services::MetricsSummaryLogger).to receive(:new).and_return(summary_logger)
   end
@@ -62,7 +62,7 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
     it 'creates a DataFetcher with cache and logger' do
       collector.call
 
-      expect(WttjMetrics::Services::DataFetcher).to have_received(:new).with(cache, logger)
+      expect(WttjMetrics::Services::Linear::DataFetcher).to have_received(:new).with(cache, logger)
     end
 
     it 'calls DataFetcher to fetch data' do
@@ -80,7 +80,7 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
     it 'creates a Calculator with fetched data' do
       collector.call
 
-      expect(WttjMetrics::Metrics::Calculator).to have_received(:new).with(
+      expect(WttjMetrics::Metrics::Linear::Calculator).to have_received(:new).with(
         [{ id: '1' }],
         [{ id: 'c1' }],
         [{ id: 'm1' }],
@@ -157,7 +157,7 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
       it 'passes nil as cache to DataFetcher' do
         collector.call
 
-        expect(WttjMetrics::Services::DataFetcher).to have_received(:new).with(nil, logger)
+        expect(WttjMetrics::Services::Linear::DataFetcher).to have_received(:new).with(nil, logger)
       end
     end
 

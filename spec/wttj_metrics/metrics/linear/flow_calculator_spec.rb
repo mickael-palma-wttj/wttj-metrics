@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Metrics::FlowCalculator do
+RSpec.describe WttjMetrics::Metrics::Linear::FlowCalculator do
   subject(:calculator) { described_class.new(issues, today: today) }
 
   # Setup

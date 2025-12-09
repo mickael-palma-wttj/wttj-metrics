@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Metrics::DistributionCalculator do
+RSpec.describe WttjMetrics::Metrics::Linear::DistributionCalculator do
   subject(:calculator) { described_class.new(issues, today: today) }
 
   # Setup
