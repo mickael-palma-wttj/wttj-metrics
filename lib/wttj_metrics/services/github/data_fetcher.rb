@@ -33,7 +33,8 @@ module WttjMetrics
             fetch_org_prs(ENV['GITHUB_ORG'], from_date)
           elsif ENV['GITHUB_REPO']
             @logger.info "   Fetching for repository: #{ENV['GITHUB_REPO']}"
-            client.fetch_pull_requests(ENV['GITHUB_REPO'], from_date)
+            prs = client.fetch_pull_requests(ENV['GITHUB_REPO'], from_date)
+            deep_stringify_keys(prs)
           else
             @logger.error '❌ GITHUB_ORG or GITHUB_REPO environment variable is not set'
             []
@@ -49,7 +50,8 @@ module WttjMetrics
                   merge_with_cache(org, cached_prs, from_date)
                 else
                   @logger.info "   No cache found. Fetching all PRs since #{from_date}..."
-                  client.fetch_organization_pull_requests(org, from_date)
+                  prs = client.fetch_organization_pull_requests(org, from_date)
+                  deep_stringify_keys(prs)
                 end
 
           cache.write(cache_key, prs)
@@ -62,6 +64,7 @@ module WttjMetrics
 
           @logger.info "   Found #{cached_prs.size} cached PRs. Fetching updates since #{Date.parse(since_date)}..."
           new_prs = client.fetch_organization_pull_requests_updated_after(org, since_date)
+          new_prs = deep_stringify_keys(new_prs)
 
           pr_map = cached_prs.to_h { |pr| [pr['url'], pr] }
           new_prs.each { |pr| pr_map[pr['url']] = pr }
@@ -82,6 +85,19 @@ module WttjMetrics
 
         def cache
           @cache ||= Data::FileCache.new
+        end
+
+        def deep_stringify_keys(obj)
+          case obj
+          when Array
+            obj.map { |v| deep_stringify_keys(v) }
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[k.to_s] = deep_stringify_keys(v)
+            end
+          else
+            obj
+          end
         end
 
         def deep_symbolize_keys(obj)
