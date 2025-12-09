@@ -238,7 +238,7 @@ module WttjMetrics
             retry
           rescue Octokit::BadGateway, Octokit::ServiceUnavailable, Octokit::GatewayTimeout, Faraday::ConnectionFailed,
                  Faraday::TimeoutError => e
-            if retries > 0
+            if retries.positive?
               sleep_time = BASE_DELAY * (2**(MAX_RETRIES - retries))
               @logger&.warn "Error: #{e.class}. Retrying in #{sleep_time} seconds... (#{retries} retries left)"
               sleep sleep_time
