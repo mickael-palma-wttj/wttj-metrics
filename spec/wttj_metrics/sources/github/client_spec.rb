@@ -34,11 +34,30 @@ RSpec.describe WttjMetrics::Sources::Github::Client do
         expect(body['variables']['query']).to include('org:org')
       end
     end
+
+    context 'with logger' do
+      subject(:client) { described_class.new(logger: logger) }
+
+      let(:logger) { instance_double(Logger, info: nil) }
+
+      let(:progress_bar) { instance_double(ProgressBar::Base, 'progress=': nil, finish: nil, progress: 0) }
+
+      before do
+        allow(ProgressBar).to receive(:create).and_return(progress_bar)
+      end
+
+      it 'displays a progress bar' do
+        client.fetch_organization_pull_requests('org', '2024-01-01')
+        expect(ProgressBar).to have_received(:create).with(hash_including(total: 500))
+        expect(progress_bar).to have_received(:finish)
+      end
+    end
   end
 
   describe 'error handling' do
-    let(:logger) { instance_double(Logger, warn: nil, error: nil) }
     subject(:client) { described_class.new(logger: logger) }
+
+    let(:logger) { instance_double(Logger, warn: nil, error: nil) }
 
     context 'when rate limit is exceeded' do
       let(:headers) { { 'retry-after' => '1' } }
@@ -54,6 +73,7 @@ RSpec.describe WttjMetrics::Sources::Github::Client do
         allow(octokit).to receive(:post) do
           call_count += 1
           raise error if call_count == 1
+
           response
         end
       end
@@ -74,6 +94,7 @@ RSpec.describe WttjMetrics::Sources::Github::Client do
         allow(octokit).to receive(:post) do
           call_count += 1
           raise error if call_count <= 2
+
           response
         end
       end
@@ -95,9 +116,9 @@ RSpec.describe WttjMetrics::Sources::Github::Client do
       end
 
       it 'raises error after retries' do
-        expect {
+        expect do
           client.fetch_pull_requests('owner/repo', '2024-01-01')
-        }.to raise_error(Octokit::BadGateway)
+        end.to raise_error(Octokit::BadGateway)
         expect(octokit).to have_received(:post).exactly(4).times
       end
     end

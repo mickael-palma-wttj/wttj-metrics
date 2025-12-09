@@ -28,3 +28,4 @@ group :test do
 end
 
 gem 'octokit', '~> 10.0'
+gem 'ruby-progressbar', '~> 1.13'

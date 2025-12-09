@@ -2,6 +2,7 @@
 
 require 'octokit'
 require 'faraday'
+require 'ruby-progressbar'
 require 'date'
 
 module WttjMetrics
@@ -189,15 +190,23 @@ module WttjMetrics
           cursor = nil
           has_next = true
 
+          progress_bar = if @logger
+                           ProgressBar.create(
+                             title: 'Fetching',
+                             total: total_count,
+                             format: '%t: |%B| %p%% %e'
+                           )
+                         end
+
           while has_next
             response = execute_search_query(search_query, cursor)
             data = response.data.search
             results.concat(data.nodes)
             cursor = data.pageInfo.endCursor
             has_next = data.pageInfo.hasNextPage
-            print '.' if @logger # Simple progress indicator
+            progress_bar&.progress += data.nodes.size
           end
-          puts '' if @logger # Newline after dots
+          progress_bar&.finish
 
           results.map(&:to_h)
         end
@@ -227,7 +236,8 @@ module WttjMetrics
             @logger&.warn "Rate limit exceeded. Retrying in #{sleep_time} seconds..."
             sleep sleep_time
             retry
-          rescue Octokit::BadGateway, Octokit::ServiceUnavailable, Octokit::GatewayTimeout, Faraday::ConnectionFailed, Faraday::TimeoutError => e
+          rescue Octokit::BadGateway, Octokit::ServiceUnavailable, Octokit::GatewayTimeout, Faraday::ConnectionFailed,
+                 Faraday::TimeoutError => e
             if retries > 0
               sleep_time = BASE_DELAY * (2**(MAX_RETRIES - retries))
               @logger&.warn "Error: #{e.class}. Retrying in #{sleep_time} seconds... (#{retries} retries left)"
