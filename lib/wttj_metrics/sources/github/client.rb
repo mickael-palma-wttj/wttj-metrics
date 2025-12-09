@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
 require 'octokit'
+require 'faraday'
 require 'date'
 
 module WttjMetrics
   module Sources
     module Github
       class Client
+        MAX_RETRIES = 3
+        BASE_DELAY = 2
+
         SEARCH_QUERY = <<~GRAPHQL
           query($query: String!, $after: String) {
             search(query: $query, type: ISSUE, first: 25, after: $after) {
@@ -132,7 +136,9 @@ module WttjMetrics
 
           all_nodes = []
           loop do
-            response = @client.post '/graphql', { query: query, variables: variables }.to_json
+            response = with_retries do
+              @client.post '/graphql', { query: query, variables: variables }.to_json
+            end
             data = response.data.repository.pullRequests
             all_nodes.concat(data.nodes)
 
@@ -198,13 +204,41 @@ module WttjMetrics
 
         def get_issue_count(query_string)
           variables = { query: query_string }
-          response = @client.post '/graphql', { query: COUNT_QUERY, variables: variables }.to_json
+          response = with_retries do
+            @client.post '/graphql', { query: COUNT_QUERY, variables: variables }.to_json
+          end
           response.data.search.issueCount
         end
 
         def execute_search_query(query_string, after_cursor)
           variables = { query: query_string, after: after_cursor }
-          @client.post '/graphql', { query: SEARCH_QUERY, variables: variables }.to_json
+          with_retries do
+            @client.post '/graphql', { query: SEARCH_QUERY, variables: variables }.to_json
+          end
+        end
+
+        def with_retries
+          retries = MAX_RETRIES
+          begin
+            yield
+          rescue Octokit::TooManyRequests => e
+            sleep_time = e.response_headers['retry-after'].to_i
+            sleep_time = 60 if sleep_time.zero?
+            @logger&.warn "Rate limit exceeded. Retrying in #{sleep_time} seconds..."
+            sleep sleep_time
+            retry
+          rescue Octokit::BadGateway, Octokit::ServiceUnavailable, Octokit::GatewayTimeout, Faraday::ConnectionFailed, Faraday::TimeoutError => e
+            if retries > 0
+              sleep_time = BASE_DELAY * (2**(MAX_RETRIES - retries))
+              @logger&.warn "Error: #{e.class}. Retrying in #{sleep_time} seconds... (#{retries} retries left)"
+              sleep sleep_time
+              retries -= 1
+              retry
+            else
+              @logger&.error "Failed after retries: #{e.message}"
+              raise
+            end
+          end
         end
       end
     end

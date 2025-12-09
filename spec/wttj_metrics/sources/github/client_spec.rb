@@ -35,4 +35,71 @@ RSpec.describe WttjMetrics::Sources::Github::Client do
       end
     end
   end
+
+  describe 'error handling' do
+    let(:logger) { instance_double(Logger, warn: nil, error: nil) }
+    subject(:client) { described_class.new(logger: logger) }
+
+    context 'when rate limit is exceeded' do
+      let(:headers) { { 'retry-after' => '1' } }
+      let(:error) do
+        e = Octokit::TooManyRequests.new
+        allow(e).to receive(:response_headers).and_return(headers)
+        e
+      end
+
+      before do
+        allow(client).to receive(:sleep)
+        call_count = 0
+        allow(octokit).to receive(:post) do
+          call_count += 1
+          raise error if call_count == 1
+          response
+        end
+      end
+
+      it 'retries after sleeping' do
+        client.fetch_pull_requests('owner/repo', '2024-01-01')
+        expect(client).to have_received(:sleep).with(1)
+        expect(octokit).to have_received(:post).twice
+      end
+    end
+
+    context 'when server error occurs' do
+      let(:error) { Octokit::BadGateway.new }
+
+      before do
+        allow(client).to receive(:sleep)
+        call_count = 0
+        allow(octokit).to receive(:post) do
+          call_count += 1
+          raise error if call_count <= 2
+          response
+        end
+      end
+
+      it 'retries with exponential backoff' do
+        client.fetch_pull_requests('owner/repo', '2024-01-01')
+        expect(octokit).to have_received(:post).exactly(3).times
+        expect(client).to have_received(:sleep).with(2)
+        expect(client).to have_received(:sleep).with(4)
+      end
+    end
+
+    context 'when max retries exceeded' do
+      let(:error) { Octokit::BadGateway.new }
+
+      before do
+        allow(client).to receive(:sleep)
+        allow(octokit).to receive(:post).and_raise(error)
+      end
+
+      it 'raises error after retries' do
+        expect {
+          client.fetch_pull_requests('owner/repo', '2024-01-01')
+        }.to raise_error(Octokit::BadGateway)
+        expect(octokit).to have_received(:post).exactly(4).times
+      end
+    end
+  end
 end
