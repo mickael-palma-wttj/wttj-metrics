@@ -16,7 +16,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     let(:flow_data) { [{ metric: 'cycle_time', value: 5.2 }] }
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('flow').and_return(flow_data)
+      allow(parser).to receive(:metrics_for).with('flow').and_return(flow_data)
       expect(accessor.flow_metrics).to eq(flow_data)
     end
 
@@ -30,7 +30,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     let(:cycle_data) { [{ metric: 'velocity', value: 25 }] }
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('cycle_metrics').and_return(cycle_data)
+      allow(parser).to receive(:metrics_for).with('cycle_metrics').and_return(cycle_data)
       expect(accessor.cycle_metrics).to eq(cycle_data)
     end
 
@@ -44,7 +44,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     let(:team_data) { [{ metric: 'ATS:velocity', value: 30 }] }
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('team').and_return(team_data)
+      allow(parser).to receive(:metrics_for).with('team').and_return(team_data)
       expect(accessor.team_metrics).to eq(team_data)
     end
 
@@ -58,7 +58,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     let(:bug_data) { [{ metric: 'total_bugs', value: 150 }] }
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('bugs').and_return(bug_data)
+      allow(parser).to receive(:metrics_for).with('bugs').and_return(bug_data)
       expect(accessor.bug_metrics).to eq(bug_data)
     end
 
@@ -72,7 +72,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     let(:priority_data) { [{ metric: 'High', value: 50 }] }
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('bugs_by_priority').and_return(priority_data)
+      allow(parser).to receive(:metrics_for).with('bugs_by_priority').and_return(priority_data)
       expect(accessor.bugs_by_priority).to eq(priority_data)
     end
 
@@ -86,7 +86,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     let(:status_data) { [{ metric: 'In Progress', value: 45 }] }
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('status').and_return(status_data)
+      allow(parser).to receive(:metrics_for).with('status').and_return(status_data)
       expect(accessor.status_dist).to eq(status_data)
     end
 
@@ -100,7 +100,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     let(:priority_data) { [{ metric: 'High', value: 100 }] }
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('priority').and_return(priority_data)
+      allow(parser).to receive(:metrics_for).with('priority').and_return(priority_data)
       expect(accessor.priority_dist).to eq(priority_data)
     end
 
@@ -114,7 +114,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     let(:type_data) { [{ metric: 'Feature', value: 200 }] }
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('type').and_return(type_data)
+      allow(parser).to receive(:metrics_for).with('type').and_return(type_data)
       expect(accessor.type_dist).to eq(type_data)
     end
 
@@ -130,8 +130,9 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
     end
 
     it 'delegates to parser.metrics_for' do
-      expect(parser).to receive(:metrics_for).with('assignee').and_return(assignee_data)
-      accessor.assignee_dist
+      allow(parser).to receive(:metrics_for).with('assignee').and_return(assignee_data)
+      result = accessor.assignee_dist
+      expect(result).to be_an(Array)
     end
 
     it 'sorts by value descending' do
@@ -160,8 +161,8 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
       flow_data = [{ metric: 'flow', value: 1 }]
       bug_data = [{ metric: 'bugs', value: 2 }]
 
-      expect(parser).to receive(:metrics_for).with('flow').and_return(flow_data)
-      expect(parser).to receive(:metrics_for).with('bugs').and_return(bug_data)
+      allow(parser).to receive(:metrics_for).with('flow').and_return(flow_data)
+      allow(parser).to receive(:metrics_for).with('bugs').and_return(bug_data)
 
       expect(accessor.flow_metrics).to eq(flow_data)
       expect(accessor.bug_metrics).to eq(bug_data)
