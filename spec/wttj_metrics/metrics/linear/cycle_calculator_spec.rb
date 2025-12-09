@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Metrics::CycleCalculator do
+RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
   subject(:calculator) { described_class.new(cycles, today: today) }
 
   # Setup

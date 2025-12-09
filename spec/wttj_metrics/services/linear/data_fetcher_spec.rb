@@ -2,7 +2,7 @@
 
 require 'logger'
 
-RSpec.describe WttjMetrics::Services::DataFetcher do
+RSpec.describe WttjMetrics::Services::Linear::DataFetcher do
   let(:cache) { instance_double(WttjMetrics::Data::FileCache) }
   let(:logger) { instance_double(Logger, info: nil) }
   let(:client) { instance_double(WttjMetrics::Sources::Linear::Client) }

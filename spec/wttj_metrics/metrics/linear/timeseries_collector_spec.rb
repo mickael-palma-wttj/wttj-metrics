@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Metrics::TimeseriesCollector do
+RSpec.describe WttjMetrics::Metrics::Linear::TimeseriesCollector do
   subject(:collector) { described_class.new(issues, today: today) }
 
   # Setup

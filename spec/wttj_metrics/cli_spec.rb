@@ -19,7 +19,7 @@ RSpec.describe WttjMetrics::CLI do
 
   describe '#collect' do
     let(:linear_client) { instance_double(WttjMetrics::Sources::Linear::Client) }
-    let(:calculator) { instance_double(WttjMetrics::Metrics::Calculator) }
+    let(:calculator) { instance_double(WttjMetrics::Metrics::Linear::Calculator) }
     let(:csv_writer) { instance_double(WttjMetrics::Data::CsvWriter) }
     let(:cache) { instance_double(WttjMetrics::Data::FileCache) }
 
@@ -41,7 +41,7 @@ RSpec.describe WttjMetrics::CLI do
     before do
       allow(WttjMetrics::Config).to receive(:validate!)
       allow(WttjMetrics::Sources::Linear::Client).to receive(:new).and_return(linear_client)
-      allow(WttjMetrics::Metrics::Calculator).to receive(:new).and_return(calculator)
+      allow(WttjMetrics::Metrics::Linear::Calculator).to receive(:new).and_return(calculator)
       allow(WttjMetrics::Data::CsvWriter).to receive(:new).and_return(csv_writer)
       allow(WttjMetrics::Data::FileCache).to receive(:new).and_return(cache)
 

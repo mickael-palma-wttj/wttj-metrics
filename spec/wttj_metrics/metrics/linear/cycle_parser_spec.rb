@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Metrics::CycleParser do
+RSpec.describe WttjMetrics::Metrics::Linear::CycleParser do
   subject(:parser) { described_class.new(cycle_metrics, teams: selected_teams) }
 
   let(:selected_teams) { %w[Platform ATS] }

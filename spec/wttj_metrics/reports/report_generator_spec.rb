@@ -430,7 +430,7 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
 
       it 'includes all state categories' do
         result = builder.build
-        WttjMetrics::ReportGenerator::STATE_CATEGORIES.each_key do |state|
+        WttjMetrics::Reports::ReportGenerator::STATE_CATEGORIES.each_key do |state|
           expect(result[:datasets]).to have_key(state)
         end
       end

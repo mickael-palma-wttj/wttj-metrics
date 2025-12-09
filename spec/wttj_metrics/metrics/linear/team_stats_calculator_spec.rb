@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Metrics::TeamStatsCalculator do
+RSpec.describe WttjMetrics::Metrics::Linear::TeamStatsCalculator do
   subject(:calculator) { described_class.new(cycles_by_team) }
 
   # Setup

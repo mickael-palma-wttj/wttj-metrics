@@ -31,7 +31,7 @@ module WttjMetrics
       end
 
       def fetch_data
-        DataFetcher.new(cache_strategy, logger).call
+        Linear::DataFetcher.new(cache_strategy, logger).call
       end
 
       def cache_strategy
@@ -42,7 +42,7 @@ module WttjMetrics
 
       def calculate_metrics(data)
         logger.info '🔢 Calculating metrics...'
-        calculator = Metrics::Calculator.new(
+        calculator = Metrics::Linear::Calculator.new(
           data[:issues],
           data[:cycles],
           data[:team_members],

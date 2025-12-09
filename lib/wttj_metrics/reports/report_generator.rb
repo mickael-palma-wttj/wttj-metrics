@@ -159,13 +159,13 @@ module WttjMetrics
       def cycles_parsed
         # Filter cycles by cutoff date to respect days parameter
         filtered_cycles = @metrics_by_category['cycle']&.select { |m| m[:date] >= cutoff_date } || []
-        @cycles_parsed ||= Metrics::CycleParser.new(filtered_cycles, teams: @selected_teams).parse
+        @cycles_parsed ||= Metrics::Linear::CycleParser.new(filtered_cycles, teams: @selected_teams).parse
       end
 
       def cycles_by_team
         # Filter cycles by cutoff date to respect days parameter
         filtered_cycles = @metrics_by_category['cycle']&.select { |m| m[:date] >= cutoff_date } || []
-        @cycles_by_team ||= Metrics::CycleParser.new(filtered_cycles, teams: @selected_teams).by_team
+        @cycles_by_team ||= Metrics::Linear::CycleParser.new(filtered_cycles, teams: @selected_teams).by_team
       end
 
       def cycles_by_team_presented
@@ -175,7 +175,7 @@ module WttjMetrics
       end
 
       def team_stats
-        @team_stats ||= Metrics::TeamStatsCalculator.new(cycles_by_team).calculate
+        @team_stats ||= Metrics::Linear::TeamStatsCalculator.new(cycles_by_team).calculate
       end
 
       private

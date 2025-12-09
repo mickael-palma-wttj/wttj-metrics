@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Metrics::BugCalculator do
+RSpec.describe WttjMetrics::Metrics::Linear::BugCalculator do
   subject(:calculator) { described_class.new(issues, today: today) }
 
   # Setup
