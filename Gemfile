@@ -26,3 +26,5 @@ group :test do
   gem 'vcr', '~> 6.3'
   gem 'webmock', '~> 3.24'
 end
+
+gem 'octokit', '~> 10.0'

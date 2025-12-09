@@ -8,7 +8,7 @@ module WttjMetrics
       # Parses cycle metrics and organizes them by team
       # Single Responsibility: Cycle data parsing and organization
       class CycleParser
-        DEFAULT_TEAMS = Reports::ReportGenerator::SELECTED_TEAMS
+        DEFAULT_TEAMS = Reports::Linear::ReportGenerator::SELECTED_TEAMS
 
         METRIC_PARSERS = {
           'total_issues' => lambda(&:to_i),

@@ -3,7 +3,7 @@
 require 'tempfile'
 require 'csv'
 
-RSpec.describe WttjMetrics::Reports::ReportGenerator do
+RSpec.describe WttjMetrics::Reports::Linear::ReportGenerator do
   subject(:generator) { described_class.new(csv_path, days: 90, teams: teams) }
 
   let(:csv_path) { temp_csv.path }
@@ -419,7 +419,7 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
         { date: '2024-12-02', metric: 'ATS:In Progress', value: 8 }
       ]
     end
-    let(:builder) { WttjMetrics::Reports::TransitionDataBuilder.new(transition_metrics, '2024-12-01', teams: ['ATS']) }
+    let(:builder) { WttjMetrics::Reports::Linear::TransitionDataBuilder.new(transition_metrics, '2024-12-01', teams: ['ATS']) }
 
     describe '#build' do
       it 'returns hash with labels and datasets' do
@@ -430,7 +430,7 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
 
       it 'includes all state categories' do
         result = builder.build
-        WttjMetrics::Reports::ReportGenerator::STATE_CATEGORIES.each_key do |state|
+        WttjMetrics::Reports::Linear::ReportGenerator::STATE_CATEGORIES.each_key do |state|
           expect(result[:datasets]).to have_key(state)
         end
       end
@@ -445,7 +445,7 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
     end
 
     describe 'with nil transition metrics' do
-      let(:builder) { WttjMetrics::Reports::TransitionDataBuilder.new(nil, '2024-12-01') }
+      let(:builder) { WttjMetrics::Reports::Linear::TransitionDataBuilder.new(nil, '2024-12-01') }
 
       it 'handles nil metrics gracefully' do
         result = builder.build
@@ -461,7 +461,7 @@ RSpec.describe WttjMetrics::Reports::ReportGenerator do
           { date: '2024-12-01', metric: 'Done', value: 5 }
         ]
       end
-      let(:builder) { WttjMetrics::Reports::TransitionDataBuilder.new(transition_metrics, '2024-12-01', teams: nil) }
+      let(:builder) { WttjMetrics::Reports::Linear::TransitionDataBuilder.new(transition_metrics, '2024-12-01', teams: nil) }
 
       it 'processes non-team-specific metrics' do
         result = builder.build

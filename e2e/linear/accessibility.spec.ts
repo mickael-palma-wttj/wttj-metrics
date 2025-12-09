@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadReport } from './test-utils';
+import { loadReport } from '../test-utils';
 
 test.describe('Accessibility', () => {
     test.beforeEach(async ({ page }) => {

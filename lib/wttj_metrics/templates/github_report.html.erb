@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Metrics Dashboard - <%= @today %></title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #EAE4DE;
+      color: #151515;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    h1 {
+      font-size: 2.5rem;
+      color: #151515;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle { color: #585858; font-size: 1rem; }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .metric-card {
+      background: #FFFFFF;
+      border: 1px solid #DEDEDE;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      cursor: help;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+    .metric-card .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      width: 220px;
+      text-align: left;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      margin-top: 8px;
+    }
+    .metric-card .tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-bottom-color: #151515;
+    }
+    .metric-card:hover .tooltip { visibility: visible; opacity: 1; }
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #151515;
+    }
+    .metric-label { color: #585858; font-size: 0.9rem; margin-top: 0.5rem; }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: #FFFFFF;
+      border: 1px solid #DEDEDE;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .chart-card.full-width { grid-column: 1 / -1; }
+    .chart-title { font-size: 1.2rem; margin-bottom: 1rem; color: #151515; }
+    .chart-subtitle { font-size: 0.8rem; color: #585858; margin-top: -0.5rem; margin-bottom: 1rem; }
+    .chart-container { position: relative; height: 300px; }
+    .chart-container.tall { height: 400px; }
+    section { margin-bottom: 1rem; position: relative; }
+    .section-title {
+      font-size: 1.5rem;
+      margin: 2rem 0 1rem;
+      color: #151515;
+      border-bottom: 2px solid #FFCD00;
+      padding-bottom: 0.5rem;
+    }
+    footer { text-align: center; margin-top: 3rem; color: #585858; font-size: 0.9rem; }
+    
+    /* Collapsible sections */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      padding-top: 1rem;
+    }
+    .section-header .section-title {
+      margin: 0;
+      flex: 1;
+    }
+    /* iOS-style toggle switch */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      margin-left: 1rem;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #DEDEDE;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: '';
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #FFCD00;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    .toggle-switch input:focus + .toggle-slider {
+      box-shadow: 0 0 0 2px rgba(255, 205, 0, 0.3);
+    }
+    .section-content {
+      max-height: 5000px;
+      overflow-x: visible;
+      overflow-y: hidden;
+      transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+      opacity: 1;
+      padding-top: 1rem;
+      padding-bottom: 3rem;
+    }
+    .section-content.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    .collapse-all-btn {
+      background: #FFCD00;
+      border: 1px solid #151515;
+      color: #151515;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      margin-top: 1rem;
+    }
+    .collapse-all-btn:hover {
+      background: #e6b800;
+      transform: translateY(-1px);
+    }
+    .chevron {
+      display: inline-block;
+      transition: transform 0.3s;
+      margin-right: 0.5rem;
+    }
+    .chevron.collapsed {
+      transform: rotate(-90deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>&#128025; GitHub Metrics Dashboard</h1>
+      <p class="subtitle">Generated on <%= @today %> • Last <%= days_to_show %> days</p>
+      <button class="collapse-all-btn" onclick="toggleAllSections()">
+        <span id="toggleAllIcon">▼</span> <span id="toggleAllText">Collapse All</span>
+      </button>
+    </header>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Key Metrics</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="tooltip">Average time from PR creation to merge</span>
+          <div class="metric-value"><%= metrics[:avg_time_to_merge].round(1) %>d</div>
+          <div class="metric-label">Avg Time to Merge</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Total number of PRs merged in the period</span>
+          <div class="metric-value"><%= metrics[:total_merged].to_i %></div>
+          <div class="metric-label">Total Merged PRs</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average number of reviews per PR</span>
+          <div class="metric-value"><%= metrics[:avg_reviews].round(1) %></div>
+          <div class="metric-label">Avg Reviews / PR</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average number of comments per PR</span>
+          <div class="metric-value"><%= metrics[:avg_comments].round(1) %></div>
+          <div class="metric-label">Avg Comments / PR</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average time from PR creation to first review</span>
+          <div class="metric-value"><%= metrics[:avg_time_to_first_review].round(1) %>d</div>
+          <div class="metric-label">Avg Time to First Review</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average lines added per PR</span>
+          <div class="metric-value"><%= metrics[:avg_additions].to_i %></div>
+          <div class="metric-label">Avg Additions / PR</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average lines deleted per PR</span>
+          <div class="metric-value"><%= metrics[:avg_deletions].to_i %></div>
+          <div class="metric-label">Avg Deletions / PR</div>
+        </div>
+      </div>
+      </div>
+    </section>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Trends</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-title">Time to Merge History</h3>
+          <div class="chart-container">
+            <canvas id="timeToMergeChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Time to First Review History</h3>
+          <div class="chart-container">
+            <canvas id="timeToFirstReviewChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Reviews & Comments History</h3>
+          <div class="chart-container">
+            <canvas id="reviewsCommentsChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">PR Size History</h3>
+          <div class="chart-container">
+            <canvas id="prSizeChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">PR Outcome History</h3>
+          <div class="chart-container">
+            <canvas id="dailyBreakdownChart"></canvas>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+    
+    <footer>
+      <p>Data sourced from GitHub API • Report generated by WTTJ Metrics Collector</p>
+    </footer>
+  </div>
+  
+  <script>
+    // Collapse/Expand functions
+    function toggleSection(header) {
+      const content = header.nextElementSibling;
+      const chevron = header.querySelector('.chevron');
+      const checkbox = header.querySelector('.toggle-switch input');
+      content.classList.toggle('collapsed');
+      chevron.classList.toggle('collapsed');
+      if (checkbox) checkbox.checked = !content.classList.contains('collapsed');
+      updateToggleAllButton();
+    }
+    
+    function toggleSectionByCheckbox(checkbox) {
+      const header = checkbox.closest('.section-header');
+      const content = header.nextElementSibling;
+      const chevron = header.querySelector('.chevron');
+      if (checkbox.checked) {
+        content.classList.remove('collapsed');
+        chevron.classList.remove('collapsed');
+      } else {
+        content.classList.add('collapsed');
+        chevron.classList.add('collapsed');
+      }
+      updateToggleAllButton();
+    }
+    
+    function toggleAllSections() {
+      const contents = document.querySelectorAll('.section-content');
+      const chevrons = document.querySelectorAll('.chevron');
+      const checkboxes = document.querySelectorAll('.toggle-switch input');
+      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
+      
+      contents.forEach(content => {
+        if (allCollapsed) {
+          content.classList.remove('collapsed');
+        } else {
+          content.classList.add('collapsed');
+        }
+      });
+      
+      chevrons.forEach(chevron => {
+        if (allCollapsed) {
+          chevron.classList.remove('collapsed');
+        } else {
+          chevron.classList.add('collapsed');
+        }
+      });
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = allCollapsed;
+      });
+      
+      updateToggleAllButton();
+    }
+    
+    function updateToggleAllButton() {
+      const contents = document.querySelectorAll('.section-content');
+      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
+      document.getElementById('toggleAllIcon').textContent = allCollapsed ? '▶' : '▼';
+      document.getElementById('toggleAllText').textContent = allCollapsed ? 'Expand All' : 'Collapse All';
+    }
+    
+    const colors = {
+      purple: 'rgba(88, 88, 88, 0.8)',
+      blue: 'rgba(59, 130, 246, 0.8)',
+      pink: 'rgba(236, 72, 153, 0.8)',
+      green: 'rgba(34, 197, 94, 0.8)',
+      orange: 'rgba(249, 115, 22, 0.8)',
+      yellow: 'rgba(255, 205, 0, 0.9)',
+      red: 'rgba(220, 38, 38, 0.8)',
+      cyan: 'rgba(6, 182, 212, 0.8)',
+      black: 'rgba(21, 21, 21, 0.8)',
+    };
+    
+    Chart.defaults.color = '#585858';
+    Chart.defaults.borderColor = '#DEDEDE';
+    
+    <% breakdown = daily_breakdown %>
+    const breakdownLabels = <%= breakdown[:labels].to_json %>;
+
+    // Time to Merge Chart
+    const avgTimeMergeHours = <%= breakdown[:datasets][:avg_time_to_merge].to_json %>;
+    const avgTimeMergeDays = avgTimeMergeHours.map(h => (h / 24).toFixed(2));
+
+    new Chart(document.getElementById('timeToMergeChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [{
+          label: 'Avg Time to Merge (Days)',
+          data: avgTimeMergeDays,
+          borderColor: colors.blue,
+          backgroundColor: colors.blue,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // Time to First Review Chart
+    const avgTimeFirstReviewHours = <%= breakdown[:datasets][:avg_time_to_first_review].to_json %>;
+    const avgTimeFirstReviewDays = avgTimeFirstReviewHours.map(h => (h / 24).toFixed(2));
+
+    new Chart(document.getElementById('timeToFirstReviewChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [{
+          label: 'Avg Time to First Review (Days)',
+          data: avgTimeFirstReviewDays,
+          borderColor: colors.cyan,
+          backgroundColor: colors.cyan,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // Reviews & Comments Chart
+    const avgReviews = <%= breakdown[:datasets][:avg_reviews].to_json %>;
+    const avgComments = <%= breakdown[:datasets][:avg_comments].to_json %>;
+
+    new Chart(document.getElementById('reviewsCommentsChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Avg Reviews',
+            data: avgReviews,
+            borderColor: colors.purple,
+            backgroundColor: colors.purple,
+            tension: 0.4
+          },
+          {
+            label: 'Avg Comments',
+            data: avgComments,
+            borderColor: colors.orange,
+            backgroundColor: colors.orange,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // PR Size Chart
+    const avgAdditionsRaw = <%= breakdown[:datasets][:avg_additions].to_json %>;
+    const avgDeletionsRaw = <%= breakdown[:datasets][:avg_deletions].to_json %>;
+
+    const sizeTotals = breakdownLabels.map((_, i) => (avgAdditionsRaw[i] || 0) + (avgDeletionsRaw[i] || 0));
+    const additionsPct = avgAdditionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
+    const deletionsPct = avgDeletionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
+
+    new Chart(document.getElementById('prSizeChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Avg Additions',
+            data: additionsPct,
+            backgroundColor: colors.green,
+            raw: avgAdditionsRaw
+          },
+          {
+            label: 'Avg Deletions',
+            data: deletionsPct,
+            backgroundColor: colors.red,
+            raw: avgDeletionsRaw
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const raw = ctx.dataset.raw[ctx.dataIndex];
+                return `${ctx.dataset.label}: ${Number(raw).toFixed(1)} (${ctx.parsed.y.toFixed(1)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Daily Breakdown Chart (100% Stacked)
+    // Calculate percentages
+    const mergedRaw = <%= breakdown[:datasets][:merged].to_json %>;
+    const closedRaw = <%= breakdown[:datasets][:closed].to_json %>;
+    const openRaw = <%= breakdown[:datasets][:open].to_json %>;
+    
+    const dailyTotals = breakdownLabels.map((_, i) => mergedRaw[i] + closedRaw[i] + openRaw[i]);
+    
+    const mergedPct = mergedRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
+    const closedPct = closedRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
+    const openPct = openRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
+
+    new Chart(document.getElementById('dailyBreakdownChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          { label: 'Merged', data: mergedPct, backgroundColor: colors.green, raw: mergedRaw },
+          { label: 'Closed', data: closedPct, backgroundColor: colors.red, raw: closedRaw },
+          { label: 'Open', data: openPct, backgroundColor: colors.blue, raw: openRaw }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const raw = ctx.dataset.raw[ctx.dataIndex];
+                return `${ctx.dataset.label}: ${raw} (${ctx.parsed.y.toFixed(1)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Metrics Dashboard - 2025-12-09</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #EAE4DE;
+      color: #151515;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    h1 {
+      font-size: 2.5rem;
+      color: #151515;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle { color: #585858; font-size: 1rem; }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .metric-card {
+      background: #FFFFFF;
+      border: 1px solid #DEDEDE;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      cursor: help;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+    .metric-card .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      width: 220px;
+      text-align: left;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      margin-top: 8px;
+    }
+    .metric-card .tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-bottom-color: #151515;
+    }
+    .metric-card:hover .tooltip { visibility: visible; opacity: 1; }
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #151515;
+    }
+    .metric-label { color: #585858; font-size: 0.9rem; margin-top: 0.5rem; }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: #FFFFFF;
+      border: 1px solid #DEDEDE;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .chart-card.full-width { grid-column: 1 / -1; }
+    .chart-title { font-size: 1.2rem; margin-bottom: 1rem; color: #151515; }
+    .chart-subtitle { font-size: 0.8rem; color: #585858; margin-top: -0.5rem; margin-bottom: 1rem; }
+    .chart-container { position: relative; height: 300px; }
+    .chart-container.tall { height: 400px; }
+    section { margin-bottom: 1rem; position: relative; }
+    .section-title {
+      font-size: 1.5rem;
+      margin: 2rem 0 1rem;
+      color: #151515;
+      border-bottom: 2px solid #FFCD00;
+      padding-bottom: 0.5rem;
+    }
+    footer { text-align: center; margin-top: 3rem; color: #585858; font-size: 0.9rem; }
+    
+    /* Collapsible sections */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      padding-top: 1rem;
+    }
+    .section-header .section-title {
+      margin: 0;
+      flex: 1;
+    }
+    /* iOS-style toggle switch */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      margin-left: 1rem;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #DEDEDE;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: '';
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #FFCD00;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    .toggle-switch input:focus + .toggle-slider {
+      box-shadow: 0 0 0 2px rgba(255, 205, 0, 0.3);
+    }
+    .section-content {
+      max-height: 5000px;
+      overflow-x: visible;
+      overflow-y: hidden;
+      transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+      opacity: 1;
+      padding-top: 1rem;
+      padding-bottom: 3rem;
+    }
+    .section-content.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    .collapse-all-btn {
+      background: #FFCD00;
+      border: 1px solid #151515;
+      color: #151515;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      margin-top: 1rem;
+    }
+    .collapse-all-btn:hover {
+      background: #e6b800;
+      transform: translateY(-1px);
+    }
+    .chevron {
+      display: inline-block;
+      transition: transform 0.3s;
+      margin-right: 0.5rem;
+    }
+    .chevron.collapsed {
+      transform: rotate(-90deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>&#128025; GitHub Metrics Dashboard</h1>
+      <p class="subtitle">Generated on 2025-12-09 • Last 90 days</p>
+      <button class="collapse-all-btn" onclick="toggleAllSections()">
+        <span id="toggleAllIcon">▼</span> <span id="toggleAllText">Collapse All</span>
+      </button>
+    </header>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Key Metrics</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="tooltip">Average time from PR creation to merge</span>
+          <div class="metric-value">1.8d</div>
+          <div class="metric-label">Avg Time to Merge</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Total number of PRs merged in the period</span>
+          <div class="metric-value">4041</div>
+          <div class="metric-label">Total Merged PRs</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average number of reviews per PR</span>
+          <div class="metric-value">1.2</div>
+          <div class="metric-label">Avg Reviews / PR</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average number of comments per PR</span>
+          <div class="metric-value">1.2</div>
+          <div class="metric-label">Avg Comments / PR</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average time from PR creation to first review</span>
+          <div class="metric-value">1.3d</div>
+          <div class="metric-label">Avg Time to First Review</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average lines added per PR</span>
+          <div class="metric-value">309</div>
+          <div class="metric-label">Avg Additions / PR</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average lines deleted per PR</span>
+          <div class="metric-value">129</div>
+          <div class="metric-label">Avg Deletions / PR</div>
+        </div>
+      </div>
+      </div>
+    </section>
+    
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Trends</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-title">Time to Merge History</h3>
+          <div class="chart-container">
+            <canvas id="timeToMergeChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Time to First Review History</h3>
+          <div class="chart-container">
+            <canvas id="timeToFirstReviewChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Reviews & Comments History</h3>
+          <div class="chart-container">
+            <canvas id="reviewsCommentsChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">PR Size History</h3>
+          <div class="chart-container">
+            <canvas id="prSizeChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">PR Outcome History</h3>
+          <div class="chart-container">
+            <canvas id="dailyBreakdownChart"></canvas>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+    
+    <footer>
+      <p>Data sourced from GitHub API • Report generated by WTTJ Metrics Collector</p>
+    </footer>
+  </div>
+  
+  <script>
+    // Collapse/Expand functions
+    function toggleSection(header) {
+      const content = header.nextElementSibling;
+      const chevron = header.querySelector('.chevron');
+      const checkbox = header.querySelector('.toggle-switch input');
+      content.classList.toggle('collapsed');
+      chevron.classList.toggle('collapsed');
+      if (checkbox) checkbox.checked = !content.classList.contains('collapsed');
+      updateToggleAllButton();
+    }
+    
+    function toggleSectionByCheckbox(checkbox) {
+      const header = checkbox.closest('.section-header');
+      const content = header.nextElementSibling;
+      const chevron = header.querySelector('.chevron');
+      if (checkbox.checked) {
+        content.classList.remove('collapsed');
+        chevron.classList.remove('collapsed');
+      } else {
+        content.classList.add('collapsed');
+        chevron.classList.add('collapsed');
+      }
+      updateToggleAllButton();
+    }
+    
+    function toggleAllSections() {
+      const contents = document.querySelectorAll('.section-content');
+      const chevrons = document.querySelectorAll('.chevron');
+      const checkboxes = document.querySelectorAll('.toggle-switch input');
+      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
+      
+      contents.forEach(content => {
+        if (allCollapsed) {
+          content.classList.remove('collapsed');
+        } else {
+          content.classList.add('collapsed');
+        }
+      });
+      
+      chevrons.forEach(chevron => {
+        if (allCollapsed) {
+          chevron.classList.remove('collapsed');
+        } else {
+          chevron.classList.add('collapsed');
+        }
+      });
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = allCollapsed;
+      });
+      
+      updateToggleAllButton();
+    }
+    
+    function updateToggleAllButton() {
+      const contents = document.querySelectorAll('.section-content');
+      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
+      document.getElementById('toggleAllIcon').textContent = allCollapsed ? '▶' : '▼';
+      document.getElementById('toggleAllText').textContent = allCollapsed ? 'Expand All' : 'Collapse All';
+    }
+    
+    const colors = {
+      purple: 'rgba(88, 88, 88, 0.8)',
+      blue: 'rgba(59, 130, 246, 0.8)',
+      pink: 'rgba(236, 72, 153, 0.8)',
+      green: 'rgba(34, 197, 94, 0.8)',
+      orange: 'rgba(249, 115, 22, 0.8)',
+      yellow: 'rgba(255, 205, 0, 0.9)',
+      red: 'rgba(220, 38, 38, 0.8)',
+      cyan: 'rgba(6, 182, 212, 0.8)',
+      black: 'rgba(21, 21, 21, 0.8)',
+    };
+    
+    Chart.defaults.color = '#585858';
+    Chart.defaults.borderColor = '#DEDEDE';
+    
+    
+    const breakdownLabels = ["2025-09-10","2025-09-11","2025-09-12","2025-09-13","2025-09-15","2025-09-16","2025-09-17","2025-09-18","2025-09-19","2025-09-20","2025-09-22","2025-09-23","2025-09-24","2025-09-25","2025-09-26","2025-09-29","2025-09-30","2025-10-01","2025-10-02","2025-10-03","2025-10-04","2025-10-06","2025-10-07","2025-10-08","2025-10-09","2025-10-10","2025-10-11","2025-10-12","2025-10-13","2025-10-14","2025-10-15","2025-10-16","2025-10-17","2025-10-18","2025-10-19","2025-10-20","2025-10-21","2025-10-22","2025-10-23","2025-10-24","2025-10-25","2025-10-26","2025-10-27","2025-10-28","2025-10-29","2025-10-30","2025-10-31","2025-11-01","2025-11-02","2025-11-03","2025-11-04","2025-11-05","2025-11-06","2025-11-07","2025-11-10","2025-11-11","2025-11-12","2025-11-13","2025-11-14","2025-11-15","2025-11-16","2025-11-17","2025-11-18","2025-11-19","2025-11-20","2025-11-21","2025-11-22","2025-11-23","2025-11-24","2025-11-25","2025-11-26","2025-11-27","2025-11-28","2025-12-01","2025-12-02","2025-12-03","2025-12-04","2025-12-05","2025-12-06","2025-12-07","2025-12-08","2025-12-09"];
+
+    // Time to Merge Chart
+    const avgTimeMergeHours = [41.85,55.34,60.23,39.2,56.93,84.01,41.81,120.62,64.06,50.14,42.52,64.23,51.68,58.14,57.71,45.9,28.9,36.26,40.74,59.99,50.24,27.21,120.56,85.46,61.42,83.03,49.37,25.61,27.81,37.17,59.24,42.96,64.83,62.06,66.27,38.87,35.97,46.84,39.25,85.33,51.47,27.34,41.14,42.59,35.29,47.13,26.86,99.7,161.72,47.23,34.62,43.67,20.31,32.5,22.31,51.14,48.79,31.51,43.19,47.45,37.77,26.56,66.63,95.12,38.16,49.82,25.58,0.04,27.43,45.55,42.88,47.45,55.78,33.89,16.25,30.83,31.56,20.6,0.0,41.47,9.78,5.57];
+    const avgTimeMergeDays = avgTimeMergeHours.map(h => (h / 24).toFixed(2));
+
+    new Chart(document.getElementById('timeToMergeChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [{
+          label: 'Avg Time to Merge (Days)',
+          data: avgTimeMergeDays,
+          borderColor: colors.blue,
+          backgroundColor: colors.blue,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // Time to First Review Chart
+    const avgTimeFirstReviewHours = [29.59,40.4,64.29,38.85,43.84,61.71,31.35,106.93,57.09,50.04,32.78,51.52,27.95,40.28,42.27,36.27,13.79,44.41,24.22,32.13,50.24,19.97,103.6,57.76,40.74,46.74,49.37,25.51,17.4,19.4,46.57,24.88,41.83,60.65,44.9,19.09,20.24,31.04,20.42,82.05,51.46,25.84,26.42,35.87,28.68,34.33,35.19,99.69,56.13,28.97,21.24,28.74,11.7,16.64,19.95,50.92,25.25,20.32,38.08,47.36,37.68,13.77,23.65,62.89,23.23,45.8,16.99,0.04,18.48,27.68,21.96,26.5,56.22,22.8,9.07,37.38,21.63,19.24,0.0,0.0,7.32,5.66];
+    const avgTimeFirstReviewDays = avgTimeFirstReviewHours.map(h => (h / 24).toFixed(2));
+
+    new Chart(document.getElementById('timeToFirstReviewChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [{
+          label: 'Avg Time to First Review (Days)',
+          data: avgTimeFirstReviewDays,
+          borderColor: colors.cyan,
+          backgroundColor: colors.cyan,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // Reviews & Comments Chart
+    const avgReviews = [1.05,0.91,0.35,0.17,1.25,1.13,1.4,1.82,1.33,1.0,1.55,1.8,1.69,1.74,1.42,1.01,1.17,1.13,1.58,0.74,1.0,0.94,0.8,1.44,1.45,1.1,1.0,1.0,1.76,1.58,1.25,1.38,0.9,1.0,1.33,1.21,1.01,1.38,1.47,0.69,1.0,1.33,1.63,0.87,1.12,1.04,1.03,1.0,4.0,0.95,1.42,1.18,1.05,0.72,0.92,0.78,1.7,1.0,1.03,0.81,0.5,1.11,1.41,1.83,1.03,2.08,1.0,0.5,1.46,1.54,1.27,1.7,1.13,0.88,0.91,1.17,0.8,0.91,0.0,0.0,0.45,0.55];
+    const avgComments = [1.17,1.35,1.06,1.42,1.24,1.21,1.38,1.29,1.25,0.92,1.43,1.57,1.25,1.35,1.27,1.1,1.13,1.27,1.59,1.52,1.0,1.32,1.18,1.38,1.0,1.44,1.0,1.0,1.45,1.15,1.44,1.18,1.12,0.94,1.33,1.15,1.03,1.28,1.42,0.94,0.93,2.0,1.26,0.83,1.12,1.08,1.33,1.0,2.5,0.99,1.03,1.08,1.11,0.86,1.22,1.48,1.86,1.13,1.23,1.0,0.33,1.19,1.05,1.09,1.23,1.17,1.67,1.0,1.08,1.2,0.98,1.03,1.62,0.79,0.89,1.12,0.75,1.0,0.0,0.67,1.03,0.95];
+
+    new Chart(document.getElementById('reviewsCommentsChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Avg Reviews',
+            data: avgReviews,
+            borderColor: colors.purple,
+            backgroundColor: colors.purple,
+            tension: 0.4
+          },
+          {
+            label: 'Avg Comments',
+            data: avgComments,
+            borderColor: colors.orange,
+            backgroundColor: colors.orange,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // PR Size Chart
+    const avgAdditionsRaw = [241.81,1799.83,463.22,6.08,195.92,539.76,352.68,502.1,242.62,1.08,127.93,329.49,148.27,137.47,283.39,105.31,289.6,242.27,653.24,110.61,0.0,110.18,91.23,133.96,119.09,245.52,1.5,1.0,409.92,173.41,113.4,122.15,873.53,3.25,49.0,663.65,229.18,422.3,128.99,73.51,1.0,45.67,219.74,184.68,7782.28,267.75,90.39,2.5,1367.5,144.08,77.39,119.17,124.97,37.65,45.89,12.0,972.14,652.27,114.6,2.38,2.67,89.39,202.54,89.87,162.86,107.6,8.67,8.5,192.27,117.51,271.49,231.62,44.31,192.83,254.7,93.01,134.43,87.36,2.33,139.67,89.04,27.74];
+    const avgDeletionsRaw = [191.37,54.93,235.16,4.33,242.26,211.07,134.95,104.29,102.63,1.08,171.53,198.72,110.05,67.53,75.88,51.72,179.25,134.24,949.22,67.84,1.0,92.65,59.46,430.95,23.42,73.56,1.5,1.0,324.43,44.0,59.11,47.84,491.86,3.25,28.33,300.63,57.33,206.43,68.03,50.72,1.0,31.0,101.56,170.9,206.96,194.28,82.47,2.5,311.5,154.58,35.65,24.73,93.77,15.6,80.12,18.58,473.07,101.69,89.82,2.38,2.67,39.77,136.01,39.92,102.21,56.3,2.0,6.0,114.74,69.62,244.34,191.4,24.41,50.37,198.45,18.55,119.54,43.99,2.33,25.33,38.41,21.18];
+
+    const sizeTotals = breakdownLabels.map((_, i) => (avgAdditionsRaw[i] || 0) + (avgDeletionsRaw[i] || 0));
+    const additionsPct = avgAdditionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
+    const deletionsPct = avgDeletionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
+
+    new Chart(document.getElementById('prSizeChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Avg Additions',
+            data: additionsPct,
+            backgroundColor: colors.green,
+            raw: avgAdditionsRaw
+          },
+          {
+            label: 'Avg Deletions',
+            data: deletionsPct,
+            backgroundColor: colors.red,
+            raw: avgDeletionsRaw
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const raw = ctx.dataset.raw[ctx.dataIndex];
+                return `${ctx.dataset.label}: ${Number(raw).toFixed(1)} (${ctx.parsed.y.toFixed(1)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Daily Breakdown Chart (100% Stacked)
+    // Calculate percentages
+    const mergedRaw = [91.0,61.0,15.0,2.0,59.0,60.0,56.0,38.0,53.0,12.0,52.0,48.0,42.0,75.0,20.0,52.0,77.0,45.0,78.0,19.0,1.0,56.0,50.0,39.0,43.0,30.0,2.0,1.0,54.0,85.0,40.0,88.0,36.0,16.0,3.0,63.0,79.0,97.0,74.0,102.0,14.0,2.0,73.0,92.0,37.0,60.0,32.0,2.0,2.0,82.0,69.0,77.0,95.0,74.0,135.0,64.0,38.0,54.0,51.0,13.0,3.0,64.0,67.0,39.0,51.0,42.0,2.0,1.0,80.0,65.0,48.0,81.0,36.0,72.0,92.0,51.0,41.0,73.0,0.0,1.0,57.0,95.0];
+    const closedRaw = [23.0,21.0,29.0,9.0,32.0,24.0,24.0,10.0,22.0,0.0,19.0,19.0,18.0,12.0,12.0,18.0,27.0,19.0,13.0,12.0,0.0,25.0,24.0,13.0,8.0,14.0,0.0,0.0,16.0,10.0,13.0,12.0,13.0,0.0,0.0,24.0,23.0,30.0,23.0,31.0,0.0,1.0,14.0,29.0,12.0,16.0,4.0,0.0,0.0,20.0,10.0,10.0,9.0,8.0,39.0,12.0,15.0,19.0,20.0,1.0,0.0,35.0,18.0,11.0,13.0,6.0,1.0,0.0,6.0,16.0,3.0,11.0,2.0,14.0,15.0,13.0,6.0,8.0,0.0,0.0,64.0,21.0];
+    const openRaw = [4.0,6.0,5.0,1.0,4.0,2.0,1.0,1.0,1.0,0.0,4.0,2.0,4.0,1.0,1.0,2.0,5.0,3.0,2.0,0.0,0.0,4.0,5.0,3.0,2.0,4.0,0.0,0.0,5.0,3.0,2.0,0.0,0.0,0.0,0.0,10.0,3.0,1.0,0.0,9.0,0.0,0.0,4.0,13.0,8.0,0.0,0.0,0.0,0.0,14.0,0.0,1.0,1.0,13.0,12.0,9.0,4.0,4.0,2.0,2.0,3.0,9.0,20.0,3.0,7.0,5.0,0.0,1.0,11.0,4.0,8.0,6.0,1.0,31.0,15.0,13.0,14.0,18.0,3.0,2.0,68.0,59.0];
+    
+    const dailyTotals = breakdownLabels.map((_, i) => mergedRaw[i] + closedRaw[i] + openRaw[i]);
+    
+    const mergedPct = mergedRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
+    const closedPct = closedRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
+    const openPct = openRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
+
+    new Chart(document.getElementById('dailyBreakdownChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          { label: 'Merged', data: mergedPct, backgroundColor: colors.green, raw: mergedRaw },
+          { label: 'Closed', data: closedPct, backgroundColor: colors.red, raw: closedRaw },
+          { label: 'Open', data: openPct, backgroundColor: colors.blue, raw: openRaw }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const raw = ctx.dataset.raw[ctx.dataIndex];
+                return `${ctx.dataset.label}: ${raw} (${ctx.parsed.y.toFixed(1)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ require 'spec_helper'
 RSpec.describe WttjMetrics::Reports::HtmlGenerator do
   subject(:generator) { described_class.new(report_generator) }
 
-  let(:report_generator) { instance_double(WttjMetrics::Reports::ReportGenerator, today: '2024-01-15') }
+  let(:report_generator) { instance_double(WttjMetrics::Reports::Linear::ReportGenerator, today: '2024-01-15') }
   let(:output_path) { 'tmp/test_report.html' }
 
   after { FileUtils.rm_f(output_path) }

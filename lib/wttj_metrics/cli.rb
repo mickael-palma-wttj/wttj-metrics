@@ -39,9 +39,25 @@ module WttjMetrics
     option :output, aliases: '-o', type: :string, default: 'tmp/metrics.csv', desc: 'CSV output file path'
     option :cache, type: :boolean, default: true, desc: 'Use cache for API responses'
     option :clear_cache, type: :boolean, default: false, desc: 'Clear cache before fetching'
+    option :sources, aliases: '-s', type: :array, default: ['linear'],
+                     desc: 'Data sources to collect from (linear, github)'
+    option :days, aliases: '-d', type: :numeric, default: DEFAULT_REPORT_DAYS,
+                  desc: 'Number of days to collect data for'
     def collect
-      opts = Values::CollectOptions.new(options)
-      Services::MetricsCollector.new(opts, logger).call
+      collect_options = options.dup
+
+      if collect_options[:output] == 'tmp/metrics.csv'
+        collect_options[:sources].each do |source|
+          opts = collect_options.dup
+          opts[:sources] = [source]
+          opts[:output] = "tmp/#{source}_metrics.csv"
+
+          Services::MetricsCollector.new(Values::CollectOptions.new(opts), logger).call
+        end
+      else
+        opts = Values::CollectOptions.new(collect_options)
+        Services::MetricsCollector.new(opts, logger).call
+      end
     end
 
     desc 'report [CSV_FILE]', 'Generate HTML report from CSV metrics'
@@ -52,9 +68,22 @@ module WttjMetrics
     option :all_teams, type: :boolean, default: false, desc: 'Include all teams (no filter)'
     option :excel, aliases: '-x', type: :boolean, default: false, desc: 'Also generate Excel spreadsheet'
     option :excel_path, type: :string, default: 'report/report.xlsx', desc: 'Excel output file path'
+    option :sources, aliases: '-s', type: :array, default: ['linear'],
+                     desc: 'Data sources to include in filename resolution (linear, github)'
     def report(csv_file = 'tmp/metrics.csv')
-      opts = Values::ReportOptions.new(options)
-      Services::ReportService.new(csv_file, opts, logger).call
+      if csv_file == 'tmp/metrics.csv'
+        options[:sources].each do |source|
+          opts = options.dup
+          input_csv = "tmp/#{source}_metrics.csv"
+
+          opts[:output] = "report/#{source}_report.html" if opts[:output] == 'report/report.html'
+
+          Services::ReportService.new(input_csv, Values::ReportOptions.new(opts), logger).call
+        end
+      else
+        opts = Values::ReportOptions.new(options)
+        Services::ReportService.new(csv_file, opts, logger).call
+      end
     end
 
     desc 'version', 'Show version'

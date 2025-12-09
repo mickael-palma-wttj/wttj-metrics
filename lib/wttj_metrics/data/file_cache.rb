@@ -18,6 +18,15 @@ module WttjMetrics
       end
 
       def fetch(key, max_age_hours: DEFAULT_MAX_AGE_HOURS)
+        data = read(key, max_age_hours: max_age_hours)
+        return data if data
+
+        data = yield
+        write(key, data)
+        data
+      end
+
+      def read(key, max_age_hours: DEFAULT_MAX_AGE_HOURS)
         cache_file = File.join(@cache_dir, "#{key}.json")
 
         if File.exist?(cache_file)
@@ -27,10 +36,12 @@ module WttjMetrics
             return JSON.parse(File.read(cache_file))
           end
         end
+        nil
+      end
 
-        data = yield
+      def write(key, data)
+        cache_file = File.join(@cache_dir, "#{key}.json")
         File.write(cache_file, JSON.pretty_generate(data))
-        data
       end
 
       def clear!

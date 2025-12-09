@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadReport } from './test-utils';
+import { loadReport } from '../test-utils';
 
 test.describe('Key Metrics Section', () => {
     test.beforeEach(async ({ page }) => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Linear Metrics Dashboard - 2025-12-06</title>
+  <title>Linear Metrics Dashboard - 2025-12-09</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -206,6 +206,9 @@
     .scope-increased { color: #dc2626; font-weight: 600; }
     .scope-decreased { color: #16a34a; font-weight: 600; }
     .scope-neutral { color: #585858; }
+    .completion-high { color: #16a34a; font-weight: 600; }
+    .completion-medium { color: #585858; font-weight: 600; }
+    .completion-low { color: #dc2626; font-weight: 600; }
     .progress-bar {
       width: 100%;
       height: 8px;
@@ -219,6 +222,9 @@
       border-radius: 4px;
       transition: width 0.3s;
     }
+    .progress-fill.completion-high { background: #16a34a; }
+    .progress-fill.completion-medium { background: #FFCD00; }
+    .progress-fill.completion-low { background: #dc2626; }
     @media (max-width: 768px) {
       body { padding: 1rem; }
       h1 { font-size: 1.8rem; }
@@ -356,13 +362,38 @@
     .chevron.collapsed {
       transform: rotate(-90deg);
     }
+    /* Sortable table headers */
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 1.5rem !important;
+    }
+    .sortable:hover {
+      background: rgba(255, 205, 0, 0.1);
+    }
+    .sortable::after {
+      content: '⇅';
+      position: absolute;
+      right: 0.5rem;
+      opacity: 0.3;
+      font-size: 0.8rem;
+    }
+    .sortable.asc::after {
+      content: '▲';
+      opacity: 1;
+    }
+    .sortable.desc::after {
+      content: '▼';
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>&#128202; Linear Metrics Dashboard</h1>
-      <p class="subtitle">Generated on 2025-12-06</p>
+      <p class="subtitle">Generated on 2025-12-09 • Last 90 days (2025-09-10 to 2025-12-09)</p>
       <button class="collapse-all-btn" onclick="toggleAllSections()">
         <span id="toggleAllIcon">▼</span> <span id="toggleAllText">Collapse All</span>
       </button>
@@ -392,14 +423,20 @@
         </div>
 
         <div class="metric-card">
+          <span class="tooltip">Average time spent in review states (code review, testing, validation).</span>
+          <div class="metric-value">5 days</div>
+          <div class="metric-label">Avg review time</div>
+        </div>
+
+        <div class="metric-card">
           <span class="tooltip">Number of issues completed in the last 7 days.</span>
-          <div class="metric-value">88 issues</div>
+          <div class="metric-value">85 issues</div>
           <div class="metric-label">Weekly throughput</div>
         </div>
 
         <div class="metric-card">
           <span class="tooltip">Work In Progress: issues currently being worked on.</span>
-          <div class="metric-value">137 issues</div>
+          <div class="metric-value">139 issues</div>
           <div class="metric-label">Wip</div>
         </div>
 
@@ -411,21 +448,21 @@
         </div>
 
         <div class="metric-card">
-          <span class="tooltip">Percentage of planned work completed vs total planned.</span>
-          <div class="metric-value">80%</div>
+          <span class="tooltip">Average percentage of planned work completed across all completed cycles.</span>
+          <div class="metric-value">53%</div>
           <div class="metric-label">Commitment accuracy</div>
         </div>
 
         <div class="metric-card">
-          <span class="tooltip">Number of issues carried over from previous cycles.</span>
-          <div class="metric-value">8</div>
+          <span class="tooltip">Average number of issues carried over per completed cycle.</span>
+          <div class="metric-value">13</div>
           <div class="metric-label">Carryover count</div>
         </div>
 
 
         <div class="metric-card">
           <span class="tooltip">Percentage of issues completed vs total issues.</span>
-          <div class="metric-value">34%</div>
+          <div class="metric-value">38%</div>
           <div class="metric-label">Completion rate</div>
         </div>
 
@@ -455,7 +492,7 @@
 
             <div class="metric-card">
               <span class="tooltip">Total number of issues labeled as bugs.</span>
-              <div class="metric-value">679</div>
+              <div class="metric-value">681</div>
               <div class="metric-label">Total bugs</div>
             </div>
 
@@ -467,19 +504,19 @@
 
             <div class="metric-card">
               <span class="tooltip">Bugs that have been completed.</span>
-              <div class="metric-value">594</div>
+              <div class="metric-value">596</div>
               <div class="metric-label">Closed bugs</div>
             </div>
 
             <div class="metric-card">
               <span class="tooltip">New bugs created in the last 30 days.</span>
-              <div class="metric-value">34</div>
+              <div class="metric-value">31</div>
               <div class="metric-label">Created last 30d</div>
             </div>
 
             <div class="metric-card">
               <span class="tooltip">Bugs resolved in the last 30 days.</span>
-              <div class="metric-value">29</div>
+              <div class="metric-value">27</div>
               <div class="metric-label">Closed last 30d</div>
             </div>
 
@@ -491,7 +528,7 @@
 
             <div class="metric-card">
               <span class="tooltip">Percentage of issues that are bugs.</span>
-              <div class="metric-value">11.3%</div>
+              <div class="metric-value">11.2%</div>
               <div class="metric-label">Ratio</div>
             </div>
 
@@ -509,31 +546,32 @@
             <canvas id="bugsPriorityChart"></canvas>
           </div>
         </div>
-        <div class="chart-card full-width">
-          <h3 class="chart-title">Bug Flow (Last 365 Days)<span class="filter-badge">Filtered</span></h3>
+        <div class="chart-card">
+          <h3 class="chart-title">Bug Flow (Last 90 Days)<span class="filter-badge">Filtered</span></h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <div class="chart-container tall">
             <canvas id="bugFlowChart"></canvas>
           </div>
         </div>
-        <div class="chart-card full-width">
-          <h3 class="chart-title">Bugs Created by Team (Last 365 Days)<span class="filter-badge">Filtered</span></h3>
+        <div class="chart-card">
+          <h3 class="chart-title">Bugs Created by Team (Last 90 Days)<span class="filter-badge">Filtered</span></h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <div class="chart-container tall">
             <canvas id="bugsByTeamChart"></canvas>
           </div>
         </div>
         <div class="chart-card full-width">
-          <h3 class="chart-title">Bug Flow by Team<span class="filter-badge">Filtered</span></h3>
+          <h3 class="chart-title">Bug Stats by Team (All Time)<span class="filter-badge">Filtered</span></h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
-          <table class="cycles-table">
+          <table class="cycles-table" id="bugStatsTable">
             <thead>
               <tr>
-                <th>Team</th>
-                <th class="has-tooltip">Total Created<span class="th-tooltip">Total bugs ever created for this team</span></th>
-                <th class="has-tooltip">Closed<span class="th-tooltip">Bugs that have been resolved</span></th>
-                <th class="has-tooltip">Open<span class="th-tooltip">Bugs currently open</span></th>
-                <th class="has-tooltip">Resolution Rate<span class="th-tooltip">Percentage of bugs closed</span></th>
+                <th class="sortable" onclick="sortBugStatsTable(0, 'string')">Team</th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(1, 'number')">Total Created<span class="th-tooltip">Total bugs ever created for this team</span></th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(2, 'number')">Closed<span class="th-tooltip">Bugs that have been resolved</span></th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(3, 'number')">Open<span class="th-tooltip">Bugs currently open</span></th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(4, 'number')">MTTR<span class="th-tooltip">Mean Time To Resolve (avg days to fix bugs)</span></th>
+                <th class="sortable has-tooltip" onclick="sortBugStatsTable(5, 'number')">Resolution Rate<span class="th-tooltip">Percentage of bugs closed</span></th>
               </tr>
             </thead>
             <tbody>
@@ -543,7 +581,8 @@
                 <td>153</td>
                 <td>136</td>
                 <td>17</td>
-                <td><span class="status-badge status-active">88.9%</span></td>
+                <td>18d</td>
+                <td><span class="status-badge status-active">89%</span></td>
               </tr>
 
               <tr>
@@ -551,31 +590,35 @@
                 <td>109</td>
                 <td>95</td>
                 <td>14</td>
-                <td><span class="status-badge status-active">87.2%</span></td>
+                <td>40d</td>
+                <td><span class="status-badge status-active">87%</span></td>
               </tr>
 
               <tr>
                 <td><strong>Global ATS</strong></td>
-                <td>62</td>
+                <td>63</td>
                 <td>54</td>
-                <td>8</td>
-                <td><span class="status-badge status-active">87.1%</span></td>
+                <td>9</td>
+                <td>11d</td>
+                <td><span class="status-badge status-active">86%</span></td>
               </tr>
 
               <tr>
                 <td><strong>ROI</strong></td>
-                <td>163</td>
+                <td>164</td>
                 <td>156</td>
-                <td>7</td>
-                <td><span class="status-badge status-active">95.7%</span></td>
+                <td>8</td>
+                <td>26d</td>
+                <td><span class="status-badge status-active">95%</span></td>
               </tr>
 
               <tr>
                 <td><strong>Marketplace</strong></td>
                 <td>7</td>
-                <td>1</td>
-                <td>6</td>
-                <td><span class="status-badge status-past">14.3%</span></td>
+                <td>3</td>
+                <td>4</td>
+                <td>24d</td>
+                <td><span class="status-badge status-past">43%</span></td>
               </tr>
 
               <tr>
@@ -583,7 +626,8 @@
                 <td>12</td>
                 <td>11</td>
                 <td>1</td>
-                <td><span class="status-badge status-active">91.7%</span></td>
+                <td>5d</td>
+                <td><span class="status-badge status-active">92%</span></td>
               </tr>
 
               <tr>
@@ -591,7 +635,8 @@
                 <td>6</td>
                 <td>5</td>
                 <td>1</td>
-                <td><span class="status-badge status-active">83.3%</span></td>
+                <td>120d</td>
+                <td><span class="status-badge status-active">83%</span></td>
               </tr>
 
             </tbody>
@@ -603,7 +648,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128640; Ticket Flow (Last 365 Days)</h2>
+        <h2 class="section-title"><span class="chevron">▼</span> &#128640; Ticket Flow (Last 90 Days)</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -611,14 +656,14 @@
       </div>
       <div class="section-content">
       <div class="charts-grid">
-        <div class="chart-card full-width">
+        <div class="chart-card">
           <h3 class="chart-title">Tickets Created vs Completed<span class="filter-badge">Filtered</span></h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <div class="chart-container tall">
             <canvas id="flowChart"></canvas>
           </div>
         </div>
-        <div class="chart-card full-width">
+        <div class="chart-card">
           <h3 class="chart-title">State Transitions Distribution<span class="filter-badge">Filtered</span></h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <div class="chart-container tall">
@@ -696,74 +741,107 @@
 
             <tr>
               <td><strong>ATS</strong></td>
-              <td>7/13</td>
-              <td>0.0 pts</td>
-              <td>4.1</td>
-              <td>2.3</td>
-              <td>0.15</td>
-              <td>87.0%</td>
-              <td>15</td>
-              <td class="scope-increased">+67.1%</td>
+              <td>6/10</td>
+              <td>0 pts</td>
+              <td>1</td>
+              <td>1</td>
+              <td>0</td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 89%"></div></div>
+                <small>89%</small>
+              </td>
+              <td>11</td>
+              <td class="scope-increased">+71%</td>
+            </tr>
+
+            <tr>
+              <td><strong>Global ATS</strong></td>
+              <td>1/3</td>
+              <td>0 pts</td>
+              <td>5</td>
+              <td>9</td>
+              <td>0</td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 10%"></div></div>
+                <small>10%</small>
+              </td>
+              <td>0</td>
+              <td class="scope-neutral">0%</td>
             </tr>
 
             <tr>
               <td><strong>Marketplace</strong></td>
-              <td>4/13</td>
-              <td>0.0 pts</td>
-              <td>13.5</td>
-              <td>4.3</td>
-              <td>0.96</td>
-              <td>84.6%</td>
-              <td>41</td>
-              <td class="scope-increased">+156.3%</td>
+              <td>5/10</td>
+              <td>0 pts</td>
+              <td>12</td>
+              <td>5</td>
+              <td>1</td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 83%"></div></div>
+                <small>83%</small>
+              </td>
+              <td>65</td>
+              <td class="scope-increased">+125%</td>
             </tr>
 
             <tr>
               <td><strong>Platform</strong></td>
-              <td>4/6</td>
-              <td>3.5 pts</td>
-              <td>10.0</td>
-              <td>4.8</td>
-              <td>0.24</td>
-              <td>69.6%</td>
-              <td>149</td>
-              <td class="scope-neutral">0.0%</td>
+              <td>3/5</td>
+              <td>1 pts</td>
+              <td>8</td>
+              <td>4</td>
+              <td>0</td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 65%"></div></div>
+                <small>65%</small>
+              </td>
+              <td>99</td>
+              <td class="scope-neutral">0%</td>
             </tr>
 
             <tr>
               <td><strong>ROI</strong></td>
-              <td>13/14</td>
-              <td>0.0 pts</td>
-              <td>23.1</td>
-              <td>4.8</td>
-              <td>1.73</td>
-              <td>93.8%</td>
-              <td>154</td>
-              <td class="scope-increased">+7.8%</td>
+              <td>8/9</td>
+              <td>0 pts</td>
+              <td>20</td>
+              <td>5</td>
+              <td>1</td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 83%"></div></div>
+                <small>83%</small>
+              </td>
+              <td>67</td>
+              <td class="scope-increased">+4%</td>
             </tr>
 
             <tr>
               <td><strong>Sourcing</strong></td>
-              <td>13/15</td>
-              <td>15.3 pts</td>
-              <td>32.2</td>
-              <td>8.5</td>
-              <td>2.3</td>
-              <td>86.2%</td>
-              <td>483</td>
-              <td class="scope-increased">+8.5%</td>
+              <td>8/9</td>
+              <td>26 pts</td>
+              <td>32</td>
+              <td>9</td>
+              <td>3</td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 77%"></div></div>
+                <small>77%</small>
+              </td>
+              <td>349</td>
+              <td class="scope-increased">+7%</td>
             </tr>
 
             <tr>
               <td><strong>Talents</strong></td>
-              <td>4/7</td>
-              <td>0.0 pts</td>
-              <td>35.5</td>
-              <td>6.8</td>
-              <td>0.82</td>
-              <td>85.2%</td>
-              <td>70</td>
-              <td class="scope-increased">+108.4%</td>
+              <td>2/5</td>
+              <td>0 pts</td>
+              <td>22</td>
+              <td>7</td>
+              <td>1</td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 74%"></div></div>
+                <small>74%</small>
+              </td>
+              <td>30</td>
+              <td class="scope-increased">+19%</td>
             </tr>
 
           </tbody>
@@ -796,7 +874,6 @@
               <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
               <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
-              <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
               <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
             </tr>
@@ -804,224 +881,234 @@
           <tbody>
 
             <tr>
-              <td>Cycle 21</td>
+              <td>Cycle 22</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 21</td>
+              <td><span class="status-badge status-upcoming">upcoming</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
+              </td>
+              <td>0/0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 20</td>
-              <td><span class="status-badge status-upcoming">upcoming</span></td>
+              <td><span class="status-badge status-active">active</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 33%"></div></div>
+                <small>33%</small>
               </td>
-              <td>0/0</td>
+              <td>1/3</td>
               <td>0</td>
-              <td>0</td>
+              <td>2</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 3 issues → Final: 3 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 19</td>
-              <td><span class="status-badge status-active">active</span></td>
+              <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 37.5%"></div></div>
-                <small>37.5%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
-              <td>1/4</td>
+              <td>1/1</td>
               <td>0</td>
-              <td>2</td>
+              <td>1</td>
               <td>0 pts</td>
-              <td>0.07</td>
-              <td>25.0%</td>
               <td>0</td>
-              <td class="scope-increased has-tooltip">+100.0%<span class="cell-tooltip">Initial: 2 issues → Final: 4 issues</span></td>
+              <td>3</td>
+              <td class="scope-increased has-tooltip">+100%<span class="cell-tooltip">Initial: 2 issues → Final: 4 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 18</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 50.0%"></div></div>
-                <small>50.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>1/1</td>
               <td>0</td>
               <td>1</td>
               <td>0 pts</td>
-              <td>0.07</td>
-              <td>100.0%</td>
+              <td>0</td>
               <td>2</td>
-              <td class="scope-increased has-tooltip">+200.0%<span class="cell-tooltip">Initial: 1 issues → Final: 3 issues</span></td>
+              <td class="scope-increased has-tooltip">+200%<span class="cell-tooltip">Initial: 1 issues → Final: 3 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 17</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 25.0%"></div></div>
-                <small>25.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
+              <td>0</td>
               <td>1</td>
-              <td class="scope-decreased has-tooltip">-50.0%<span class="cell-tooltip">Initial: 2 issues → Final: 1 issues</span></td>
+              <td class="scope-decreased has-tooltip">-50%<span class="cell-tooltip">Initial: 2 issues → Final: 1 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 16</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 33.3%"></div></div>
-                <small>33.3%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>1/1</td>
               <td>0</td>
               <td>1</td>
               <td>0 pts</td>
-              <td>0.07</td>
-              <td>100.0%</td>
+              <td>0</td>
               <td>2</td>
-              <td class="scope-increased has-tooltip">+50.0%<span class="cell-tooltip">Initial: 2 issues → Final: 3 issues</span></td>
+              <td class="scope-increased has-tooltip">+50%<span class="cell-tooltip">Initial: 2 issues → Final: 3 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 15</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 33.3%"></div></div>
-                <small>33.3%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>1/1</td>
               <td>0</td>
               <td>1</td>
               <td>0 pts</td>
-              <td>0.07</td>
-              <td>100.0%</td>
+              <td>0</td>
               <td>2</td>
-              <td class="scope-increased has-tooltip">+50.0%<span class="cell-tooltip">Initial: 2 issues → Final: 3 issues</span></td>
+              <td class="scope-increased has-tooltip">+50%<span class="cell-tooltip">Initial: 2 issues → Final: 3 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 14</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 60.0%"></div></div>
-                <small>60.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>3/3</td>
               <td>0</td>
               <td>2</td>
               <td>0 pts</td>
-              <td>0.21</td>
-              <td>100.0%</td>
+              <td>0</td>
               <td>2</td>
-              <td class="scope-increased has-tooltip">+25.0%<span class="cell-tooltip">Initial: 4 issues → Final: 5 issues</span></td>
+              <td class="scope-increased has-tooltip">+25%<span class="cell-tooltip">Initial: 4 issues → Final: 5 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 13</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 6.3%"></div></div>
-                <small>6.3%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
+              <td>0</td>
               <td>4</td>
-              <td class="scope-increased has-tooltip">+300.0%<span class="cell-tooltip">Initial: 1 issues → Final: 4 issues</span></td>
+              <td class="scope-increased has-tooltip">+300%<span class="cell-tooltip">Initial: 1 issues → Final: 4 issues</span></td>
             </tr>
 
+          </tbody>
+        </table>
+      </div>
+
+      <div class="chart-card" style="margin-bottom: 1.5rem;">
+        <h3 class="chart-title">Global ATS</h3>
+        <table class="cycles-table">
+          <thead>
             <tr>
-              <td>Cycle 12</td>
-              <td><span class="status-badge status-completed">completed</span></td>
+              <th>Cycle</th>
+              <th>Status</th>
+              <th class="has-tooltip">Progress<span class="th-tooltip">Percentage of issues completed</span></th>
+              <th class="has-tooltip">Issues<span class="th-tooltip">Completed / Total issues</span></th>
+              <th class="has-tooltip">Bugs<span class="th-tooltip">Bug issues in this cycle</span></th>
+              <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
+              <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
+              <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
+              <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
+              <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr>
+              <td>Cycle 22</td>
+              <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 25.0%"></div></div>
-                <small>25.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
-              <td>1</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 1 issues → Final: 1 issues</span></td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
-              <td>Cycle 11</td>
-              <td><span class="status-badge status-completed">completed</span></td>
+              <td>Cycle 21</td>
+              <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 100.0%"></div></div>
-                <small>100.0%</small>
-              </td>
-              <td>1/1</td>
-              <td>0</td>
-              <td>1</td>
-              <td>0 pts</td>
-              <td>0.07</td>
-              <td>100.0%</td>
-              <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 1 issues → Final: 1 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 10</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
-              <td>Cycle 9</td>
-              <td><span class="status-badge status-completed">completed</span></td>
+              <td>Cycle 20</td>
+              <td><span class="status-badge status-active">active</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 76.9%"></div></div>
-                <small>76.9%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 10%"></div></div>
+                <small>10%</small>
               </td>
-              <td>21/25</td>
+              <td>5/50</td>
               <td>0</td>
-              <td>8</td>
+              <td>9</td>
               <td>0 pts</td>
-              <td>0.5</td>
-              <td>84.0%</td>
-              <td>7</td>
-              <td class="scope-increased has-tooltip">+44.4%<span class="cell-tooltip">Initial: 18 issues → Final: 26 issues</span></td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 53 issues → Final: 53 issues</span></td>
             </tr>
 
           </tbody>
@@ -1041,7 +1128,6 @@
               <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
               <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
-              <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
               <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
             </tr>
@@ -1049,224 +1135,163 @@
           <tbody>
 
             <tr>
-              <td>Cycle 20</td>
+              <td>Cycle 21</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 20</td>
+              <td><span class="status-badge status-upcoming">upcoming</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
+              </td>
+              <td>0/0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 19</td>
-              <td><span class="status-badge status-upcoming">upcoming</span></td>
+              <td><span class="status-badge status-active">active</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 28%"></div></div>
+                <small>28%</small>
               </td>
-              <td>0/0</td>
+              <td>8/29</td>
               <td>0</td>
-              <td>0</td>
+              <td>8</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
+              <td>1</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 29 issues → Final: 29 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 18</td>
-              <td><span class="status-badge status-active">active</span></td>
+              <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 60.4%"></div></div>
-                <small>60.4%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 96%"></div></div>
+                <small>96%</small>
               </td>
-              <td>24/49</td>
+              <td>24/25</td>
               <td>0</td>
-              <td>8</td>
+              <td>7</td>
               <td>0 pts</td>
-              <td>1.71</td>
-              <td>49.0%</td>
-              <td>0</td>
-              <td class="scope-increased has-tooltip">+77.8%<span class="cell-tooltip">Initial: 27 issues → Final: 48 issues</span></td>
+              <td>2</td>
+              <td>24</td>
+              <td class="scope-increased has-tooltip">+78%<span class="cell-tooltip">Initial: 27 issues → Final: 48 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 17</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 53.2%"></div></div>
-                <small>53.2%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 89%"></div></div>
+                <small>89%</small>
               </td>
               <td>17/19</td>
               <td>0</td>
               <td>4</td>
               <td>0 pts</td>
-              <td>1.21</td>
-              <td>89.5%</td>
+              <td>1</td>
               <td>22</td>
-              <td class="scope-increased has-tooltip">+225.0%<span class="cell-tooltip">Initial: 12 issues → Final: 39 issues</span></td>
+              <td class="scope-increased has-tooltip">+225%<span class="cell-tooltip">Initial: 12 issues → Final: 39 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 16</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 56.3%"></div></div>
-                <small>56.3%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>9/9</td>
               <td>0</td>
               <td>3</td>
               <td>0 pts</td>
-              <td>0.64</td>
-              <td>100.0%</td>
+              <td>1</td>
               <td>11</td>
-              <td class="scope-increased has-tooltip">+122.2%<span class="cell-tooltip">Initial: 9 issues → Final: 20 issues</span></td>
+              <td class="scope-increased has-tooltip">+122%<span class="cell-tooltip">Initial: 9 issues → Final: 20 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 15</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 47.9%"></div></div>
-                <small>47.9%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>4/4</td>
               <td>0</td>
               <td>2</td>
               <td>0 pts</td>
-              <td>0.29</td>
-              <td>100.0%</td>
+              <td>0</td>
               <td>8</td>
-              <td class="scope-increased has-tooltip">+200.0%<span class="cell-tooltip">Initial: 4 issues → Final: 12 issues</span></td>
+              <td class="scope-increased has-tooltip">+200%<span class="cell-tooltip">Initial: 4 issues → Final: 12 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 14</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 18.8%"></div></div>
-                <small>18.8%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
+              <td>0</td>
               <td>4</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 4 issues</span></td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 4 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 13</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 12</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
-              <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 11</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
-              </td>
-              <td>0/0</td>
               <td>0</td>
               <td>0</td>
-              <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
-              <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 10</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
-              </td>
-              <td>0/0</td>
-              <td>0</td>
-              <td>0</td>
-              <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
-              <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 9</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
-              </td>
-              <td>0/0</td>
-              <td>0</td>
-              <td>0</td>
-              <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
-              <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 8</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
-              </td>
-              <td>0/0</td>
-              <td>0</td>
-              <td>0</td>
-              <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
-              <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
           </tbody>
@@ -1286,7 +1311,6 @@
               <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
               <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
-              <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
               <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
             </tr>
@@ -1297,102 +1321,80 @@
               <td>Cycle 13</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 12</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 11</td>
               <td><span class="status-badge status-active">active</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 25.0%"></div></div>
-                <small>25.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 8%"></div></div>
+                <small>8%</small>
               </td>
-              <td>3/50</td>
+              <td>4/50</td>
               <td>0</td>
-              <td>2</td>
+              <td>3</td>
               <td>0 pts</td>
-              <td>0.07</td>
-              <td>6.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 8 issues → Final: 8 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 8 issues → Final: 8 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 10</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 45.5%"></div></div>
-                <small>45.5%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 87%"></div></div>
+                <small>87%</small>
               </td>
               <td>13/15</td>
               <td>0</td>
               <td>5</td>
               <td>3 pts</td>
-              <td>0.31</td>
-              <td>86.7%</td>
+              <td>0</td>
               <td>50</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 11 issues → Final: 11 issues</span></td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 11 issues → Final: 11 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 9</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 25.0%"></div></div>
-                <small>25.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>6/6</td>
               <td>0</td>
               <td>4</td>
               <td>0 pts</td>
-              <td>0.14</td>
-              <td>100.0%</td>
-              <td>49</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 8 issues → Final: 8 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 8</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 68.4%"></div></div>
-                <small>68.4%</small>
-              </td>
-              <td>18/21</td>
               <td>0</td>
-              <td>8</td>
-              <td>11 pts</td>
-              <td>0.43</td>
-              <td>85.7%</td>
-              <td>50</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 19 issues → Final: 19 issues</span></td>
+              <td>49</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 8 issues → Final: 8 issues</span></td>
             </tr>
 
           </tbody>
@@ -1412,7 +1414,6 @@
               <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
               <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
-              <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
               <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
             </tr>
@@ -1420,241 +1421,147 @@
           <tbody>
 
             <tr>
-              <td>Cycle 19</td>
+              <td>Cycle 20</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
-              <td>0/22</td>
+              <td>0/0</td>
               <td>0</td>
-              <td>1</td>
+              <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 19</td>
+              <td><span class="status-badge status-active">active</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 6%"></div></div>
+                <small>6%</small>
+              </td>
+              <td>2/33</td>
+              <td>0</td>
+              <td>3</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 32 issues → Final: 32 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 18</td>
-              <td><span class="status-badge status-active">active</span></td>
+              <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 89.4%"></div></div>
-                <small>89.4%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 94%"></div></div>
+                <small>94%</small>
               </td>
-              <td>40/50</td>
+              <td>47/50</td>
               <td>0</td>
               <td>5</td>
               <td>0 pts</td>
-              <td>2.86</td>
-              <td>80.0%</td>
-              <td>0</td>
-              <td class="scope-increased has-tooltip">+51.1%<span class="cell-tooltip">Initial: 47 issues → Final: 71 issues</span></td>
+              <td>3</td>
+              <td>9</td>
+              <td class="scope-increased has-tooltip">+51%<span class="cell-tooltip">Initial: 47 issues → Final: 71 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 17</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 57.1%"></div></div>
-                <small>57.1%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>20/20</td>
               <td>0</td>
               <td>5</td>
               <td>0 pts</td>
-              <td>1.43</td>
-              <td>100.0%</td>
+              <td>1</td>
               <td>19</td>
-              <td class="scope-increased has-tooltip">+44.4%<span class="cell-tooltip">Initial: 27 issues → Final: 39 issues</span></td>
+              <td class="scope-increased has-tooltip">+44%<span class="cell-tooltip">Initial: 27 issues → Final: 39 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 16</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 62.1%"></div></div>
-                <small>62.1%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>17/17</td>
               <td>0</td>
               <td>6</td>
               <td>0 pts</td>
-              <td>1.21</td>
-              <td>100.0%</td>
+              <td>1</td>
               <td>11</td>
-              <td class="scope-increased has-tooltip">+45.0%<span class="cell-tooltip">Initial: 20 issues → Final: 29 issues</span></td>
+              <td class="scope-increased has-tooltip">+45%<span class="cell-tooltip">Initial: 20 issues → Final: 29 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 15</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 56.3%"></div></div>
-                <small>56.3%</small>
+                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 78%"></div></div>
+                <small>78%</small>
               </td>
               <td>18/23</td>
               <td>0</td>
               <td>5</td>
               <td>0 pts</td>
-              <td>1.29</td>
-              <td>78.3%</td>
+              <td>1</td>
               <td>17</td>
-              <td class="scope-decreased has-tooltip">-2.7%<span class="cell-tooltip">Initial: 37 issues → Final: 36 issues</span></td>
+              <td class="scope-decreased has-tooltip">-3%<span class="cell-tooltip">Initial: 37 issues → Final: 36 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 14</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 96.7%"></div></div>
-                <small>96.7%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 92%"></div></div>
+                <small>92%</small>
               </td>
               <td>22/24</td>
               <td>0</td>
               <td>4</td>
               <td>0 pts</td>
-              <td>1.57</td>
-              <td>91.7%</td>
+              <td>2</td>
               <td>1</td>
-              <td class="scope-decreased has-tooltip">-41.0%<span class="cell-tooltip">Initial: 39 issues → Final: 23 issues</span></td>
+              <td class="scope-decreased has-tooltip">-41%<span class="cell-tooltip">Initial: 39 issues → Final: 23 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 13</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 38.3%"></div></div>
-                <small>38.3%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
               </td>
               <td>4/4</td>
               <td>0</td>
               <td>3</td>
               <td>0 pts</td>
-              <td>0.29</td>
-              <td>100.0%</td>
+              <td>0</td>
               <td>6</td>
-              <td class="scope-decreased has-tooltip">-28.6%<span class="cell-tooltip">Initial: 21 issues → Final: 15 issues</span></td>
+              <td class="scope-decreased has-tooltip">-29%<span class="cell-tooltip">Initial: 21 issues → Final: 15 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 12</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 88.7%"></div></div>
-                <small>88.7%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 96%"></div></div>
+                <small>96%</small>
               </td>
               <td>27/28</td>
               <td>0</td>
               <td>5</td>
               <td>0 pts</td>
-              <td>1.93</td>
-              <td>96.4%</td>
+              <td>2</td>
               <td>4</td>
-              <td class="scope-decreased has-tooltip">-32.6%<span class="cell-tooltip">Initial: 46 issues → Final: 31 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 11</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 100.0%"></div></div>
-                <small>100.0%</small>
-              </td>
-              <td>23/24</td>
-              <td>0</td>
-              <td>5</td>
-              <td>0 pts</td>
-              <td>1.64</td>
-              <td>95.8%</td>
-              <td>0</td>
-              <td class="scope-decreased has-tooltip">-24.1%<span class="cell-tooltip">Initial: 29 issues → Final: 22 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 10</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 44.4%"></div></div>
-                <small>44.4%</small>
-              </td>
-              <td>6/6</td>
-              <td>0</td>
-              <td>4</td>
-              <td>0 pts</td>
-              <td>0.43</td>
-              <td>100.0%</td>
-              <td>12</td>
-              <td class="scope-increased has-tooltip">+20.0%<span class="cell-tooltip">Initial: 15 issues → Final: 18 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 9</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 95.2%"></div></div>
-                <small>95.2%</small>
-              </td>
-              <td>19/20</td>
-              <td>0</td>
-              <td>5</td>
-              <td>0 pts</td>
-              <td>1.36</td>
-              <td>95.0%</td>
-              <td>1</td>
-              <td class="scope-decreased has-tooltip">-19.2%<span class="cell-tooltip">Initial: 26 issues → Final: 21 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 8</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 78.9%"></div></div>
-                <small>78.9%</small>
-              </td>
-              <td>27/27</td>
-              <td>0</td>
-              <td>5</td>
-              <td>0 pts</td>
-              <td>1.93</td>
-              <td>100.0%</td>
-              <td>10</td>
-              <td class="scope-increased has-tooltip">+58.3%<span class="cell-tooltip">Initial: 24 issues → Final: 38 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 7</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 65.9%"></div></div>
-                <small>65.9%</small>
-              </td>
-              <td>44/50</td>
-              <td>0</td>
-              <td>6</td>
-              <td>0 pts</td>
-              <td>1.05</td>
-              <td>88.0%</td>
-              <td>50</td>
-              <td class="scope-increased has-tooltip">+47.3%<span class="cell-tooltip">Initial: 91 issues → Final: 134 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>__blank__</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 62.7%"></div></div>
-                <small>62.7%</small>
-              </td>
-              <td>33/35</td>
-              <td>0</td>
-              <td>5</td>
-              <td>0 pts</td>
-              <td>5.5</td>
-              <td>94.3%</td>
-              <td>23</td>
-              <td class="scope-decreased has-tooltip">-16.9%<span class="cell-tooltip">Initial: 71 issues → Final: 59 issues</span></td>
+              <td class="scope-decreased has-tooltip">-33%<span class="cell-tooltip">Initial: 46 issues → Final: 31 issues</span></td>
             </tr>
 
           </tbody>
@@ -1674,7 +1581,6 @@
               <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
               <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
-              <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
               <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
             </tr>
@@ -1685,255 +1591,144 @@
               <td>Cycle 20</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
-              <td>0/0</td>
+              <td>0/8</td>
               <td>0</td>
-              <td>0</td>
+              <td>3</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 19</td>
-              <td><span class="status-badge status-upcoming">upcoming</span></td>
+              <td><span class="status-badge status-active">active</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 2.5%"></div></div>
-                <small>2.5%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 2%"></div></div>
+                <small>2%</small>
               </td>
-              <td>0/16</td>
+              <td>1/50</td>
               <td>0</td>
               <td>7</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 90 issues → Final: 90 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 18#bis</td>
-              <td><span class="status-badge status-active">active</span></td>
+              <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 36.7%"></div></div>
-                <small>36.7%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 95%"></div></div>
+                <small>95%</small>
               </td>
-              <td>21/50</td>
+              <td>35/37</td>
               <td>0</td>
               <td>8</td>
-              <td>8 pts</td>
-              <td>3.0</td>
-              <td>42.0%</td>
-              <td>0</td>
-              <td class="scope-increased has-tooltip">+2.7%<span class="cell-tooltip">Initial: 110 issues → Final: 113 issues</span></td>
+              <td>14 pts</td>
+              <td>5</td>
+              <td>50</td>
+              <td class="scope-increased has-tooltip">+3%<span class="cell-tooltip">Initial: 110 issues → Final: 113 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 18 - Unblock GTM for UK & Focus Location filter + WUI v10</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 41.1%"></div></div>
-                <small>41.1%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 90%"></div></div>
+                <small>90%</small>
               </td>
               <td>45/50</td>
               <td>0</td>
               <td>9</td>
               <td>33 pts</td>
-              <td>3.21</td>
-              <td>90.0%</td>
+              <td>3</td>
               <td>50</td>
-              <td class="scope-increased has-tooltip">+33.1%<span class="cell-tooltip">Initial: 127 issues → Final: 169 issues</span></td>
+              <td class="scope-increased has-tooltip">+33%<span class="cell-tooltip">Initial: 127 issues → Final: 169 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 17</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 52.0%"></div></div>
-                <small>52.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 92%"></div></div>
+                <small>92%</small>
               </td>
-              <td>45/50</td>
+              <td>46/50</td>
               <td>0</td>
               <td>9</td>
               <td>31 pts</td>
-              <td>3.21</td>
-              <td>90.0%</td>
+              <td>3</td>
               <td>50</td>
-              <td class="scope-increased has-tooltip">+6.3%<span class="cell-tooltip">Initial: 128 issues → Final: 136 issues</span></td>
+              <td class="scope-increased has-tooltip">+6%<span class="cell-tooltip">Initial: 128 issues → Final: 136 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 16</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 35.2%"></div></div>
-                <small>35.2%</small>
+                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 65%"></div></div>
+                <small>65%</small>
               </td>
               <td>26/40</td>
               <td>0</td>
               <td>9</td>
               <td>25 pts</td>
-              <td>1.86</td>
-              <td>65.0%</td>
+              <td>2</td>
               <td>50</td>
-              <td class="scope-increased has-tooltip">+23.1%<span class="cell-tooltip">Initial: 121 issues → Final: 149 issues</span></td>
+              <td class="scope-increased has-tooltip">+23%<span class="cell-tooltip">Initial: 121 issues → Final: 149 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 15</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 55.7%"></div></div>
-                <small>55.7%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 92%"></div></div>
+                <small>92%</small>
               </td>
               <td>46/50</td>
               <td>0</td>
               <td>7</td>
               <td>26 pts</td>
-              <td>3.29</td>
-              <td>92.0%</td>
+              <td>3</td>
               <td>49</td>
-              <td class="scope-increased has-tooltip">+3.2%<span class="cell-tooltip">Initial: 124 issues → Final: 128 issues</span></td>
+              <td class="scope-increased has-tooltip">+3%<span class="cell-tooltip">Initial: 124 issues → Final: 128 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 14</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 39.4%"></div></div>
-                <small>39.4%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 93%"></div></div>
+                <small>93%</small>
               </td>
               <td>25/27</td>
               <td>0</td>
               <td>8</td>
               <td>41 pts</td>
-              <td>1.79</td>
-              <td>92.6%</td>
+              <td>2</td>
               <td>50</td>
-              <td class="scope-decreased has-tooltip">-8.3%<span class="cell-tooltip">Initial: 169 issues → Final: 155 issues</span></td>
+              <td class="scope-decreased has-tooltip">-8%<span class="cell-tooltip">Initial: 169 issues → Final: 155 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 13</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 44.3%"></div></div>
-                <small>44.3%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 90%"></div></div>
+                <small>90%</small>
               </td>
               <td>35/39</td>
               <td>0</td>
               <td>12</td>
               <td>35 pts</td>
-              <td>2.5</td>
-              <td>89.7%</td>
-              <td>50</td>
-              <td class="scope-decreased has-tooltip">-3.3%<span class="cell-tooltip">Initial: 153 issues → Final: 148 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 12</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 50.8%"></div></div>
-                <small>50.8%</small>
-              </td>
-              <td>27/27</td>
-              <td>0</td>
-              <td>11</td>
-              <td>0 pts</td>
-              <td>1.93</td>
-              <td>100.0%</td>
-              <td>31</td>
-              <td class="scope-decreased has-tooltip">-16.2%<span class="cell-tooltip">Initial: 74 issues → Final: 62 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 11</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 42.8%"></div></div>
-                <small>42.8%</small>
-              </td>
-              <td>22/23</td>
-              <td>0</td>
-              <td>8</td>
-              <td>0 pts</td>
-              <td>1.57</td>
-              <td>95.7%</td>
-              <td>44</td>
-              <td class="scope-increased has-tooltip">+37.5%<span class="cell-tooltip">Initial: 48 issues → Final: 66 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 10</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 65.1%"></div></div>
-                <small>65.1%</small>
-              </td>
-              <td>34/34</td>
-              <td>0</td>
-              <td>7</td>
-              <td>0 pts</td>
-              <td>2.43</td>
-              <td>100.0%</td>
-              <td>23</td>
-              <td class="scope-increased has-tooltip">+9.4%<span class="cell-tooltip">Initial: 53 issues → Final: 58 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 9</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 93.6%"></div></div>
-                <small>93.6%</small>
-              </td>
-              <td>31/31</td>
-              <td>0</td>
-              <td>7</td>
-              <td>0 pts</td>
-              <td>2.21</td>
-              <td>100.0%</td>
               <td>3</td>
-              <td class="scope-decreased has-tooltip">-31.4%<span class="cell-tooltip">Initial: 51 issues → Final: 35 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 8</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 57.1%"></div></div>
-                <small>57.1%</small>
-              </td>
-              <td>29/40</td>
-              <td>0</td>
-              <td>6</td>
-              <td>0 pts</td>
-              <td>2.07</td>
-              <td>72.5%</td>
-              <td>33</td>
-              <td class="scope-decreased has-tooltip">-28.4%<span class="cell-tooltip">Initial: 88 issues → Final: 63 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 7</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 32.2%"></div></div>
-                <small>32.2%</small>
-              </td>
-              <td>33/36</td>
-              <td>0</td>
-              <td>10</td>
-              <td>0 pts</td>
-              <td>0.79</td>
-              <td>91.7%</td>
               <td>50</td>
-              <td class="scope-increased has-tooltip">+82.5%<span class="cell-tooltip">Initial: 63 issues → Final: 115 issues</span></td>
+              <td class="scope-decreased has-tooltip">-3%<span class="cell-tooltip">Initial: 153 issues → Final: 148 issues</span></td>
             </tr>
 
           </tbody>
@@ -1953,7 +1748,6 @@
               <th class="has-tooltip">Assignees<span class="th-tooltip">Team members assigned</span></th>
               <th class="has-tooltip">Velocity<span class="th-tooltip">Story points completed</span></th>
               <th class="has-tooltip">Tickets/Day<span class="th-tooltip">Average per day</span></th>
-              <th class="has-tooltip">Completion<span class="th-tooltip">Planned work completed</span></th>
               <th class="has-tooltip">Carryover<span class="th-tooltip">From previous cycles</span></th>
               <th class="has-tooltip">Scope Change<span class="th-tooltip">Change in sprint scope during cycle</span></th>
             </tr>
@@ -1964,119 +1758,80 @@
               <td>Cycle 13</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 12</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 11</td>
               <td><span class="status-badge status-upcoming">upcoming</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 0.0%"></div></div>
-                <small>0.0%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
               </td>
               <td>0/0</td>
               <td>0</td>
               <td>0</td>
               <td>0 pts</td>
-              <td>0.0</td>
-              <td>0.0%</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0.0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 10</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 61.1%"></div></div>
-                <small>61.1%</small>
+                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 50%"></div></div>
+                <small>50%</small>
               </td>
-              <td>10/21</td>
+              <td>10/20</td>
               <td>0</td>
               <td>6</td>
               <td>0 pts</td>
-              <td>0.24</td>
-              <td>47.6%</td>
+              <td>0</td>
               <td>8</td>
-              <td class="scope-decreased has-tooltip">-28.0%<span class="cell-tooltip">Initial: 25 issues → Final: 18 issues</span></td>
+              <td class="scope-decreased has-tooltip">-28%<span class="cell-tooltip">Initial: 25 issues → Final: 18 issues</span></td>
             </tr>
 
             <tr>
               <td>Cycle 9</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 69.2%"></div></div>
-                <small>69.2%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 97%"></div></div>
+                <small>97%</small>
               </td>
               <td>34/35</td>
               <td>0</td>
               <td>7</td>
               <td>0 pts</td>
-              <td>0.81</td>
-              <td>97.1%</td>
+              <td>1</td>
               <td>22</td>
-              <td class="scope-increased has-tooltip">+64.7%<span class="cell-tooltip">Initial: 34 issues → Final: 56 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 8</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 79.7%"></div></div>
-                <small>79.7%</small>
-              </td>
-              <td>50/50</td>
-              <td>0</td>
-              <td>5</td>
-              <td>0 pts</td>
-              <td>1.19</td>
-              <td>100.0%</td>
-              <td>19</td>
-              <td class="scope-increased has-tooltip">+158.6%<span class="cell-tooltip">Initial: 29 issues → Final: 75 issues</span></td>
-            </tr>
-
-            <tr>
-              <td>Cycle 7</td>
-              <td><span class="status-badge status-completed">completed</span></td>
-              <td>
-                <div class="progress-bar"><div class="progress-fill" style="width: 76.1%"></div></div>
-                <small>76.1%</small>
-              </td>
-              <td>48/50</td>
-              <td>0</td>
-              <td>9</td>
-              <td>0 pts</td>
-              <td>1.02</td>
-              <td>96.0%</td>
-              <td>21</td>
-              <td class="scope-increased has-tooltip">+238.1%<span class="cell-tooltip">Initial: 21 issues → Final: 71 issues</span></td>
+              <td class="scope-increased has-tooltip">+65%<span class="cell-tooltip">Initial: 34 issues → Final: 56 issues</span></td>
             </tr>
 
           </tbody>
@@ -2153,6 +1908,56 @@
       document.getElementById('toggleAllText').textContent = allCollapsed ? 'Expand All' : 'Collapse All';
     }
     
+    // Table sorting function for Bug Stats
+    let bugStatsCurrentSort = { column: -1, direction: 'asc' }; // Initialize with no column selected
+    
+    function sortBugStatsTable(columnIndex, type) {
+      const table = document.getElementById('bugStatsTable');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const headers = table.querySelectorAll('th');
+      
+      // Determine sort direction
+      let direction = 'asc';
+      if (bugStatsCurrentSort.column === columnIndex) {
+        direction = bugStatsCurrentSort.direction === 'asc' ? 'desc' : 'asc';
+      }
+      
+      // Sort rows
+      rows.sort((a, b) => {
+        let aVal = a.cells[columnIndex].textContent.trim();
+        let bVal = b.cells[columnIndex].textContent.trim();
+        
+        if (type === 'number') {
+          // Extract numeric value (handle N/A, percentages, badges, etc.)
+          aVal = aVal === 'N/A' ? -1 : parseFloat(aVal.replace(/[^0-9.-]/g, '')) || 0;
+          bVal = bVal === 'N/A' ? -1 : parseFloat(bVal.replace(/[^0-9.-]/g, '')) || 0;
+          return direction === 'asc' ? aVal - bVal : bVal - aVal;
+        } else {
+          // String comparison
+          return direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+      });
+      
+      // Re-append sorted rows
+      rows.forEach(row => tbody.appendChild(row));
+      
+      // Update header indicators
+      headers.forEach(h => h.classList.remove('asc', 'desc'));
+      headers[columnIndex].classList.add(direction);
+      
+      // Store current sort state
+      bugStatsCurrentSort = { column: columnIndex, direction };
+    }
+    
+    // Initialize default sort on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      if (document.getElementById('bugStatsTable')) {
+        sortBugStatsTable(5, 'number'); // Sort by Resolution Rate (column 5)
+        sortBugStatsTable(5, 'number'); // Toggle to descending
+      }
+    });
+    
     const colors = {
       purple: 'rgba(88, 88, 88, 0.8)',
       blue: 'rgba(59, 130, 246, 0.8)',
@@ -2176,16 +1981,16 @@
 
     // Flow Chart
     const flowCtx = document.getElementById('flowChart').getContext('2d');
-    const createdRaw = [1,57,68,24,21,49,44,61,60,53,47,35,54,26,57,34,57,55,40,46,20,16,19,36,45,23,65,36,52,41,69,58,66,56,59,68,59,59,107,81,50,69,51,128,97,97,77,74,273,85,151,101,105];
-    const completedRaw = [2,32,27,15,25,39,40,62,39,19,53,42,27,41,22,21,25,45,22,16,39,11,7,20,28,20,32,31,49,39,56,41,49,53,41,49,36,38,41,51,49,44,46,58,62,79,74,77,84,62,60,124,80];
+    const createdRaw = [23,69,51,128,97,97,77,74,273,85,151,101,104,43];
+    const completedRaw = [33,44,46,58,62,79,74,77,84,62,60,123,77,20];
     
     new Chart(flowCtx, {
       type: 'bar',
       data: {
-        labels: ["Dec 02","Dec 09","Dec 16","Dec 23","Dec 30","Jan 06","Jan 13","Jan 20","Jan 27","Feb 03","Feb 10","Feb 17","Feb 24","Mar 03","Mar 10","Mar 17","Mar 24","Mar 31","Apr 07","Apr 14","Apr 21","Apr 28","May 05","May 12","May 19","May 26","Jun 02","Jun 09","Jun 16","Jun 23","Jun 30","Jul 07","Jul 14","Jul 21","Jul 28","Aug 04","Aug 11","Aug 18","Aug 25","Sep 01","Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01"],
+        labels: ["Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
         datasets: [
-          { label: 'Created', data: [33.3,64.0,71.6,61.5,45.7,55.7,52.4,49.6,60.6,73.6,47.0,45.5,66.7,38.8,72.2,61.8,69.5,55.0,64.5,74.2,33.9,59.3,73.1,64.3,61.6,53.5,67.0,53.7,51.5,51.2,55.2,58.6,57.4,51.4,59.0,58.1,62.1,60.8,72.3,61.4,50.5,61.1,52.6,68.8,61.0,55.1,51.0,49.0,76.5,57.8,71.6,44.9,56.8], backgroundColor: colors.black, rawData: createdRaw },
-          { label: 'Completed', data: [66.7,36.0,28.4,38.5,54.3,44.3,47.6,50.4,39.4,26.4,53.0,54.5,33.3,61.2,27.8,38.2,30.5,45.0,35.5,25.8,66.1,40.7,26.9,35.7,38.4,46.5,33.0,46.3,48.5,48.8,44.8,41.4,42.6,48.6,41.0,41.9,37.9,39.2,27.7,38.6,49.5,38.9,47.4,31.2,39.0,44.9,49.0,51.0,23.5,42.2,28.4,55.1,43.2], backgroundColor: colors.yellow, rawData: completedRaw }
+          { label: 'Created', data: [41,61,53,69,61,55,51,49,76,58,72,45,57,68], backgroundColor: colors.black, rawData: createdRaw },
+          { label: 'Completed', data: [59,39,47,31,39,45,49,51,24,42,28,55,43,32], backgroundColor: colors.yellow, rawData: completedRaw }
         ]
       },
       options: {
@@ -2226,22 +2031,22 @@
     new Chart(transitionCtx, {
       type: 'bar',
       data: {
-        labels: ["Dec 02","Dec 09","Dec 16","Dec 23","Dec 30","Jan 02","Jan 06","Jan 13","Jan 20","Jan 27","Feb 03","Feb 10","Feb 17","Feb 24","Mar 03","Mar 10","Mar 17","Mar 24","Mar 31","Apr 07","Apr 14","Apr 21","Apr 28","May 05","May 12","May 19","May 26","Jun 02","Jun 09","Jun 16","Jun 23","Jun 30","Jul 07","Jul 14","Jul 21","Jul 28","Aug 04","Aug 11","Aug 18","Aug 25","Sep 01","Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01"],
+        labels: ["Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
         datasets: [
 
-          { label: 'Backlog', data: [0.0,2.4,2.2,0.0,0.0,0.0,3.2,1.4,1.4,3.5,4.2,6.7,2.7,9.4,3.6,2.2,2.2,1.0,5.4,3.8,9.9,0.0,0.0,5.4,3.5,0.0,4.0,3.1,2.3,0.6,2.7,16.0,16.7,4.1,13.1,2.4,12.9,0.7,3.2,3.4,1.7,11.4,11.3,5.6,6.2,3.3,3.2,3.8,3.7,5.2,2.8,3.6,7.9,6.7], backgroundColor: transitionColors['Backlog'], rawData: [0,2,3,0,0,0,5,2,4,5,4,17,4,13,4,2,2,1,8,3,9,0,0,3,3,0,4,5,3,1,4,42,35,7,24,3,20,1,6,5,3,24,17,9,17,7,10,12,11,13,6,13,34,25] },
+          { label: 'Backlog', data: [5.2,11.3,5.6,6.2,3.3,3.2,3.8,3.7,5.2,2.8,3.6,7.9,6.7,12.4], backgroundColor: transitionColors['Backlog'], rawData: [6,17,9,17,7,10,12,11,13,6,13,34,25,13] },
 
-          { label: 'Todo', data: [0.0,2.4,5.0,6.8,2.1,0.0,5.7,4.3,2.8,11.1,6.3,7.5,11.6,7.9,3.6,6.6,14.6,1.9,6.1,7.6,7.7,5.1,5.3,12.5,5.9,5.9,5.0,5.0,3.0,5.4,8.7,6.5,11.0,8.8,3.3,4.8,3.2,6.7,9.6,7.5,10.6,9.0,8.0,5.0,7.7,9.5,3.5,7.1,3.4,5.6,6.9,8.0,8.6,10.2], backgroundColor: transitionColors['Todo'], rawData: [0,2,7,3,1,0,9,6,8,16,6,19,17,11,4,6,13,2,9,6,7,7,4,7,5,6,5,8,4,9,13,17,23,15,6,6,5,9,18,11,19,19,12,8,21,20,11,22,10,14,15,29,37,38] },
+          { label: 'Todo', data: [12.1,8.0,5.0,7.7,9.5,3.5,7.1,3.4,5.6,6.9,8.0,8.6,10.2,2.9], backgroundColor: transitionColors['Todo'], rawData: [14,12,8,21,20,11,22,10,14,15,29,37,38,3] },
 
-          { label: 'In Progress', data: [0.0,18.8,25.2,22.7,20.8,19.5,22.8,20.9,16.7,15.3,21.9,20.8,15.0,23.0,16.4,23.1,23.6,25.0,23.0,15.2,22.0,19.9,6.7,10.7,17.6,10.9,12.0,20.1,15.8,21.6,17.4,13.3,19.5,22.4,19.1,29.0,18.7,29.9,27.7,23.8,25.6,24.2,20.7,28.6,23.7,22.3,20.9,22.8,17.2,16.4,24.5,18.6,14.2,16.4], backgroundColor: transitionColors['In Progress'], rawData: [0,16,35,10,10,8,36,29,48,22,21,53,22,32,18,21,21,26,34,12,20,27,5,6,15,11,12,32,21,36,26,35,41,38,35,36,29,40,52,35,46,51,31,46,65,47,65,71,51,41,53,67,61,61] },
+          { label: 'In Progress', data: [22.4,20.7,28.6,23.7,22.3,20.9,22.8,17.2,16.4,24.5,18.6,14.2,16.6,14.3], backgroundColor: transitionColors['In Progress'], rawData: [26,31,46,65,47,65,71,51,41,53,67,61,62,15] },
 
-          { label: 'In Review', data: [25.0,18.8,15.8,18.2,14.6,24.4,19.0,13.7,20.2,13.2,12.5,14.5,12.9,10.1,5.5,16.5,18.0,16.3,14.2,8.9,12.1,12.5,2.7,3.6,12.9,10.9,9.0,18.9,9.8,13.2,13.4,8.0,10.0,5.9,7.1,11.3,7.7,10.4,11.2,8.2,6.1,7.6,14.7,14.9,14.2,14.7,27.7,26.6,31.3,23.6,18.1,26.9,24.0,20.2], backgroundColor: transitionColors['In Review'], rawData: [2,16,22,8,7,10,30,19,58,19,12,37,19,14,6,15,16,17,21,7,11,17,2,2,11,11,9,30,13,22,20,21,21,10,13,14,12,14,21,12,11,16,22,24,39,31,86,83,93,59,39,97,103,75] },
+          { label: 'In Review', data: [9.5,14.7,14.9,14.2,14.7,27.7,26.6,31.3,23.6,18.1,26.9,24.0,20.1,30.5], backgroundColor: transitionColors['In Review'], rawData: [11,22,24,39,31,86,83,93,59,39,97,103,75,32] },
 
-          { label: 'Testing', data: [37.5,12.9,20.1,18.2,31.3,22.0,19.6,19.4,16.4,15.3,15.6,18.8,12.2,20.9,18.2,14.3,11.2,23.1,14.2,17.7,9.9,20.6,12.0,17.9,21.2,27.7,16.0,20.8,21.1,14.4,15.4,16.7,9.0,18.8,14.8,8.9,18.7,15.7,17.6,17.0,13.3,12.3,10.7,7.5,15.0,10.4,5.1,3.8,7.1,4.4,6.5,10.8,9.6,4.8], backgroundColor: transitionColors['Testing'], rawData: [3,11,28,8,15,9,31,27,47,22,15,48,18,29,20,13,10,24,21,14,9,28,9,10,18,28,16,33,28,24,23,44,19,32,27,11,29,21,33,25,24,26,16,12,41,22,16,12,21,11,14,39,41,18] },
+          { label: 'Testing', data: [12.9,10.7,7.5,15.0,10.4,5.1,3.8,7.1,4.4,6.5,10.8,9.6,4.8,4.8], backgroundColor: transitionColors['Testing'], rawData: [15,16,12,41,22,16,12,21,11,14,39,41,18,5] },
 
-          { label: 'Done', data: [37.5,38.8,29.5,34.1,31.3,31.7,29.1,36.0,37.6,32.6,27.1,28.6,33.3,20.9,48.2,37.4,25.8,26.9,32.4,45.6,29.7,36.8,72.0,48.2,32.9,42.6,48.0,28.3,39.1,39.5,38.9,31.6,26.7,39.4,41.5,41.9,36.1,33.6,26.6,37.4,39.4,28.0,31.3,31.1,29.2,33.6,31.2,27.2,31.0,41.2,31.9,24.9,34.5,30.1], backgroundColor: transitionColors['Done'], rawData: [3,33,41,15,15,13,46,50,108,47,26,73,49,29,53,34,23,28,48,36,27,50,54,27,28,43,48,45,52,66,58,83,56,67,76,52,56,45,50,55,71,59,47,50,80,71,97,85,92,103,69,90,148,112] },
+          { label: 'Done', data: [31.0,31.3,31.1,29.2,33.6,31.2,27.2,31.0,41.2,31.9,24.9,34.5,29.9,21.9], backgroundColor: transitionColors['Done'], rawData: [36,47,50,80,71,97,85,92,103,69,90,148,112,23] },
 
-          { label: 'Canceled', data: [0.0,5.9,2.2,0.0,0.0,2.4,0.6,4.3,4.9,9.0,12.5,3.1,12.2,7.9,4.5,0.0,4.5,5.8,4.7,1.3,8.8,5.1,1.3,1.8,5.9,2.0,6.0,3.8,9.0,5.4,3.4,8.0,7.1,0.6,1.1,1.6,2.6,3.0,4.3,2.7,3.3,7.6,3.3,7.5,4.0,6.2,8.4,8.7,6.4,3.6,9.3,7.2,1.2,11.6], backgroundColor: transitionColors['Canceled'], rawData: [0,5,3,0,0,1,1,6,14,13,12,8,18,11,5,0,4,6,7,1,8,7,1,1,5,2,6,6,12,9,5,21,15,1,2,2,4,4,8,4,6,16,5,12,11,13,26,27,19,9,20,26,5,43] }
+          { label: 'Canceled', data: [6.9,3.3,7.5,4.0,6.2,8.4,8.7,6.4,3.6,9.3,7.2,1.2,11.8,13.3], backgroundColor: transitionColors['Canceled'], rawData: [8,5,12,11,13,26,27,19,9,20,26,5,44,14] }
 
         ]
       },
@@ -2274,7 +2079,7 @@
       type: 'doughnut',
       data: {
         labels: ['Open', 'Closed'],
-        datasets: [{ data: [85, 594], backgroundColor: [colors.red, colors.green], borderWidth: 0 }]
+        datasets: [{ data: [85, 596], backgroundColor: [colors.red, colors.green], borderWidth: 0 }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
     });
@@ -2282,7 +2087,7 @@
     // Bugs by Priority
     const bugsPriorityColors = { 'Urgent': colors.red, 'High': colors.orange, 'Medium': colors.yellow, 'Low': colors.green, 'No priority': 'rgba(148, 163, 184, 0.8)' };
     const bugsPriorityLabels = ["Urgent","High","Medium","Low","No priority"];
-    const bugsPriorityData = [2,16,11,23,33];
+    const bugsPriorityData = [2,16,11,22,34];
     
     new Chart(document.getElementById('bugsPriorityChart').getContext('2d'), {
       type: 'doughnut',
@@ -2298,10 +2103,10 @@
     new Chart(document.getElementById('bugFlowChart').getContext('2d'), {
       type: 'bar',
       data: {
-        labels: ["Dec 09","Dec 16","Dec 23","Dec 30","Jan 06","Jan 13","Jan 20","Jan 27","Feb 03","Feb 10","Feb 17","Feb 24","Mar 03","Mar 10","Mar 17","Mar 24","Mar 31","Apr 07","Apr 14","Apr 21","Apr 28","May 05","May 12","May 19","May 26","Jun 02","Jun 09","Jun 16","Jun 23","Jun 30","Jul 07","Jul 14","Jul 21","Jul 28","Aug 04","Aug 11","Aug 18","Aug 25","Sep 01","Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01"],
+        labels: ["Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
         datasets: [
-          { label: 'Bugs Created', data: [52.9,77.3,63.6,57.1,53.8,57.1,47.8,60.7,55.6,57.1,60.0,60.0,36.8,80.0,57.9,91.7,46.7,77.8,66.7,19.0,71.4,75.0,73.7,46.2,31.3,54.5,62.5,33.3,42.9,53.3,55.6,16.7,44.4,60.0,61.5,60.0,42.9,70.0,37.5,71.4,76.9,56.5,50.0,100.0,68.8,30.0,35.7,60.0,50.0,66.7,41.7,33.3], backgroundColor: 'rgba(220, 38, 38, 0.8)', borderRadius: 0, raw: [9,17,7,12,14,12,11,17,5,8,9,9,7,12,11,22,7,7,4,4,10,3,14,6,5,6,10,6,3,8,10,2,4,6,8,6,3,7,6,10,10,13,5,11,11,3,5,12,9,10,5,3] },
-          { label: 'Bugs Closed', data: [47.1,22.7,36.4,42.9,46.2,42.9,52.2,39.3,44.4,42.9,40.0,40.0,63.2,20.0,42.1,8.3,53.3,22.2,33.3,81.0,28.6,25.0,26.3,53.8,68.8,45.5,37.5,66.7,57.1,46.7,44.4,83.3,55.6,40.0,38.5,40.0,57.1,30.0,62.5,28.6,23.1,43.5,50.0,0.0,31.3,70.0,64.3,40.0,50.0,33.3,58.3,66.7], backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 0, raw: [8,5,4,9,12,9,12,11,4,6,6,6,12,3,8,2,8,2,2,17,4,1,5,7,11,5,6,12,4,7,8,10,5,4,5,4,4,3,10,4,3,10,5,0,5,7,9,8,9,5,7,6] }
+          { label: 'Bugs Created', data: [67,77,57,50,100,69,30,36,60,50,67,42,33,100], backgroundColor: 'rgba(220, 38, 38, 0.8)', borderRadius: 0, raw: [4,10,13,5,11,11,3,5,12,9,10,5,3,2] },
+          { label: 'Bugs Closed', data: [33,23,43,50,0,31,70,64,40,50,33,58,67,0], backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 0, raw: [2,3,10,5,0,5,7,9,8,9,5,7,6,0] }
         ]
       },
       options: {
@@ -2352,22 +2157,22 @@
     });
 
     // Calculate percentages for 100% stacked chart
-    const teamLabels = ["Dec 09","Dec 16","Dec 23","Dec 30","Jan 06","Jan 13","Jan 20","Jan 27","Feb 03","Feb 10","Feb 17","Feb 24","Mar 03","Mar 10","Mar 17","Mar 24","Mar 31","Apr 07","Apr 14","Apr 21","Apr 28","May 05","May 12","May 19","May 26","Jun 02","Jun 09","Jun 16","Jun 23","Jun 30","Jul 07","Jul 14","Jul 21","Jul 28","Aug 04","Aug 11","Aug 18","Aug 25","Sep 01","Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01"];
+    const teamLabels = ["Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"];
     const teamRawData = {
 
-      'ATS': [0,0,0,0,0,0,0,5,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      'ATS': [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 
-      'Global ATS': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,3,0,0,0,1,2,2,0,0,0,3,5,4,9,9,2,2,8,6,4,1,0],
+      'Global ATS': [0,3,5,4,9,9,2,2,8,6,4,1,0,1],
 
-      'Marketplace': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,1,0,0,0,1,0,0,0,0,0,0],
+      'Marketplace': [1,3,1,0,0,0,1,0,0,0,0,0,0,0],
 
-      'Platform': [0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      'Platform': [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 
-      'ROI': [3,6,1,2,1,1,0,4,3,6,4,3,4,6,5,7,2,6,3,3,8,2,1,4,4,4,8,4,2,6,3,2,0,1,5,0,1,2,2,2,4,0,1,1,1,0,2,2,2,5,1,2],
+      'ROI': [1,4,0,1,1,1,0,2,2,2,5,1,2,1],
 
-      'Sourcing': [3,10,6,10,11,10,11,3,0,2,5,3,2,5,5,15,4,0,0,0,2,0,3,0,0,0,1,0,0,0,3,0,0,3,0,4,0,1,1,4,0,5,0,0,1,0,1,2,1,0,3,1],
+      'Sourcing': [1,0,5,0,0,1,0,1,2,1,0,3,1,0],
 
-      'Talents': [3,1,0,0,2,1,0,2,2,0,0,3,0,1,1,0,1,0,1,1,0,1,10,2,1,2,1,2,1,1,0,0,4,2,2,0,0,4,2,2,0,2,0,1,0,0,0,0,0,1,0,0]
+      'Talents': [1,0,2,0,1,0,0,0,0,0,1,0,0,0]
 
     };
     
@@ -2416,13 +2221,13 @@
     // Status Chart
     const statusColors = { 'Backlog': 'rgba(148, 163, 184, 0.8)', 'To Do': 'rgba(59, 130, 246, 0.8)', 'In Progress': 'rgba(255, 205, 0, 0.9)', 'In Review': 'rgba(88, 88, 88, 0.8)', 'Done': 'rgba(34, 197, 94, 0.8)' };
     const statusLabels = ["Backlog","To Do","In Progress","In Review","Done"];
-    const statusBreakdown = [[{"name":"Backlog","count":675},{"name":"Archived","count":179},{"name":"Triage","count":35}],[{"name":"Todo","count":277},{"name":"To Do","count":41},{"name":"To Qualify","count":16},{"name":"To dev","count":13},{"name":"To do","count":6},{"name":"To design","count":5}],[{"name":"In Progress","count":74},{"name":"In progress","count":3}],[{"name":"In Review","count":42},{"name":"To test","count":13},{"name":"To Validate","count":2},{"name":"To Review","count":2},{"name":"To Merge (main)","count":1}],[{"name":"Done","count":2456},{"name":"Released","count":1534},{"name":"Canceled","count":482},{"name":"Duplicate","count":133},{"name":"Auto-closed","count":42}]];
+    const statusBreakdown = [[{"name":"Backlog","count":698},{"name":"Archived","count":179},{"name":"Triage","count":34}],[{"name":"Todo","count":262},{"name":"To Do","count":39},{"name":"To Qualify","count":16},{"name":"To dev","count":13},{"name":"To do","count":6},{"name":"To design","count":5}],[{"name":"In Progress","count":68},{"name":"In progress","count":3}],[{"name":"In Review","count":49},{"name":"To test","count":13},{"name":"To Validate","count":2},{"name":"To Merge (main)","count":2},{"name":"To Review","count":2}],[{"name":"Done","count":2473},{"name":"Released","count":1538},{"name":"Canceled","count":495},{"name":"Duplicate","count":134},{"name":"Auto-closed","count":43}]];
     
     new Chart(document.getElementById('statusChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: statusLabels,
-        datasets: [{ data: [889,358,77,60,4647], backgroundColor: statusLabels.map(l => statusColors[l] || colors.purple), borderWidth: 0 }]
+        datasets: [{ data: [911,341,71,68,4683], backgroundColor: statusLabels.map(l => statusColors[l] || colors.purple), borderWidth: 0 }]
       },
       options: {
         responsive: true,
@@ -2450,8 +2255,8 @@
     new Chart(document.getElementById('priorityChart').getContext('2d'), {
       type: 'doughnut',
       data: {
-        labels: ["No priority","Low","Medium","High","Urgent"],
-        datasets: [{ data: [3771,528,627,931,174], backgroundColor: ['rgba(148, 163, 184, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(255, 205, 0, 0.9)', 'rgba(249, 115, 22, 0.8)', 'rgba(220, 38, 38, 0.8)'], borderWidth: 0 }]
+        labels: ["No priority","High","Low","Medium","Urgent"],
+        datasets: [{ data: [3805,934,532,629,174], backgroundColor: ['rgba(148, 163, 184, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(255, 205, 0, 0.9)', 'rgba(249, 115, 22, 0.8)', 'rgba(220, 38, 38, 0.8)'], borderWidth: 0 }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
     });
@@ -2460,8 +2265,8 @@
     new Chart(document.getElementById('typeChart').getContext('2d'), {
       type: 'doughnut',
       data: {
-        labels: ["Feature","Bug","Tech Debt","Other"],
-        datasets: [{ data: [119,679,53,5180], backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(220, 38, 38, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(88, 88, 88, 0.8)'], borderWidth: 0 }]
+        labels: ["Feature","Bug","Improvement","Tech Debt","Task","Documentation","Other"],
+        datasets: [{ data: [172,736,210,241,146,117,4452], backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'], borderWidth: 0 }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
     });
@@ -2470,8 +2275,8 @@
     new Chart(document.getElementById('assigneeChart').getContext('2d'), {
       type: 'bar',
       data: {
-        labels: ["Unassigned","David Julien","Camille Nairi","Zeid Fazazi","Jonathan Herbault","Valentin Mariette","Daryna Panicheva","Simon Degraeve","Brice Thomas","Amélie BRESSON","Nicolas Briere","Jade Mihami","Paul-Xavier Ceccaldi","Guilhem BERNARD","Isaac MAAMOUCHE"],
-        datasets: [{ label: 'Active Issues', data: [39,8,6,5,5,4,4,4,4,4,4,3,3,3,3], backgroundColor: 'rgba(255, 205, 0, 0.9)', borderRadius: 4 }]
+        labels: ["Unassigned","David Julien","Jonathan Herbault","Camille Nairi","Valentin Mariette","Benjamin WAN NAN WO","Daryna Panicheva","Brice Thomas","Amélie BRESSON","Zeid Fazazi","Cédric Garcia","Simon Degraeve","Baptiste TRUCHET","Clement Quaresma","Jade Mihami"],
+        datasets: [{ label: 'Active Issues', data: [34,8,5,5,4,4,4,4,4,4,4,4,4,3,3], backgroundColor: 'rgba(255, 205, 0, 0.9)', borderRadius: 4 }]
       },
       options: {
         responsive: true,
