@@ -148,7 +148,7 @@ module WttjMetrics
             variables[:after] = data.pageInfo.endCursor
           end
 
-          all_nodes
+          all_nodes.map(&:to_h)
         end
 
         def fetch_organization_pull_requests(org, from_date)
@@ -236,7 +236,7 @@ module WttjMetrics
             @logger&.warn "Rate limit exceeded. Retrying in #{sleep_time} seconds..."
             sleep sleep_time
             retry
-          rescue Octokit::BadGateway, Octokit::ServiceUnavailable, Octokit::GatewayTimeout, Faraday::ConnectionFailed,
+          rescue Octokit::BadGateway, Octokit::ServiceUnavailable, Faraday::ConnectionFailed,
                  Faraday::TimeoutError => e
             if retries.positive?
               sleep_time = BASE_DELAY * (2**(MAX_RETRIES - retries))

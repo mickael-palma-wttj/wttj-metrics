@@ -91,8 +91,27 @@ module WttjMetrics
             today: @today,
             metrics: metrics,
             daily_breakdown: daily_breakdown,
+            top_repositories: top_repositories,
             raw_data: @parser.data
           }
+        end
+
+        def top_repositories
+          start_date = (Date.today - @days_to_show).to_s
+
+          metrics = (@parser.metrics_by_category['github_repo_activity'] || [])
+                    .select { |m| m[:date] >= start_date }
+                    .group_by { |m| m[:metric] }
+
+          aggregated = metrics.map do |repo_name, repo_metrics|
+            {
+              metric: repo_name,
+              value: repo_metrics.sum { |m| m[:value] },
+              date: @today
+            }
+          end
+
+          aggregated.sort_by { |m| -m[:value] }.first(10)
         end
 
         def initialize_datasets

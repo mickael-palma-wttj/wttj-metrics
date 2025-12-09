@@ -30,7 +30,8 @@ RSpec.describe WttjMetrics::Services::Github::DataFetcher do
     it 'fetches pull requests' do
       allow(client).to receive(:fetch_pull_requests).and_return(prs)
       result = fetcher.call
-      expected_prs = [{ title: 'PR 1', createdAt: Date.today.iso8601, url: 'http://github.com/owner/repo/pull/1' }]
+      expected_prs = [{ title: 'PR 1', createdAt: Date.today.iso8601, url: 'http://github.com/owner/repo/pull/1',
+                        repository: { name: 'repo' } }]
       expect(result[:pull_requests]).to eq(expected_prs)
     end
 

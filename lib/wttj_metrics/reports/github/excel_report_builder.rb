@@ -17,6 +17,7 @@ module WttjMetrics
         def build(output_path)
           add_key_metrics_sheet
           add_daily_breakdown_sheet
+          add_top_repositories_sheet
           add_raw_data_sheet
 
           @package.serialize(output_path)
@@ -84,6 +85,17 @@ module WttjMetrics
                 datasets[:avg_deletions][index],
                 datasets[:avg_time_to_first_review][index]
               ]
+            end
+          end
+        end
+
+        def add_top_repositories_sheet
+          return unless @data[:top_repositories]&.any?
+
+          @workbook.add_worksheet(name: 'Top 10 Repositories') do |sheet|
+            sheet.add_row %w[Repository PRs], style: @header_style
+            @data[:top_repositories].each do |repo|
+              sheet.add_row [repo[:metric], repo[:value]]
             end
           end
         end

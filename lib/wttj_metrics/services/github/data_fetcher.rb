@@ -34,7 +34,10 @@ module WttjMetrics
           elsif ENV['GITHUB_REPO']
             @logger.info "   Fetching for repository: #{ENV['GITHUB_REPO']}"
             prs = client.fetch_pull_requests(ENV['GITHUB_REPO'], from_date)
-            deep_stringify_keys(prs)
+            prs = deep_stringify_keys(prs)
+            repo_name = ENV['GITHUB_REPO'].split('/').last
+            prs.each { |pr| pr['repository'] ||= { 'name' => repo_name } }
+            prs
           else
             @logger.error '❌ GITHUB_ORG or GITHUB_REPO environment variable is not set'
             []

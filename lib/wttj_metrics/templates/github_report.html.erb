@@ -294,6 +294,12 @@
           </div>
         </div>
         <div class="chart-card">
+          <h3 class="chart-title">Top 10 Active Repositories (PRs Created)</h3>
+          <div class="chart-container">
+            <canvas id="topReposChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
           <h3 class="chart-title">PR Size History</h3>
           <div class="chart-container">
             <canvas id="prSizeChart"></canvas>
@@ -565,6 +571,39 @@
         }
       }
     });
+
+    // Top Repositories Chart
+    <% top_repos = top_repositories %>
+    const topRepoLabels = <%= top_repos.map { |r| r[:metric] }.to_json %>;
+    const topRepoData = <%= top_repos.map { |r| r[:value] }.to_json %>;
+
+    if (topRepoLabels.length > 0) {
+      new Chart(document.getElementById('topReposChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: topRepoLabels,
+          datasets: [{
+            label: 'Pull Requests',
+            data: topRepoData,
+            backgroundColor: colors.purple,
+            borderColor: colors.purple,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: false }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>
