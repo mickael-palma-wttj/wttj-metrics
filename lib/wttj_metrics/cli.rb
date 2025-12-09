@@ -77,6 +77,7 @@ module WttjMetrics
           input_csv = "tmp/#{source}_metrics.csv"
 
           opts[:output] = "report/#{source}_report.html" if opts[:output] == 'report/report.html'
+          opts[:excel_path] = "report/#{source}_report.xlsx" if opts[:excel_path] == 'report/report.xlsx'
 
           Services::ReportService.new(input_csv, Values::ReportOptions.new(opts), logger).call
         end

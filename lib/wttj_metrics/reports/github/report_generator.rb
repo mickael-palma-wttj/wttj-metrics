@@ -25,9 +25,10 @@ module WttjMetrics
           puts "✅ HTML report generated: #{output_path}"
         end
 
-        def generate_excel(_output_path)
-          # Not implemented for GitHub yet
-          puts '⚠️ Excel report not supported for GitHub metrics yet'
+        def generate_excel(output_path)
+          builder = ExcelReportBuilder.new(excel_report_data)
+          builder.build(output_path)
+          puts "✅ Excel report generated: #{output_path}"
         end
 
         def metrics
@@ -84,6 +85,15 @@ module WttjMetrics
         end
 
         private
+
+        def excel_report_data
+          {
+            today: @today,
+            metrics: metrics,
+            daily_breakdown: daily_breakdown,
+            raw_data: @parser.data
+          }
+        end
 
         def initialize_datasets
           {
