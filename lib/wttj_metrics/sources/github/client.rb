@@ -236,6 +236,9 @@ module WttjMetrics
             @logger&.warn "Rate limit exceeded. Retrying in #{sleep_time} seconds..."
             sleep sleep_time
             retry
+          rescue Octokit::Unauthorized => e
+            @logger&.error "❌ Authentication failed: #{e.message}. Please check your GITHUB_TOKEN."
+            raise
           rescue Octokit::BadGateway, Octokit::ServiceUnavailable, Faraday::ConnectionFailed,
                  Faraday::TimeoutError => e
             if retries.positive?

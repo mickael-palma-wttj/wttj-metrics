@@ -13,6 +13,8 @@ module WttjMetrics
         validate_config
         log_start
         data = fetch_data
+        return if data.empty?
+
         rows = calculate_metrics(data)
         write_results(rows)
         log_summary(rows)

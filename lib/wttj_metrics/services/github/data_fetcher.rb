@@ -21,6 +21,9 @@ module WttjMetrics
           @logger.info "   Found #{filtered_prs.size} pull requests (created >= #{from_date})"
 
           { pull_requests: filtered_prs }
+        rescue Octokit::Unauthorized
+          # Already logged in client
+          {}
         rescue StandardError => e
           @logger.error "❌ Error fetching GitHub data: #{e.message}"
           {}

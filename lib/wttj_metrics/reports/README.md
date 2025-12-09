@@ -4,26 +4,31 @@ This directory contains classes responsible for report generation, data aggregat
 
 ## Architecture
 
-The reports layer consists of:
-- **ReportGenerator**: Main orchestrator that coordinates all report generation
-- **HtmlGenerator**: Renders HTML reports using ERB templates
-- **MetricAccessor**: Provides cached access to parsed metrics with memoization
-- **TeamFilter**: Handles team filtering and discovery logic
+The reports layer is split by data source:
+
+### Linear Reports
+- **Linear::ReportGenerator**: Main orchestrator for Linear reports
+- **Linear::HtmlGenerator**: Renders HTML reports using ERB templates
+- **Linear::ExcelReportBuilder**: Generates Excel reports
+- **MetricAccessor**: Provides cached access to parsed metrics
+- **TeamFilter**: Handles team filtering logic
 - **BugsByTeamBuilder**: Aggregates bug statistics by team
-- **WeeklyBugFlowBuilder**: Builds weekly bug flow data aggregated by team
 - **ChartDataBuilder**: Prepares data for Chart.js visualizations
-- **WeeklyDataAggregator**: Aggregates time-series data into weekly buckets
-- **ExcelReportBuilder**: Generates Excel reports (alternative output format)
+
+### GitHub Reports
+- **Github::ReportGenerator**: Main orchestrator for GitHub reports
+- **Github::ExcelReportBuilder**: Generates Excel reports for GitHub metrics
+- **Github::ChartDataBuilder**: Prepares GitHub chart data
 
 ## Classes
 
-### ReportGenerator
+### ReportGenerator (Linear/Github)
 
-The main orchestrator that coordinates data collection, metric calculations, and HTML report generation.
+The main orchestrators that coordinate data collection, metric calculations, and HTML report generation.
 
 **Responsibilities:**
 - Load and parse metrics from CSV files
-- Calculate all metrics (bugs, cycles, teams, flow)
+- Calculate all metrics
 - Prepare data for presenters
 - Generate chart data for visualizations
 - Render HTML report from ERB template
@@ -31,11 +36,11 @@ The main orchestrator that coordinates data collection, metric calculations, and
 
 **Key Methods:**
 ```ruby
-generator = ReportGenerator.new('tmp/metrics.csv', days: 90)
+generator = Reports::Linear::ReportGenerator.new('tmp/linear_metrics.csv', days: 90)
+generator.generate_html('report/linear_report.html')
 
-# Generate complete report
-generator.generate('tmp/report.html')
-# => Creates comprehensive HTML report with all sections
+gh_generator = Reports::Github::ReportGenerator.new('tmp/github_metrics.csv', days: 90)
+gh_generator.generate_html('report/github_report.html')
 ```
 
 **Data Flow:**
@@ -43,11 +48,18 @@ generator.generate('tmp/report.html')
 CSV File → CsvParser → Metrics Calculators → Presenters → ERB Template → HTML Report
 ```
 
-**Generated Sections:**
+**Generated Sections (Linear):**
 1. Overview metrics (total issues, cycles, teams)
 2. Cycle metrics with scope change and completion
 3. Team comparison metrics
 4. Bug tracking metrics
+
+**Generated Sections (GitHub):**
+1. Key Metrics (Merge time, Review time, etc.)
+2. Daily Breakdown (Created, Merged, Closed, Open)
+3. Top 10 Active Repositories
+4. PR Size Distribution
+5. Review & Comment Stats
 5. All charts (scatter, bar, line, pie)
 
 **Configuration:**

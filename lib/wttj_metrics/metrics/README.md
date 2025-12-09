@@ -1,13 +1,13 @@
 # Metrics
 
-This directory contains the core calculation engines for all metrics tracked in the application. Each calculator is responsible for computing specific metrics from Linear issue data.
+This directory contains the core calculation engines for all metrics tracked in the application. Each calculator is responsible for computing specific metrics from Linear or GitHub data.
 
 ## Architecture
 
 All metric calculators inherit from `Base` and follow a consistent pattern:
-1. Accept issues and configuration in the initializer
-2. Provide a `calculate` method that returns structured metric data
-3. Use helpers for common operations (date formatting, issue filtering, etc.)
+1. Accept data (issues, PRs) and configuration in the initializer
+2. Provide a `calculate` or `to_rows` method that returns structured metric data
+3. Use helpers for common operations (date formatting, filtering, etc.)
 
 ## Calculators
 
@@ -20,7 +20,31 @@ Abstract base class providing common functionality for all metric calculators.
 - Consistent interface for all calculators
 - Common initialization pattern
 
-### BugCalculator
+### GitHub Metrics
+
+Calculators for GitHub pull request data.
+
+#### PrVelocityCalculator
+Calculates velocity metrics for PRs.
+- **Avg Time to Merge**: Time from creation to merge
+- **Avg Time to First Review**: Time from creation to first review
+- **Avg Reviews/Comments**: Engagement metrics
+
+#### RepositoryActivityCalculator
+Tracks activity per repository.
+- **Top 10 Repositories**: Most active repos by PR count
+- **Daily Activity**: PRs created per repo per day
+
+#### TimeseriesCalculator
+Calculates daily trends for PRs.
+- **Created/Merged/Closed/Open**: Daily counts
+- **Moving Averages**: Trends over time
+
+### Linear Metrics
+
+Calculators for Linear issue data.
+
+#### BugCalculator
 
 Calculates bug-related metrics including status distribution, resolution rates, and Mean Time To Resolution (MTTR).
 

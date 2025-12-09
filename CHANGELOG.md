@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **GitHub Metrics Integration**: Full support for GitHub pull request metrics
+  - **Data Collection**: Fetches PRs, reviews, comments, and commits via GraphQL API
+  - **Key Metrics**: Average Time to Merge, Time to First Review, Reviews/PR, Comments/PR
+  - **Repository Activity**: "Top 10 Active Repositories" chart and detailed breakdown
+  - **Daily Breakdown**: Created, Merged, Closed, and Open PRs over time
+  - **Excel Export**: Dedicated sheets for GitHub metrics and repository activity
+  - **Caching**: Efficient caching of GitHub data to minimize API calls
+  - **Error Handling**: Robust handling of rate limits, timeouts, and authentication errors
 - **Average Review Time Metric**: New metric in Key Metrics section showing average time spent in review states
   - Calculates time in states matching "review", "validate", "test", or "merge"
   - Displayed as days with tooltip explanation
