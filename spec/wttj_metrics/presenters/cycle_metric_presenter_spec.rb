@@ -54,7 +54,7 @@ RSpec.describe WttjMetrics::Presenters::CycleMetricPresenter do
       let(:metric_name) { 'cycle_commitment_accuracy' }
 
       it 'returns the tooltip' do
-        expect(tooltip).to eq('Percentage of planned work completed vs total planned.')
+        expect(tooltip).to eq('Average percentage of planned work completed across all completed cycles.')
       end
     end
 
@@ -62,7 +62,7 @@ RSpec.describe WttjMetrics::Presenters::CycleMetricPresenter do
       let(:metric_name) { 'cycle_carryover_count' }
 
       it 'returns the tooltip' do
-        expect(tooltip).to eq('Number of issues carried over from previous cycles.')
+        expect(tooltip).to eq('Average number of issues carried over per completed cycle.')
       end
     end
 

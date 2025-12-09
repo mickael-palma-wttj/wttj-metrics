@@ -33,10 +33,46 @@ RSpec.describe WttjMetrics::Metrics::CycleCalculator do
         # 3 + 5 = 8 points completed
         expect(result[:current_cycle_velocity]).to eq(8)
       end
+    end
 
-      it 'calculates commitment accuracy' do
-        # 2 out of 3 issues completed = 66.67%
-        expect(result[:cycle_commitment_accuracy]).to be_within(0.1).of(66.67)
+    context 'with completed cycles' do
+      let(:cycles) do
+        [
+          {
+            'name' => 'Sprint 1',
+            'startsAt' => '2024-11-01',
+            'endsAt' => '2024-11-14',
+            'completedAt' => '2024-11-14T10:00:00Z',
+            'issues' => {
+              'nodes' => [
+                { 'estimate' => 3, 'state' => { 'type' => 'completed' } },
+                { 'estimate' => 5, 'state' => { 'type' => 'completed' } },
+                { 'estimate' => 2, 'state' => { 'type' => 'started' } }
+              ]
+            }
+          },
+          {
+            'name' => 'Sprint 2',
+            'startsAt' => '2024-11-15',
+            'endsAt' => '2024-11-28',
+            'completedAt' => '2024-11-28T10:00:00Z',
+            'issues' => {
+              'nodes' => [
+                { 'estimate' => 2, 'state' => { 'type' => 'completed' } },
+                { 'estimate' => 3, 'state' => { 'type' => 'completed' } },
+                { 'estimate' => 5, 'state' => { 'type' => 'completed' } },
+                { 'estimate' => 1, 'state' => { 'type' => 'completed' } }
+              ]
+            }
+          }
+        ]
+      end
+
+      it 'calculates average commitment accuracy across completed cycles' do
+        # Sprint 1: 2/3 = 66.67%
+        # Sprint 2: 4/4 = 100%
+        # Average: (66.67 + 100) / 2 = 83.33%
+        expect(result[:cycle_commitment_accuracy]).to be_within(0.1).of(83.33)
       end
     end
 
@@ -57,18 +93,61 @@ RSpec.describe WttjMetrics::Metrics::CycleCalculator do
         ]
       end
 
-      it 'calculates carryover count from last completed cycle' do
-        expect(result[:cycle_carryover_count]).to eq(2)
+      it 'calculates average carryover count across completed cycles' do
+        expect(result[:cycle_carryover_count]).to eq(2.0)
       end
     end
 
-    context 'with cycle but no issues' do
+    context 'with multiple completed cycles' do
+      let(:cycles) do
+        [
+          {
+            'name' => 'Sprint 1',
+            'startsAt' => '2024-10-01',
+            'endsAt' => '2024-10-14',
+            'completedAt' => '2024-10-14T10:00:00Z',
+            'issues' => { 'nodes' => [] },
+            'uncompletedIssuesUponClose' => {
+              'nodes' => [{ 'id' => '1' }, { 'id' => '2' }, { 'id' => '3' }]
+            }
+          },
+          {
+            'name' => 'Sprint 2',
+            'startsAt' => '2024-10-15',
+            'endsAt' => '2024-10-28',
+            'completedAt' => '2024-10-28T10:00:00Z',
+            'issues' => { 'nodes' => [] },
+            'uncompletedIssuesUponClose' => {
+              'nodes' => [{ 'id' => '4' }]
+            }
+          },
+          {
+            'name' => 'Sprint 3',
+            'startsAt' => '2024-10-29',
+            'endsAt' => '2024-11-11',
+            'completedAt' => '2024-11-11T10:00:00Z',
+            'issues' => { 'nodes' => [] },
+            'uncompletedIssuesUponClose' => {
+              'nodes' => [{ 'id' => '5' }, { 'id' => '6' }, { 'id' => '7' }, { 'id' => '8' }]
+            }
+          }
+        ]
+      end
+
+      it 'calculates average carryover across all completed cycles' do
+        # (3 + 1 + 4) / 3 = 8 / 3 = 2.7
+        expect(result[:cycle_carryover_count]).to eq(2.7)
+      end
+    end
+
+    context 'with completed cycle but no issues' do
       let(:cycles) do
         [
           {
             'name' => 'Sprint 1',
             'startsAt' => '2024-12-01',
             'endsAt' => '2024-12-14',
+            'completedAt' => '2024-12-14T10:00:00Z',
             'issues' => { 'nodes' => [] }
           }
         ]
@@ -100,7 +179,7 @@ RSpec.describe WttjMetrics::Metrics::CycleCalculator do
       end
     end
 
-    context 'with no completed cycle' do
+    context 'with no completed cycles' do
       let(:cycles) do
         [
           {
@@ -113,8 +192,9 @@ RSpec.describe WttjMetrics::Metrics::CycleCalculator do
         ]
       end
 
-      it 'returns zero carryover' do
+      it 'returns zero for carryover and commitment accuracy' do
         expect(result[:cycle_carryover_count]).to eq(0)
+        expect(result[:cycle_commitment_accuracy]).to eq(0)
       end
     end
 

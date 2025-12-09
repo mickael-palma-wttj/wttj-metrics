@@ -38,20 +38,30 @@ module WttjMetrics
       end
 
       def cycle_commitment_accuracy
-        return 0 unless current_cycle
+        completed_cycles = cycles.select { |c| c['completedAt'] }
+        return 0 if completed_cycles.empty?
 
-        cycle_issues = current_cycle.dig('issues', 'nodes') || []
-        return 0 if cycle_issues.empty?
+        total_accuracy = completed_cycles.sum do |cycle|
+          cycle_issues = cycle.dig('issues', 'nodes') || []
+          next 0 if cycle_issues.empty?
 
-        completed = cycle_issues.count { |i| i.dig('state', 'type') == 'completed' }
-        ((completed.to_f / cycle_issues.size) * PERCENTAGE_MULTIPLIER).round(2)
+          completed = cycle_issues.count { |i| i.dig('state', 'type') == 'completed' }
+          (completed.to_f / cycle_issues.size) * PERCENTAGE_MULTIPLIER
+        end
+
+        (total_accuracy / completed_cycles.size).round(2)
       end
 
       def cycle_carryover_count
-        return 0 unless last_completed_cycle
+        completed_cycles = cycles.select { |c| c['completedAt'] }
+        return 0 if completed_cycles.empty?
 
-        uncompleted = last_completed_cycle.dig('uncompletedIssuesUponClose', 'nodes') || []
-        uncompleted.size
+        total_carryover = completed_cycles.sum do |cycle|
+          uncompleted = cycle.dig('uncompletedIssuesUponClose', 'nodes') || []
+          uncompleted.size
+        end
+
+        (total_carryover.to_f / completed_cycles.size).round(1)
       end
 
       def cycle_details_rows
