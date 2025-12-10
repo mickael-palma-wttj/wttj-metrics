@@ -86,12 +86,14 @@ git clone https://github.com/mickael-palma-wttj/wttj-metrics.git
 cd wttj-metrics
 bundle install
 
-# 2. Configure your Linear API key
+# 2. Configure your API keys
 echo "LINEAR_API_KEY=lin_api_xxxxxxxxxxxxxxxxxxxxx" > .env
+echo "GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxx" >> .env
+echo "GITHUB_ORG=YourOrganization" >> .env
 
 # 3. Collect metrics and generate report
-./bin/wttj-metrics collect -o metrics.csv
-./bin/wttj-metrics report metrics.csv --excel
+./bin/wttj-metrics collect -s linear github -o metrics.csv
+./bin/wttj-metrics report metrics.csv --excel -s linear github
 
 # 4. Open the report
 open report/report.html
@@ -149,6 +151,9 @@ Fetch data from Linear API and save to CSV:
 # Default output to tmp/metrics.csv
 ./bin/wttj-metrics collect
 
+# Collect from specific sources (linear, github)
+./bin/wttj-metrics collect -s linear github
+
 # Custom output path
 ./bin/wttj-metrics collect -o metrics.csv
 
@@ -164,6 +169,7 @@ Fetch data from Linear API and save to CSV:
 | Option | Short | Default | Description |
 |--------|-------|---------|-------------|
 | `--output` | `-o` | `tmp/metrics.csv` | CSV output file path |
+| `--sources` | `-s` | `linear` | Data sources to collect from (linear, github) |
 | `--cache` | | `true` | Use cache for API responses |
 | `--clear-cache` | | `false` | Clear cache before fetching |
 
@@ -174,6 +180,9 @@ Create HTML dashboard from collected metrics:
 ```bash
 # Default: last 90 days, output to report/report.html
 ./bin/wttj-metrics report metrics.csv
+
+# Generate report for specific sources
+./bin/wttj-metrics report metrics.csv -s linear github
 
 # Custom time range (365 days)
 ./bin/wttj-metrics report metrics.csv --days 365
@@ -196,6 +205,7 @@ Create HTML dashboard from collected metrics:
 | Option | Short | Default | Description |
 |--------|-------|---------|-------------|
 | `--output` | `-o` | `report/report.html` | HTML output file path |
+| `--sources` | `-s` | `linear` | Data sources to include (linear, github) |
 | `--days` | `-d` | `90` | Number of days to show in charts |
 | `--teams` | `-t` | *default list* | Teams to include in report |
 | `--all-teams` | | `false` | Include all teams (no filter) |
@@ -228,7 +238,10 @@ Create HTML dashboard from collected metrics:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `LINEAR_API_KEY` | Yes | - | Your Linear API key (starts with `lin_api_`) |
+| `LINEAR_API_KEY` | Yes (for Linear) | - | Your Linear API key (starts with `lin_api_`) |
+| `GITHUB_TOKEN` | Yes (for GitHub) | - | Your GitHub Personal Access Token |
+| `GITHUB_ORG` | Yes (for GitHub) | - | GitHub Organization name to fetch PRs from |
+| `GITHUB_REPO` | No | - | Specific repository (format: `owner/repo`) |
 | `CSV_OUTPUT_PATH` | No | `tmp/metrics.csv` | Default CSV output path |
 
 ### Team Filtering
@@ -301,6 +314,17 @@ SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourci
 | **Type Distribution** | Issues by 7 categories (Feature, Bug, Improvement, Tech Debt, Task, Documentation, Other) with intelligent label and title-based classification |
 | **Assignee Distribution** | Top 15 assignees by issue count |
 
+### GitHub Metrics
+
+| Metric | Description |
+|--------|-------------|
+| **Avg Time to Merge** | Average time from PR creation to merge |
+| **Time to First Review** | Average time from PR creation to first review comment |
+| **Reviews per PR** | Average number of reviews per pull request |
+| **Comments per PR** | Average number of comments per pull request |
+| **Repository Activity** | Top 10 most active repositories by PR count |
+| **Daily Breakdown** | Daily stats for Created, Merged, Closed, and Open PRs |
+
 ---
 
 ## Architecture
@@ -311,8 +335,8 @@ The codebase follows **Clean Architecture** principles with clear separation of 
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Linear     │────▶│ wttj-metrics │────▶│   Reports    │
-│   GraphQL    │     │     CLI      │     │  HTML/Excel  │
+│   Linear /   │────▶│ wttj-metrics │────▶│   Reports    │
+│   GitHub     │     │     CLI      │     │  HTML/Excel  │
 │     API      │◀────│              │     │              │
 └──────────────┘     └──────────────┘     └──────────────┘
                             │
@@ -346,22 +370,12 @@ wttj-metrics/
 │       ├── metrics/              # Specialized metric calculators (README included)
 │       │   ├── README.md        # Metrics documentation
 │       │   ├── base.rb          # Template base class
-│       │   ├── bug_calculator.rb
-│       │   ├── cycle_calculator.rb
-│       │   ├── distribution_calculator.rb
-│       │   ├── flow_calculator.rb
-│       │   ├── team_calculator.rb
-│       │   ├── team_stats_calculator.rb
-│       │   └── timeseries_collector.rb
+│       │   ├── linear/          # Linear metrics calculators
+│       │   └── github/          # GitHub metrics calculators
 │       ├── reports/              # Report generation (README included, refactored)
 │       │   ├── README.md                 # Reports documentation
-│       │   ├── report_generator.rb       # Main orchestrator
-│       │   ├── metric_accessor.rb        # Memoized metric access
-│       │   ├── team_filter.rb            # Team selection logic
-│       │   ├── bugs_by_team_builder.rb   # Bug aggregation
-│       │   ├── chart_data_builder.rb     # Chart data prep
-│       │   ├── excel_report_builder.rb   # Excel generation
-│       │   └── weekly_data_aggregator.rb # Weekly aggregation
+│       │   ├── linear/                   # Linear report generators
+│       │   └── github/                   # GitHub report generators
 │       ├── helpers/              # Mixins and view helpers (README included)
 │       │   ├── README.md        # Helpers documentation
 │       │   ├── logger_mixin.rb  # Shared logger configuration
@@ -393,7 +407,7 @@ wttj-metrics/
 │       │   └── team_metric_presenter.rb
 │       └── templates/            # ERB templates (README included)
 │           ├── README.md        # Templates documentation
-│           └── report.html.erb  # HTML report template
+│           └── linear_report.html.erb  # HTML report template
 ├── spec/                         # RSpec tests (485 examples)
 │   ├── cassettes/                # VCR HTTP recordings
 │   ├── support/                  # Test helpers & configuration

@@ -18,7 +18,7 @@ RSpec.describe WttjMetrics::Services::ReportService do
 
   let(:report_generator) do
     instance_double(
-      WttjMetrics::Reports::ReportGenerator,
+      WttjMetrics::Reports::Linear::ReportGenerator,
       generate_html: nil,
       generate_excel: nil
     )
@@ -27,7 +27,7 @@ RSpec.describe WttjMetrics::Services::ReportService do
   before do
     allow(File).to receive(:exist?).with(csv_file).and_return(true)
     allow(WttjMetrics::Services::DirectoryPreparer).to receive(:ensure_exists)
-    allow(WttjMetrics::Reports::ReportGenerator).to receive(:new).and_return(report_generator)
+    allow(WttjMetrics::Reports::Linear::ReportGenerator).to receive(:new).and_return(report_generator)
   end
 
   describe '#call' do
@@ -50,7 +50,7 @@ RSpec.describe WttjMetrics::Services::ReportService do
     it 'creates a ReportGenerator with CSV file and options' do
       report_service.call
 
-      expect(WttjMetrics::Reports::ReportGenerator).to have_received(:new).with(
+      expect(WttjMetrics::Reports::Linear::ReportGenerator).to have_received(:new).with(
         csv_file,
         days: 90,
         teams: %w[ATS Platform]
@@ -90,7 +90,7 @@ RSpec.describe WttjMetrics::Services::ReportService do
       it 'does not create ReportGenerator' do
         expect { report_service.call }.to raise_error(WttjMetrics::Error)
 
-        expect(WttjMetrics::Reports::ReportGenerator).not_to have_received(:new)
+        expect(WttjMetrics::Reports::Linear::ReportGenerator).not_to have_received(:new)
       end
     end
 
@@ -157,7 +157,7 @@ RSpec.describe WttjMetrics::Services::ReportService do
       it 'creates generator only once' do
         report_service.call
 
-        expect(WttjMetrics::Reports::ReportGenerator).to have_received(:new).once
+        expect(WttjMetrics::Reports::Linear::ReportGenerator).to have_received(:new).once
       end
 
       it 'uses the same generator instance for both reports' do
@@ -175,7 +175,7 @@ RSpec.describe WttjMetrics::Services::ReportService do
 
         expect(report_generator).to have_received(:generate_html)
         expect(report_generator).to have_received(:generate_excel)
-        expect(WttjMetrics::Reports::ReportGenerator).to have_received(:new).once
+        expect(WttjMetrics::Reports::Linear::ReportGenerator).to have_received(:new).once
       end
     end
 
@@ -194,7 +194,7 @@ RSpec.describe WttjMetrics::Services::ReportService do
       it 'passes days parameter to ReportGenerator' do
         report_service.call
 
-        expect(WttjMetrics::Reports::ReportGenerator).to have_received(:new).with(
+        expect(WttjMetrics::Reports::Linear::ReportGenerator).to have_received(:new).with(
           csv_file,
           days: 30,
           teams: []
@@ -217,7 +217,7 @@ RSpec.describe WttjMetrics::Services::ReportService do
       it 'passes teams parameter to ReportGenerator' do
         report_service.call
 
-        expect(WttjMetrics::Reports::ReportGenerator).to have_received(:new).with(
+        expect(WttjMetrics::Reports::Linear::ReportGenerator).to have_received(:new).with(
           csv_file,
           days: 90,
           teams: %w[ATS Platform Sourcing]

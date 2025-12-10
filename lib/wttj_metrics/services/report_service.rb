@@ -41,11 +41,19 @@ module WttjMetrics
       end
 
       def generator
-        @generator ||= Reports::ReportGenerator.new(
-          csv_file,
-          days: options.days,
-          teams: options.teams
-        )
+        @generator ||= if csv_file.include?('github')
+                         Reports::Github::ReportGenerator.new(
+                           csv_file,
+                           days: options.days,
+                           teams: options.teams
+                         )
+                       else
+                         Reports::Linear::ReportGenerator.new(
+                           csv_file,
+                           days: options.days,
+                           teams: options.teams
+                         )
+                       end
       end
     end
   end

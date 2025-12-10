@@ -14,7 +14,7 @@ module WttjMetrics
 
         def calculate
           {
-            current_cycle_velocity: current_cycle_velocity,
+            avg_cycle_velocity: avg_cycle_velocity,
             cycle_commitment_accuracy: cycle_commitment_accuracy,
             cycle_carryover_count: cycle_carryover_count
           }
@@ -32,37 +32,46 @@ module WttjMetrics
 
         attr_reader :cycles, :today
 
-        def current_cycle_velocity
-          return 0 unless current_cycle
+        def avg_cycle_velocity
+          return 0 if completed_cycles.empty?
 
-          completed_points(current_cycle)
+          total_velocity = completed_cycles.sum { |cycle| completed_points(cycle) }
+          (total_velocity.to_f / completed_cycles.size).round(1)
         end
 
         def cycle_commitment_accuracy
-          completed_cycles = cycles.select { |c| c['completedAt'] }
           return 0 if completed_cycles.empty?
 
-          total_accuracy = completed_cycles.sum do |cycle|
-            cycle_issues = cycle.dig('issues', 'nodes') || []
-            next 0 if cycle_issues.empty?
-
-            completed = cycle_issues.count { |i| i.dig('state', 'type') == 'completed' }
-            (completed.to_f / cycle_issues.size) * PERCENTAGE_MULTIPLIER
-          end
-
+          total_accuracy = completed_cycles.sum { |cycle| cycle_completion_percentage(cycle) }
           (total_accuracy / completed_cycles.size).round(2)
         end
 
         def cycle_carryover_count
-          completed_cycles = cycles.select { |c| c['completedAt'] }
           return 0 if completed_cycles.empty?
 
-          total_carryover = completed_cycles.sum do |cycle|
-            uncompleted = cycle.dig('uncompletedIssuesUponClose', 'nodes') || []
-            uncompleted.size
-          end
-
+          total_carryover = completed_cycles.sum { |cycle| carryover_count_for(cycle) }
           (total_carryover.to_f / completed_cycles.size).round(1)
+        end
+
+        def completed_cycles
+          @completed_cycles ||= cycles.select { |cycle| cycle['completedAt'] }
+        end
+
+        def cycle_completion_percentage(cycle)
+          cycle_issues = cycle.dig('issues', 'nodes') || []
+          return 0 if cycle_issues.empty?
+
+          completed = cycle_issues.count { |issue| issue_completed?(issue) }
+          (completed.to_f / cycle_issues.size) * PERCENTAGE_MULTIPLIER
+        end
+
+        def carryover_count_for(cycle)
+          uncompleted = cycle.dig('uncompletedIssuesUponClose', 'nodes') || []
+          uncompleted.size
+        end
+
+        def issue_completed?(issue)
+          issue.dig('state', 'type') == 'completed'
         end
 
         def cycle_details_rows
@@ -70,11 +79,15 @@ module WttjMetrics
         end
 
         def current_cycle
-          @current_cycle ||= cycles.find do |cycle|
-            starts = Date.parse(cycle['startsAt'])
-            ends = Date.parse(cycle['endsAt'])
-            today.between?(starts, ends)
-          end
+          @current_cycle ||= cycles.find { |cycle| cycle_active?(cycle) }
+        end
+
+        def cycle_active?(cycle)
+          return false unless cycle['startsAt'] && cycle['endsAt']
+
+          starts = Date.parse(cycle['startsAt'])
+          ends = Date.parse(cycle['endsAt'])
+          today.between?(starts, ends)
         end
 
         def last_completed_cycle
@@ -86,15 +99,16 @@ module WttjMetrics
         def completed_points(cycle)
           cycle_issues = cycle.dig('issues', 'nodes') || []
           cycle_issues.sum do |issue|
-            issue.dig('state', 'type') == 'completed' ? (issue['estimate'] || 0) : 0
+            issue_completed?(issue) ? (issue['estimate'] || 0) : 0
           end
         end
       end
 
       # Builds detail rows for a single cycle
       class CycleDetailBuilder
-        PERCENTAGE_MULTIPLIER = 100
+        include Helpers::Linear::IssueHelper
 
+        PERCENTAGE_MULTIPLIER = 100
         METRICS = %i[
           total_issues completed_issues bug_count velocity planned_points
           completion_rate carryover progress duration_days tickets_per_day
@@ -129,18 +143,24 @@ module WttjMetrics
         end
 
         def cycle_date
-          return Date.parse(cycle['completedAt']).to_s if cycle['completedAt']
+          return parse_cycle_date(cycle['completedAt']) if cycle['completedAt']
           return ends_at.to_s if ends_at && ends_at <= today
 
           today.to_s
         end
 
         def starts_at
-          @starts_at ||= cycle['startsAt'] ? Date.parse(cycle['startsAt']) : nil
+          @starts_at ||= parse_cycle_date(cycle['startsAt'])
         end
 
         def ends_at
-          @ends_at ||= cycle['endsAt'] ? Date.parse(cycle['endsAt']) : nil
+          @ends_at ||= parse_cycle_date(cycle['endsAt'])
+        end
+
+        def parse_cycle_date(date_string)
+          return nil unless date_string
+
+          Date.parse(date_string)
         end
 
         def cycle_issues
@@ -152,17 +172,21 @@ module WttjMetrics
         end
 
         def completed_issues
-          cycle_issues.count { |i| i.dig('state', 'type') == 'completed' }
+          cycle_issues.count { |issue| issue_completed?(issue) }
         end
 
         def bug_count
-          cycle_issues.count { |i| issue_is_bug?(i) }
+          cycle_issues.count { |issue| issue_is_bug?(issue) }
         end
 
         def velocity
           cycle_issues.sum do |issue|
-            issue.dig('state', 'type') == 'completed' ? (issue['estimate'] || 0) : 0
+            issue_completed?(issue) ? (issue['estimate'] || 0) : 0
           end
+        end
+
+        def issue_completed?(issue)
+          issue.dig('state', 'type') == 'completed'
         end
 
         def planned_points
@@ -170,9 +194,7 @@ module WttjMetrics
         end
 
         def completion_rate
-          return 0 unless total_issues.positive?
-
-          ((completed_issues.to_f / total_issues) * PERCENTAGE_MULTIPLIER).round
+          calculate_percentage(completed_issues, total_issues)
         end
 
         def carryover
@@ -180,9 +202,13 @@ module WttjMetrics
         end
 
         def progress
-          return 0 unless total_issues.positive?
+          calculate_percentage(completed_issues, total_issues)
+        end
 
-          ((completed_issues.to_f / total_issues) * PERCENTAGE_MULTIPLIER).round
+        def calculate_percentage(numerator, denominator)
+          return 0 unless denominator.positive?
+
+          ((numerator.to_f / denominator) * PERCENTAGE_MULTIPLIER).round
         end
 
         def duration_days
@@ -208,34 +234,29 @@ module WttjMetrics
         end
 
         def scope_change
-          scope_history = cycle['scopeHistory'] || []
           return 0.0 if scope_history.empty?
 
           initial = initial_scope.to_f
           final = final_scope.to_f
-
           return 0.0 if initial.zero?
 
           (((final - initial) / initial) * PERCENTAGE_MULTIPLIER).round(1)
         end
 
         def initial_scope
-          scope_history = cycle['scopeHistory'] || []
           return 0 if scope_history.empty?
 
           scope_history.first.to_i
         end
 
         def final_scope
-          scope_history = cycle['scopeHistory'] || []
           return 0 if scope_history.empty?
 
           scope_history.last.to_i
         end
 
-        def issue_is_bug?(issue)
-          labels = (issue.dig('labels', 'nodes') || []).map { |l| l['name'].downcase }
-          labels.any? { |l| l.include?('bug') || l.include?('fix') }
+        def scope_history
+          @scope_history ||= cycle['scopeHistory'] || []
         end
       end
     end

@@ -7,6 +7,7 @@ module WttjMetrics
       class TeamCalculator < Base
         DAYS_IN_MONTH = 30
         PERCENTAGE_MULTIPLIER = 100
+        HOURS_PER_DAY = 24
 
         def calculate
           {
@@ -27,24 +28,40 @@ module WttjMetrics
           recent = recent_issues
           return 0 if recent.empty?
 
-          completed = recent.count { |i| i['completedAt'] }
-          ((completed.to_f / recent.size) * PERCENTAGE_MULTIPLIER).round(2)
+          completed_count = count_completed_issues(recent)
+          calculate_percentage(completed_count, recent.size)
+        end
+
+        def count_completed_issues(issue_collection)
+          issue_collection.count { |issue| issue['completedAt'] }
+        end
+
+        def calculate_percentage(numerator, denominator)
+          ((numerator.to_f / denominator) * PERCENTAGE_MULTIPLIER).round(2)
         end
 
         def recent_issues
-          thirty_days_ago = (today - DAYS_IN_MONTH).to_datetime
+          @recent_issues ||= issues.select { |issue| recent_issue?(issue) }
+        end
 
-          issues.select do |issue|
-            created = parse_datetime(issue['createdAt'])
-            created >= thirty_days_ago
-          end
+        def recent_issue?(issue)
+          created = parse_datetime(issue['createdAt'])
+          created >= thirty_days_ago
+        end
+
+        def thirty_days_ago
+          @thirty_days_ago ||= (today - DAYS_IN_MONTH).to_datetime
         end
 
         def avg_blocked_time
           blocked_times = collect_blocked_times
           return 0 if blocked_times.empty?
 
-          (blocked_times.sum / blocked_times.size).round(2)
+          calculate_average(blocked_times)
+        end
+
+        def calculate_average(values)
+          (values.sum / values.size).round(2)
         end
 
         def collect_blocked_times
@@ -52,29 +69,43 @@ module WttjMetrics
         end
 
         def calculate_blocked_times(issue)
-          history = issue.dig('history', 'nodes') || []
-          times = []
-          blocked_start = nil
+          history = sorted_history(issue)
+          durations = []
+          blocked_entry_time = nil
 
-          history.sort_by { |h| h['createdAt'] }.each do |event|
+          history.each do |event|
             if entering_blocked?(event)
-              blocked_start = parse_datetime(event['createdAt'])
-            elsif blocked_start && leaving_blocked?(event)
-              blocked_end = parse_datetime(event['createdAt'])
-              times << ((blocked_end - blocked_start) * 24)
-              blocked_start = nil
+              blocked_entry_time = parse_datetime(event['createdAt'])
+            elsif blocked_entry_time && leaving_blocked?(event)
+              duration = calculate_blocked_duration(blocked_entry_time, event['createdAt'])
+              durations << duration
+              blocked_entry_time = nil
             end
           end
 
-          times
+          durations
+        end
+
+        def sorted_history(issue)
+          history = issue.dig('history', 'nodes') || []
+          history.sort_by { |event| event['createdAt'] }
+        end
+
+        def calculate_blocked_duration(start_time, end_field)
+          end_time = parse_datetime(end_field)
+          (end_time - start_time) * HOURS_PER_DAY
         end
 
         def entering_blocked?(event)
-          event.dig('toState', 'name')&.downcase&.include?('blocked')
+          state_is_blocked?(event.dig('toState', 'name'))
         end
 
         def leaving_blocked?(event)
-          event.dig('fromState', 'name')&.downcase&.include?('blocked')
+          state_is_blocked?(event.dig('fromState', 'name'))
+        end
+
+        def state_is_blocked?(state_name)
+          state_name&.downcase&.include?('blocked')
         end
       end
     end

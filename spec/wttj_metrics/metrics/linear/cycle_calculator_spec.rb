@@ -29,9 +29,9 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
         ]
       end
 
-      it 'calculates current cycle velocity' do
-        # 3 + 5 = 8 points completed
-        expect(result[:current_cycle_velocity]).to eq(8)
+      it 'calculates average cycle velocity from completed cycles' do
+        # No completed cycles in this test, so avg should be 0
+        expect(result[:avg_cycle_velocity]).to eq(0)
       end
     end
 
@@ -66,6 +66,13 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
             }
           }
         ]
+      end
+
+      it 'calculates average cycle velocity across completed cycles' do
+        # Sprint 1: 3 + 5 = 8 points
+        # Sprint 2: 2 + 3 + 5 + 1 = 11 points
+        # Average: (8 + 11) / 2 = 9.5 points
+        expect(result[:avg_cycle_velocity]).to eq(9.5)
       end
 
       it 'calculates average commitment accuracy across completed cycles' do
@@ -174,8 +181,8 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
         ]
       end
 
-      it 'treats nil estimate as 0' do
-        expect(result[:current_cycle_velocity]).to eq(0)
+      it 'treats nil estimate as 0 in average calculation' do
+        expect(result[:avg_cycle_velocity]).to eq(0)
       end
     end
 
@@ -203,7 +210,7 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
       let(:cycles) { [] }
 
       it 'returns zero for all metrics', :aggregate_failures do
-        expect(result[:current_cycle_velocity]).to eq(0)
+        expect(result[:avg_cycle_velocity]).to eq(0)
         expect(result[:cycle_commitment_accuracy]).to eq(0)
         expect(result[:cycle_carryover_count]).to eq(0)
       end
@@ -238,7 +245,7 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
         cycle_metrics = rows.select { |r| r[1] == 'cycle_metrics' }
 
         expect(cycle_metrics.map { |r| r[2] }).to include(
-          'current_cycle_velocity',
+          'avg_cycle_velocity',
           'cycle_commitment_accuracy',
           'cycle_carryover_count'
         )

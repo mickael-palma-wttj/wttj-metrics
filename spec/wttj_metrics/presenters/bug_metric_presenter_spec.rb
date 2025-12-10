@@ -34,8 +34,8 @@ RSpec.describe WttjMetrics::Presenters::BugMetricPresenter do
     context 'with bug_ratio metric' do
       let(:name) { 'bug_ratio' }
 
-      it 'removes bug prefix' do
-        expect(presenter.label).to eq('Ratio')
+      it 'returns custom label' do
+        expect(presenter.label).to eq('Issues are bugs')
       end
     end
   end

@@ -8,6 +8,8 @@ module WttjMetrics
         DAYS_IN_WEEK = 7
         REVIEW_STATE_PATTERN = /review|validate|test|merge/i
         AVERAGE_PRECISION = 2
+        STARTED_STATE = 'started'
+        COMPLETED_STATE = 'completed'
 
         def calculate
           {
@@ -28,10 +30,17 @@ module WttjMetrics
         private
 
         def avg_cycle_time
-          eligible_issues = issues.select { |i| i['completedAt'] && i['startedAt'] }
-          average_duration(eligible_issues) do |issue|
+          average_duration(cycle_time_eligible_issues) do |issue|
             duration_between(issue['startedAt'], issue['completedAt'])
           end
+        end
+
+        def cycle_time_eligible_issues
+          issues.select { |issue| cycle_time_data?(issue) }
+        end
+
+        def cycle_time_data?(issue)
+          issue['completedAt'] && issue['startedAt']
         end
 
         def avg_lead_time
@@ -41,17 +50,29 @@ module WttjMetrics
         end
 
         def weekly_throughput
-          week_ago = (today - DAYS_IN_WEEK).to_datetime
+          issues.count { |issue| completed_in_last_week?(issue) }
+        end
 
-          issues.count do |issue|
-            next false unless issue['completedAt']
+        def completed_in_last_week?(issue)
+          return false unless issue['completedAt']
 
-            parse_datetime(issue['completedAt']) >= week_ago
-          end
+          parse_datetime(issue['completedAt']) >= one_week_ago
+        end
+
+        def one_week_ago
+          @one_week_ago ||= (today - DAYS_IN_WEEK).to_datetime
         end
 
         def current_wip
-          issues.count { |issue| issue.dig('state', 'type') == 'started' }
+          filter_issues_by_state(STARTED_STATE).count
+        end
+
+        def filter_issues_by_state(state_type)
+          issues.select { |issue| issue.dig('state', 'type') == state_type }
+        end
+
+        def completed_issues
+          @completed_issues ||= filter_issues_by_state(COMPLETED_STATE)
         end
 
         def avg_review_time
@@ -68,19 +89,19 @@ module WttjMetrics
 
         def calculate_state_durations(issue, enter_predicate, leave_predicate)
           history = sorted_history(issue)
-          times = []
-          state_start = nil
+          durations = []
+          state_entry_time = nil
 
           history.each do |event|
             if send(enter_predicate, event)
-              state_start = parse_datetime(event['createdAt'])
-            elsif state_start && send(leave_predicate, event)
-              times << duration_in_days(state_start, event['createdAt'])
-              state_start = nil
+              state_entry_time = parse_datetime(event['createdAt'])
+            elsif state_entry_time && send(leave_predicate, event)
+              durations << duration_in_days(state_entry_time, event['createdAt'])
+              state_entry_time = nil
             end
           end
 
-          times
+          durations
         end
 
         def entering_review?(event)
@@ -105,23 +126,28 @@ module WttjMetrics
           return 0 if collection.empty?
 
           total = collection.sum(&)
-          (total / collection.size).round(AVERAGE_PRECISION)
+          round_to_precision(total / collection.size)
         end
 
         def average_from_collection(values)
           return 0 if values.empty?
 
-          (values.sum / values.size).round(AVERAGE_PRECISION)
+          round_to_precision(values.sum / values.size)
+        end
+
+        def round_to_precision(value)
+          value.round(AVERAGE_PRECISION)
         end
 
         def duration_between(start_field, end_field)
-          start_time = parse_datetime(start_field)
-          end_time = parse_datetime(end_field)
-          (end_time - start_time).to_f
+          calculate_duration(parse_datetime(start_field), parse_datetime(end_field))
         end
 
         def duration_in_days(start_time, end_field)
-          end_time = parse_datetime(end_field)
+          calculate_duration(start_time, parse_datetime(end_field))
+        end
+
+        def calculate_duration(start_time, end_time)
           (end_time - start_time).to_f
         end
       end

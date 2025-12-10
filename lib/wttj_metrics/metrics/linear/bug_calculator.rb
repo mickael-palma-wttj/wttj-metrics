@@ -5,15 +5,40 @@ module WttjMetrics
     module Linear
       # Calculates bug-related metrics
       class BugCalculator < Base
+        include Helpers::Linear::IssueHelper
+
         COMPLETED_STATES = %w[completed canceled].freeze
         DAYS_IN_MONTH = 30
         PERCENTAGE_MULTIPLIER = 100
+        METRIC_MAPPINGS = {
+          total_bugs: :total,
+          open_bugs: :open,
+          closed_bugs: :closed,
+          bugs_created_last_30d: :created_last_30d,
+          bugs_closed_last_30d: :closed_last_30d,
+          avg_bug_resolution_days: :avg_resolution_days,
+          bug_ratio: :bug_ratio
+        }.freeze
 
         def calculate
+          build_metrics_hash
+        end
+
+        def to_rows
+          stats = calculate
+          [
+            *bug_metric_rows(stats),
+            *priority_rows(stats[:by_priority])
+          ]
+        end
+
+        private
+
+        def build_metrics_hash
           {
-            total: bugs.size,
-            open: open_bugs.size,
-            closed: closed_bugs.size,
+            total: total_bugs,
+            open: open_bugs_count,
+            closed: closed_bugs_count,
             created_last_30d: bugs_created_last_30_days,
             closed_last_30d: bugs_closed_last_30_days,
             avg_resolution_days: avg_resolution_days,
@@ -22,70 +47,92 @@ module WttjMetrics
           }
         end
 
-        def to_rows
-          stats = calculate
-          rows = []
-
-          rows << [today_str, 'bugs', 'total_bugs', stats[:total]]
-          rows << [today_str, 'bugs', 'open_bugs', stats[:open]]
-          rows << [today_str, 'bugs', 'closed_bugs', stats[:closed]]
-          rows << [today_str, 'bugs', 'bugs_created_last_30d', stats[:created_last_30d]]
-          rows << [today_str, 'bugs', 'bugs_closed_last_30d', stats[:closed_last_30d]]
-          rows << [today_str, 'bugs', 'avg_bug_resolution_days', stats[:avg_resolution_days]]
-          rows << [today_str, 'bugs', 'bug_ratio', stats[:bug_ratio]]
-
-          stats[:by_priority].each do |priority, count|
-            rows << [today_str, 'bugs_by_priority', priority.to_s, count]
+        def bug_metric_rows(stats)
+          METRIC_MAPPINGS.map do |metric_name, stat_key|
+            build_row('bugs', metric_name.to_s, stats[stat_key])
           end
-
-          rows
         end
 
-        private
+        def priority_rows(priorities)
+          priorities.map do |priority, count|
+            build_row('bugs_by_priority', priority.to_s, count)
+          end
+        end
+
+        def build_row(category, metric, value)
+          [today_str, category, metric, value]
+        end
 
         def bugs
           @bugs ||= issues.select { |issue| issue_is_bug?(issue) }
         end
 
         def open_bugs
-          @open_bugs ||= bugs.reject { |b| COMPLETED_STATES.include?(b.dig('state', 'type')) }
+          @open_bugs ||= bugs.reject { |bug| issue_completed?(bug) }
         end
 
         def closed_bugs
-          @closed_bugs ||= bugs.select { |b| COMPLETED_STATES.include?(b.dig('state', 'type')) }
+          @closed_bugs ||= bugs.select { |bug| issue_completed?(bug) }
+        end
+
+        def total_bugs
+          bugs.size
+        end
+
+        def open_bugs_count
+          open_bugs.size
+        end
+
+        def closed_bugs_count
+          closed_bugs.size
         end
 
         def today_str
           @today_str ||= today.to_s
         end
 
-        def thirty_days_ago
-          @thirty_days_ago ||= today - DAYS_IN_MONTH
+        def last_30_days_range
+          @last_30_days_range ||= (today - DAYS_IN_MONTH)..today
         end
 
         def bugs_created_last_30_days
-          bugs.count { |b| parse_date(b['createdAt']) >= thirty_days_ago }
+          bugs.count { |bug| date_in_range?(bug['createdAt'], last_30_days_range) }
         end
 
         def bugs_closed_last_30_days
-          closed_bugs.count do |b|
-            completed = parse_date(b['completedAt'])
-            completed && completed >= thirty_days_ago
+          closed_bugs.count do |bug|
+            date_in_range?(bug['completedAt'], last_30_days_range)
           end
         end
 
+        def date_in_range?(date_string, range)
+          return false unless date_string
+
+          parsed_date = parse_date(date_string)
+          range.cover?(parsed_date)
+        end
+
         def avg_resolution_days
-          resolution_times = closed_bugs.filter_map do |b|
-            next unless b['completedAt']
-
-            created = parse_date(b['createdAt'])
-            completed = parse_date(b['completedAt'])
-            (completed - created).to_f
-          end
-
+          resolution_times = calculate_resolution_times
           return 0 if resolution_times.empty?
 
-          (resolution_times.sum / resolution_times.size).round(1)
+          average(resolution_times).round(1)
+        end
+
+        def calculate_resolution_times
+          closed_bugs.filter_map { |bug| resolution_time_for(bug) }
+        end
+
+        def resolution_time_for(bug)
+          return unless bug['completedAt']
+
+          created = parse_date(bug['createdAt'])
+          completed = parse_date(bug['completedAt'])
+          (completed - created).to_f
+        end
+
+        def average(numbers)
+          numbers.sum / numbers.size.to_f
         end
 
         def bug_ratio
@@ -96,7 +143,7 @@ module WttjMetrics
 
         def bugs_by_priority
           open_bugs.each_with_object(Hash.new(0)) do |bug, distribution|
-            priority = bug['priorityLabel'] || 'No priority'
+            priority = extract_priority_label(bug)
             distribution[priority] += 1
           end
         end

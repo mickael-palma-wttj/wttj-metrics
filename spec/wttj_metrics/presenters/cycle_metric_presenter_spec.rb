@@ -6,7 +6,7 @@ RSpec.describe WttjMetrics::Presenters::CycleMetricPresenter do
   subject(:presenter) { described_class.new(metric) }
 
   let(:metric) { { metric: metric_name, value: metric_value } }
-  let(:metric_name) { 'current_cycle_velocity' }
+  let(:metric_name) { 'avg_cycle_velocity' }
   let(:metric_value) { 42 }
 
   it_behaves_like 'a presenter'
@@ -14,10 +14,10 @@ RSpec.describe WttjMetrics::Presenters::CycleMetricPresenter do
   describe '#label' do
     subject(:label) { presenter.label }
 
-    context 'with current_cycle_velocity' do
-      let(:metric_name) { 'current_cycle_velocity' }
+    context 'with avg_cycle_velocity' do
+      let(:metric_name) { 'avg_cycle_velocity' }
 
-      it 'removes current and cycle prefixes' do
+      it 'removes avg and cycle prefixes' do
         expect(label).to eq('Velocity')
       end
     end
@@ -42,11 +42,11 @@ RSpec.describe WttjMetrics::Presenters::CycleMetricPresenter do
   describe '#tooltip' do
     subject(:tooltip) { presenter.tooltip }
 
-    context 'with current_cycle_velocity' do
-      let(:metric_name) { 'current_cycle_velocity' }
+    context 'with avg_cycle_velocity' do
+      let(:metric_name) { 'avg_cycle_velocity' }
 
       it 'returns the tooltip' do
-        expect(tooltip).to eq('Total story points completed in the current cycle.')
+        expect(tooltip).to eq('Average story points completed per cycle across all completed cycles.')
       end
     end
 
@@ -87,7 +87,7 @@ RSpec.describe WttjMetrics::Presenters::CycleMetricPresenter do
     end
 
     context 'with velocity metric' do
-      let(:metric_name) { 'current_cycle_velocity' }
+      let(:metric_name) { 'avg_cycle_velocity' }
 
       it 'returns empty string' do
         expect(unit).to eq('')

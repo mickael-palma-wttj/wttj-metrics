@@ -8,25 +8,7 @@ module WttjMetrics
       # Parses cycle metrics and organizes them by team
       # Single Responsibility: Cycle data parsing and organization
       class CycleParser
-        DEFAULT_TEAMS = Reports::ReportGenerator::SELECTED_TEAMS
-
-        METRIC_PARSERS = {
-          'total_issues' => lambda(&:to_i),
-          'completed_issues' => lambda(&:to_i),
-          'bug_count' => lambda(&:to_i),
-          'velocity' => lambda(&:to_i),
-          'planned_points' => lambda(&:to_i),
-          'completion_rate' => ->(v) { v.to_f.round },
-          'carryover' => lambda(&:to_i),
-          'progress' => ->(v) { v.to_f.round },
-          'duration_days' => lambda(&:to_i),
-          'tickets_per_day' => ->(v) { v.to_f.round },
-          'assignee_count' => lambda(&:to_i),
-          'status' => ->(v) { v.to_s.strip },
-          'scope_change' => ->(v) { v.to_f.round },
-          'initial_scope' => lambda(&:to_i),
-          'final_scope' => lambda(&:to_i)
-        }.freeze
+        include CycleParserConfig
 
         def initialize(cycle_metrics, teams: nil)
           @cycle_metrics = cycle_metrics
@@ -38,40 +20,82 @@ module WttjMetrics
         end
 
         def by_team
-          @by_team ||= parse.values
-                            .select { |c| @selected_teams.include?(c[:team]) }
-                            .group_by { |c| c[:team] }
-                            .transform_values { |cycles| sort_cycles(cycles) }
-                            .sort_by { |team, cycles| team_sort_key(team, cycles) }
-                            .to_h
+          @by_team ||= build_team_grouped_cycles
         end
 
         private
 
+        def build_team_grouped_cycles
+          filtered_cycles
+            .group_by { |cycle| cycle[:team] }
+            .transform_values { |cycles| sort_cycles(cycles) }
+            .sort_by { |team, cycles| team_sort_key(team, cycles) }
+            .to_h
+        end
+
+        def filtered_cycles
+          parse.values.select { |cycle| team_selected?(cycle[:team]) }
+        end
+
+        def team_selected?(team)
+          @selected_teams.include?(team)
+        end
+
         def build_cycles_hash
           cycles = {}
 
-          @cycle_metrics.each do |m|
-            parts = m[:metric].split(':')
-            next unless parts.size == 3
-
-            team, cycle_name, metric_name = parts
-            cycle_key = "#{team}:#{cycle_name}"
-
-            cycles[cycle_key] ||= { team: team, name: cycle_name, date: m[:date] }
-            parse_metric(cycles[cycle_key], metric_name, m[:value])
+          @cycle_metrics.each do |metric_row|
+            process_metric_row(metric_row, cycles)
           end
 
           cycles
         end
 
-        def parse_metric(cycle, metric_name, value)
-          parser = METRIC_PARSERS[metric_name]
-          cycle[metric_name.to_sym] = parser.call(value) if parser
+        def process_metric_row(metric_row, cycles)
+          parts = parse_metric_parts(metric_row[:metric])
+          return unless parts
+
+          team, cycle_name, metric_name = parts
+          cycle_key = build_cycle_key(team, cycle_name)
+
+          cycles[cycle_key] ||= initialize_cycle(team, cycle_name, metric_row[:date])
+          parse_and_store_metric(cycles[cycle_key], metric_name, metric_row[:value])
+        end
+
+        def parse_metric_parts(metric_string)
+          parts = metric_string.split(':')
+          parts if valid_metric_format?(parts)
+        end
+
+        def valid_metric_format?(parts)
+          parts.size == METRIC_PARTS_COUNT
+        end
+
+        def build_cycle_key(team, cycle_name)
+          "#{team}:#{cycle_name}"
+        end
+
+        def initialize_cycle(team, cycle_name, date)
+          { team: team, name: cycle_name, date: date }
+        end
+
+        def parse_and_store_metric(cycle, metric_name, value)
+          parser = metric_parser_for(metric_name)
+          return unless parser
+
+          cycle[metric_name.to_sym] = parser.call(value)
+        end
+
+        def metric_parser_for(metric_name)
+          METRIC_PARSERS[metric_name]
         end
 
         def sort_cycles(cycles)
-          cycles.sort_by { |c| -extract_cycle_number(c[:name]) }
+          cycles.sort_by { |cycle| -cycle_number(cycle) }
+        end
+
+        def cycle_number(cycle)
+          extract_cycle_number(cycle[:name])
         end
 
         def extract_cycle_number(name)
@@ -80,8 +104,16 @@ module WttjMetrics
         end
 
         def team_sort_key(team, cycles)
-          has_active = cycles.any? { |c| c[:status] == 'active' } ? 0 : 1
-          [has_active, team]
+          active_priority = team_has_active_cycle?(cycles) ? 0 : 1
+          [active_priority, team]
+        end
+
+        def team_has_active_cycle?(cycles)
+          cycles.any? { |cycle| cycle_active?(cycle) }
+        end
+
+        def cycle_active?(cycle)
+          cycle[:status] == 'active'
         end
       end
     end

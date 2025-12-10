@@ -1,6 +1,6 @@
 # Sources
 
-This directory contains data source integrations for fetching metrics data from external systems. Currently supports Linear (project management platform) with a GraphQL API client.
+This directory contains data source integrations for fetching metrics data from external systems. Currently supports Linear (project management) and GitHub (code collaboration).
 
 ## Architecture
 
@@ -20,6 +20,37 @@ Integration with the Linear GraphQL API for fetching issues, cycles, teams, and 
 **Files:**
 - `client.rb` - Linear API client with GraphQL support
 - `query_builder.rb` - Builds GraphQL queries for Linear API
+
+### github/
+
+Integration with the GitHub GraphQL API for fetching pull requests, reviews, and comments.
+
+**Files:**
+- `client.rb` - GitHub API client with GraphQL support
+
+## GitHub Integration
+
+### Client
+
+GraphQL client for the GitHub API with caching, pagination, and error handling.
+
+**Responsibilities:**
+- Execute GraphQL queries against GitHub API
+- Handle authentication with Personal Access Token
+- Paginate through large result sets (PRs, reviews, comments)
+- Handle rate limiting (429) and authentication errors (401)
+- Retry logic for transient failures (Gateway Timeout, etc.)
+
+**Key Methods:**
+```ruby
+client = Sources::Github::Client.new(logger: logger)
+
+# Fetch PRs for a repository
+prs = client.fetch_pull_requests('owner/repo', '2025-01-01')
+
+# Fetch PRs for an organization (recursive splitting for large datasets)
+prs = client.fetch_organization_pull_requests('org-name', '2025-01-01')
+```
 
 ## Linear Integration
 

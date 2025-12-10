@@ -89,7 +89,13 @@ RSpec.describe WttjMetrics::Metrics::Linear::DistributionCalculator do
     end
 
     it 'returns rows in expected format' do
-      expect(rows).to all(match([today.to_s, kind_of(String), kind_of(String), kind_of(Numeric)]))
+      expect(rows).to all(satisfy do |row|
+        # Date, Category, Metric Name, Value
+        row[0] == today.to_s &&
+          row[1].is_a?(String) &&
+          row[2].is_a?(String) &&
+          (row[3].is_a?(Numeric) || (row[1] == 'type_breakdown' && row[3].is_a?(String)))
+      end)
     end
 
     it 'includes status distribution rows' do
