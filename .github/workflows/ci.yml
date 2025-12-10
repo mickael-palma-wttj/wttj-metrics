@@ -134,6 +134,7 @@ jobs:
       - name: Collect GitHub metrics
         if: steps.restore-github.outputs.cache-hit != 'true'
         env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_ORG: ${{ vars.GH_ORG }}
         run: ./bin/wttj-metrics collect --sources github
@@ -146,6 +147,10 @@ jobs:
           key: github-metrics-${{ runner.os }}-${{ steps.date.outputs.date }}
 
       - name: Generate report
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_ORG: ${{ vars.GH_ORG }}
         run: ./bin/wttj-metrics report --sources linear github
 
       - name: Run Playwright tests
