@@ -17,6 +17,15 @@ module WttjMetrics
             @hotfix_count += 1 if name.downcase.include?('hotfix') || tag.downcase.include?('hotfix')
           end
 
+          def record_from_pr(pull_request)
+            title = pull_request['title'] || pull_request[:title] || ''
+            state = pull_request['state'] || pull_request[:state]
+
+            return unless state == 'MERGED'
+
+            @hotfix_count += 1 if title.downcase.include?('hotfix')
+          end
+
           def metrics
             {
               releases_count: @releases_count,

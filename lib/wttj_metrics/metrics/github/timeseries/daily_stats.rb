@@ -18,6 +18,7 @@ module WttjMetrics
             @reviews.record(pull_request)
             @code.record(pull_request)
             @ci.record(pull_request)
+            @releases.record_from_pr(pull_request)
           end
 
           def record_release(release)

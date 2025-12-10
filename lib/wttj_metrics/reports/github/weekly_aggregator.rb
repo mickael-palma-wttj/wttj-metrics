@@ -68,7 +68,7 @@ module WttjMetrics
           datasets[:unreviewed_pr_rate] << calculator.rate_from_daily('unreviewed_pr_rate', 'created')
           datasets[:ci_success_rate] << calculator.rate_from_daily('ci_success_rate', 'created')
           datasets[:deploy_frequency] << calculator.sum('releases_count')
-          datasets[:hotfix_rate] << calculator.rate_from_daily('hotfix_rate', 'releases_count')
+          datasets[:hotfix_rate] << calculator.rate('hotfix_count', 'releases_count')
           datasets[:time_to_green] << calculator.simple_avg('avg_time_to_green_hours')
         end
 
@@ -113,6 +113,12 @@ module WttjMetrics
           def simple_avg(name)
             values = @by_name[name]&.map { |m| m[:value] } || []
             values.any? ? (values.sum / values.size).round(2) : 0
+          end
+
+          def rate(numerator_name, denominator_name)
+            numerator = sum(numerator_name)
+            denominator = sum(denominator_name)
+            denominator.positive? ? (numerator.to_f / denominator * 100).round(2) : 0
           end
 
           def rate_from_daily(rate_name, base_name)
