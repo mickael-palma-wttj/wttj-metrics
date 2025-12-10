@@ -110,6 +110,7 @@ jobs:
         with:
           path: tmp/linear_metrics.csv
           key: linear-metrics-${{ runner.os }}-${{ steps.date.outputs.date }}
+          save-always: true
 
       - name: Collect Linear metrics
         if: steps.cache-linear.outputs.cache-hit != 'true'
@@ -123,6 +124,7 @@ jobs:
         with:
           path: tmp/github_metrics.csv
           key: github-metrics-${{ runner.os }}-${{ steps.date.outputs.date }}
+          save-always: true
 
       - name: Collect GitHub metrics
         if: steps.cache-github.outputs.cache-hit != 'true'
