@@ -74,6 +74,63 @@
       border-bottom-color: #151515;
     }
     .metric-card:hover .tooltip { visibility: visible; opacity: 1; }
+    
+    /* Chart Tooltips */
+    .tooltip-icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      background: #EAE4DE;
+      color: #585858;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 18px;
+      font-size: 12px;
+      margin-left: 8px;
+      cursor: help;
+      position: relative;
+      vertical-align: middle;
+      border: 1px solid #DEDEDE;
+    }
+    .tooltip-icon:hover {
+      background: #585858;
+      color: #FFFFFF;
+      border-color: #585858;
+    }
+    .tooltip-icon .tooltip-text {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      transform: translateY(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      width: 250px;
+      text-align: left;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      margin-left: 10px;
+      font-weight: normal;
+      pointer-events: none;
+    }
+    .tooltip-icon .tooltip-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-right-color: #151515;
+    }
+    .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
+
     .metric-value {
       font-size: 2.5rem;
       font-weight: 700;
@@ -252,6 +309,31 @@
           <div class="metric-label">Avg Time to First Review</div>
         </div>
         <div class="metric-card">
+          <span class="tooltip">Percentage of resolved PRs that were merged</span>
+          <div class="metric-value"><%= metrics[:merge_rate].round(1) %>%</div>
+          <div class="metric-label">Acceptance Rate</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average time from PR creation to first approval</span>
+          <div class="metric-value"><%= metrics[:avg_time_to_approval].round(1) %>d</div>
+          <div class="metric-label">Time to Approval</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average number of 'Changes Requested' reviews per PR</span>
+          <div class="metric-value"><%= metrics[:avg_rework_cycles].round(1) %></div>
+          <div class="metric-label">Rework Cycles</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Percentage of merged PRs with successful CI status</span>
+          <div class="metric-value"><%= metrics[:ci_success_rate].round(1) %>%</div>
+          <div class="metric-label">CI Success Rate</div>
+        </div>
+        <div class="metric-card">
+          <span class="tooltip">Average number of releases per day</span>
+          <div class="metric-value"><%= metrics[:deploy_frequency_daily].round(1) %></div>
+          <div class="metric-label">Daily Deploys</div>
+        </div>
+        <div class="metric-card">
           <span class="tooltip">Average lines added per PR</span>
           <div class="metric-value"><%= metrics[:avg_additions].to_i %></div>
           <div class="metric-label">Avg Additions / PR</div>
@@ -267,7 +349,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Trends</h2>
+        <h2 class="section-title"><span class="chevron">▼</span> &#128640; Efficiency Trends</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -276,39 +358,207 @@
       <div class="section-content">
       <div class="charts-grid">
         <div class="chart-card">
-          <h3 class="chart-title">Time to Merge History</h3>
+          <h3 class="chart-title">
+            Time to Merge History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Average time from PR creation to merge. Tracks how quickly code is integrated.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="timeToMergeChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Time to First Review History</h3>
+          <h3 class="chart-title">
+            Time to First Review History (Days)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Average time from PR creation to the first review comment. Indicates review responsiveness.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="timeToFirstReviewChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Reviews & Comments History</h3>
+          <h3 class="chart-title">
+            Time to Approval History (Days)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Average time from PR creation to the first approval. Measures review cycle efficiency.</span>
+            </span>
+          </h3>
           <div class="chart-container">
-            <canvas id="reviewsCommentsChart"></canvas>
+            <canvas id="timeToApprovalChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Top 10 Active Repositories (PRs Created)</h3>
+          <h3 class="chart-title">
+            Daily Deployment Frequency
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Number of releases created per day. Indicates delivery cadence.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="deployFrequencyChart"></canvas>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#129658; Quality & Health Trends</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-title">
+            CI Success Rate History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Percentage of PRs where the last commit passed all CI checks. Indicates build stability.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="ciSuccessRateChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Acceptance Rate History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Percentage of PRs merged vs closed (Merged / (Merged + Closed)). Higher means less wasted effort.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="mergeRateChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Unreviewed PR Rate History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Percentage of PRs merged without any review. Should be close to 0% for code quality.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="unreviewedPRRateChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Hotfix Rate History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Percentage of releases tagged as hotfixes. Lower indicates better release stability.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="hotfixRateChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Time to Green History (Hours)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Average time from PR creation to passing CI checks. Lower means faster feedback loops.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="timeToGreenChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            PR Outcome History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Daily distribution of PRs by status (Merged, Closed, Open).</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="dailyBreakdownChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            PR Size History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Average lines added and deleted per PR. Smaller PRs are easier to review and merge.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="prSizeChart"></canvas>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#129309; Collaboration Trends</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Reviews per PR History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Average number of reviews per PR. Indicates level of team collaboration and code scrutiny.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="reviewsChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Comments per PR History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Average number of comments per PR. Indicates level of discussion and feedback.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="commentsChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Rework Cycles History
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Average number of times changes were requested. Lower means clearer requirements and code.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="reworkCyclesChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Top 10 Active Repositories (PRs Created)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Repositories with the most Pull Requests created during the selected period.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="topReposChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">PR Size History</h3>
+          <h3 class="chart-title">
+            Top 10 Active Contributors (PRs Created)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Authors with the most Pull Requests created during the selected period.</span>
+            </span>
+          </h3>
           <div class="chart-container">
-            <canvas id="prSizeChart"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <h3 class="chart-title">PR Outcome History</h3>
-          <div class="chart-container">
-            <canvas id="dailyBreakdownChart"></canvas>
+            <canvas id="topContributorsChart"></canvas>
           </div>
         </div>
       </div>
@@ -399,6 +649,20 @@
     
     <% breakdown = daily_breakdown %>
     const breakdownLabels = <%= breakdown[:labels].to_json %>;
+    const globalMetrics = <%= metrics.to_json %>;
+
+    function createBaselineDataset(value, label, color) {
+      return {
+        type: 'line',
+        label: `${label} (Avg: ${Number(value).toFixed(2)})`,
+        data: new Array(breakdownLabels.length).fill(value),
+        borderColor: color,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        borderWidth: 2,
+        fill: false
+      };
+    }
 
     // Time to Merge Chart
     const avgTimeMergeHours = <%= breakdown[:datasets][:avg_time_to_merge].to_json %>;
@@ -408,13 +672,16 @@
       type: 'line',
       data: {
         labels: breakdownLabels,
-        datasets: [{
-          label: 'Avg Time to Merge (Days)',
-          data: avgTimeMergeDays,
-          borderColor: colors.blue,
-          backgroundColor: colors.blue,
-          tension: 0.4
-        }]
+        datasets: [
+          {
+            label: 'Avg Time to Merge (Days)',
+            data: avgTimeMergeDays,
+            borderColor: colors.blue,
+            backgroundColor: colors.blue,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.avg_time_to_merge, 'Period Avg', colors.blue)
+        ]
       },
       options: {
         responsive: true,
@@ -425,20 +692,24 @@
     });
 
     // Time to First Review Chart
-    const avgTimeFirstReviewHours = <%= breakdown[:datasets][:avg_time_to_first_review].to_json %>;
-    const avgTimeFirstReviewDays = avgTimeFirstReviewHours.map(h => (h / 24).toFixed(2));
+    const avgTimeFirstReviewRaw = <%= breakdown[:datasets][:avg_time_to_first_review].to_json %>;
+    // Data is already in days
+    const avgTimeFirstReviewDays = avgTimeFirstReviewRaw.map(d => Number(d).toFixed(2));
 
     new Chart(document.getElementById('timeToFirstReviewChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
-        datasets: [{
-          label: 'Avg Time to First Review (Days)',
-          data: avgTimeFirstReviewDays,
-          borderColor: colors.cyan,
-          backgroundColor: colors.cyan,
-          tension: 0.4
-        }]
+        datasets: [
+          {
+            label: 'Avg Time to First Review (Days)',
+            data: avgTimeFirstReviewDays,
+            borderColor: colors.cyan,
+            backgroundColor: colors.cyan,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.avg_time_to_first_review, 'Period Avg', colors.cyan)
+        ]
       },
       options: {
         responsive: true,
@@ -448,11 +719,36 @@
       }
     });
 
-    // Reviews & Comments Chart
+    // Time to Approval Chart
+    new Chart(document.getElementById('timeToApprovalChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Avg Time to Approval (Days)',
+            data: <%= breakdown[:datasets][:avg_time_to_approval].to_json %>,
+            borderColor: colors.green,
+            backgroundColor: colors.green,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.avg_time_to_approval, 'Period Avg', colors.green)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // Reviews & Comments Charts
     const avgReviews = <%= breakdown[:datasets][:avg_reviews].to_json %>;
     const avgComments = <%= breakdown[:datasets][:avg_comments].to_json %>;
+    const avgRework = <%= breakdown[:datasets][:avg_rework_cycles].to_json %>;
 
-    new Chart(document.getElementById('reviewsCommentsChart').getContext('2d'), {
+    new Chart(document.getElementById('reviewsChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -464,13 +760,53 @@
             backgroundColor: colors.purple,
             tension: 0.4
           },
+          createBaselineDataset(globalMetrics.avg_reviews, 'Period Avg', colors.purple)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    new Chart(document.getElementById('commentsChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
           {
             label: 'Avg Comments',
             data: avgComments,
             borderColor: colors.orange,
             backgroundColor: colors.orange,
             tension: 0.4
-          }
+          },
+          createBaselineDataset(globalMetrics.avg_comments, 'Period Avg', colors.orange)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    new Chart(document.getElementById('reworkCyclesChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Avg Rework Cycles',
+            data: avgRework,
+            borderColor: colors.red,
+            backgroundColor: colors.red,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.avg_rework_cycles, 'Period Avg', colors.red)
         ]
       },
       options: {
@@ -572,6 +908,152 @@
       }
     });
 
+    // Quality & Health Charts
+    const ciSuccessRate = <%= breakdown[:datasets][:ci_success_rate].to_json %>;
+    const mergeRate = <%= breakdown[:datasets][:merge_rate].to_json %>;
+    const unreviewedRate = <%= breakdown[:datasets][:unreviewed_pr_rate].to_json %>;
+
+    new Chart(document.getElementById('ciSuccessRateChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'CI Success Rate (%)',
+            data: ciSuccessRate,
+            borderColor: colors.green,
+            backgroundColor: colors.green,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.ci_success_rate, 'Period Avg', colors.green)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, max: 100 } }
+      }
+    });
+
+    new Chart(document.getElementById('mergeRateChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Acceptance Rate (%)',
+            data: mergeRate,
+            borderColor: colors.blue,
+            backgroundColor: colors.blue,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.merge_rate, 'Period Avg', colors.blue)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, max: 100 } }
+      }
+    });
+
+    new Chart(document.getElementById('unreviewedPRRateChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Unreviewed PR Rate (%)',
+            data: unreviewedRate,
+            borderColor: colors.red,
+            backgroundColor: colors.red,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.unreviewed_pr_rate, 'Period Avg', colors.red)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, max: 100 } }
+      }
+    });
+
+    // Hotfix Rate Chart
+    new Chart(document.getElementById('hotfixRateChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Hotfix Rate (%)',
+            data: <%= breakdown[:datasets][:hotfix_rate].to_json %>,
+            borderColor: colors.red,
+            backgroundColor: colors.red,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.hotfix_rate, 'Period Avg', colors.red)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, max: 100 } }
+      }
+    });
+
+    // Time to Green Chart
+    new Chart(document.getElementById('timeToGreenChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Time to Green (Hours)',
+            data: <%= breakdown[:datasets][:time_to_green].to_json %>,
+            borderColor: colors.green,
+            backgroundColor: colors.green,
+            tension: 0.4
+          },
+          createBaselineDataset(globalMetrics.time_to_green, 'Period Avg', colors.green)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // Deployment Frequency Chart
+    const deployFrequency = <%= breakdown[:datasets][:deploy_frequency].to_json %>;
+
+    new Chart(document.getElementById('deployFrequencyChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: breakdownLabels,
+        datasets: [
+          {
+            label: 'Daily Deploys',
+            data: deployFrequency,
+            backgroundColor: colors.purple
+          },
+          createBaselineDataset(globalMetrics.deploy_frequency_daily, 'Period Avg', colors.purple)
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
     // Top Repositories Chart
     <% top_repos = top_repositories %>
     const topRepoLabels = <%= top_repos.map { |r| r[:metric] }.to_json %>;
@@ -585,8 +1067,41 @@
           datasets: [{
             label: 'Pull Requests',
             data: topRepoData,
-            backgroundColor: colors.purple,
-            borderColor: colors.purple,
+            backgroundColor: colors.yellow,
+            borderColor: colors.yellow,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: false }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+    }
+
+    // Top Contributors Chart
+    <% contributors_data = top_contributors %>
+    const topContributorLabels = <%= contributors_data.map { |r| r[:metric] }.to_json %>;
+    const topContributorData = <%= contributors_data.map { |r| r[:value] }.to_json %>;
+
+    if (topContributorLabels.length > 0) {
+      new Chart(document.getElementById('topContributorsChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: topContributorLabels,
+          datasets: [{
+            label: 'Pull Requests',
+            data: topContributorData,
+            backgroundColor: colors.blue,
+            borderColor: colors.blue,
             borderWidth: 1
           }]
         },

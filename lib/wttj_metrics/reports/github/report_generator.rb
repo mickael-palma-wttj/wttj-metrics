@@ -41,7 +41,16 @@ module WttjMetrics
             avg_additions: latest_metric('avg_additions_per_pr'),
             avg_deletions: latest_metric('avg_deletions_per_pr'),
             avg_changed_files: latest_metric('avg_changed_files_per_pr'),
-            avg_commits: latest_metric('avg_commits_per_pr')
+            avg_commits: latest_metric('avg_commits_per_pr'),
+            merge_rate: latest_metric('merge_rate'),
+            avg_time_to_approval: latest_metric('avg_time_to_approval_days'),
+            avg_rework_cycles: latest_metric('avg_rework_cycles'),
+            unreviewed_pr_rate: latest_metric('unreviewed_pr_rate'),
+            ci_success_rate: latest_metric('ci_success_rate'),
+            deploy_frequency: latest_metric('deploy_frequency_weekly'),
+            deploy_frequency_daily: calculate_daily_deploy_frequency,
+            hotfix_rate: latest_metric('hotfix_rate'),
+            time_to_green: latest_metric('time_to_green_hours')
           }
         end
 
@@ -55,7 +64,15 @@ module WttjMetrics
             avg_additions: history_for('avg_additions_per_pr'),
             avg_deletions: history_for('avg_deletions_per_pr'),
             avg_changed_files: history_for('avg_changed_files_per_pr'),
-            avg_commits: history_for('avg_commits_per_pr')
+            avg_commits: history_for('avg_commits_per_pr'),
+            merge_rate: history_for('merge_rate'),
+            avg_time_to_approval: history_for('avg_time_to_approval_days'),
+            avg_rework_cycles: history_for('avg_rework_cycles'),
+            unreviewed_pr_rate: history_for('unreviewed_pr_rate'),
+            ci_success_rate: history_for('ci_success_rate'),
+            deploy_frequency: history_for('deploy_frequency_weekly'),
+            hotfix_rate: history_for('hotfix_rate'),
+            time_to_green: history_for('time_to_green_hours')
           }
         end
 
@@ -77,7 +94,15 @@ module WttjMetrics
               datasets[:avg_comments] << get_value(metrics, 'avg_comments_per_pr')
               datasets[:avg_additions] << get_value(metrics, 'avg_additions_per_pr')
               datasets[:avg_deletions] << get_value(metrics, 'avg_deletions_per_pr')
-              datasets[:avg_time_to_first_review] << get_value(metrics, 'avg_time_to_first_review_hours')
+              datasets[:avg_time_to_first_review] << get_value(metrics, 'avg_time_to_first_review_days')
+              datasets[:merge_rate] << get_value(metrics, 'merge_rate')
+              datasets[:avg_time_to_approval] << get_value(metrics, 'avg_time_to_approval_days')
+              datasets[:avg_rework_cycles] << get_value(metrics, 'avg_rework_cycles')
+              datasets[:unreviewed_pr_rate] << get_value(metrics, 'unreviewed_pr_rate')
+              datasets[:ci_success_rate] << get_value(metrics, 'ci_success_rate')
+              datasets[:deploy_frequency] << get_value(metrics, 'deploy_count')
+              datasets[:hotfix_rate] << get_value(metrics, 'hotfix_rate')
+              datasets[:time_to_green] << get_value(metrics, 'time_to_green_hours')
             end
 
             { labels: sorted_dates, datasets: datasets }
@@ -92,6 +117,7 @@ module WttjMetrics
             metrics: metrics,
             daily_breakdown: daily_breakdown,
             top_repositories: top_repositories,
+            top_contributors: top_contributors,
             raw_data: @parser.data
           }
         end
@@ -114,11 +140,32 @@ module WttjMetrics
           aggregated.sort_by { |m| -m[:value] }.first(10)
         end
 
+        def top_contributors
+          start_date = (Date.today - @days_to_show).to_s
+
+          metrics = (@parser.metrics_by_category['github_contributor_activity'] || [])
+                    .select { |m| m[:date] >= start_date }
+                    .group_by { |m| m[:metric] }
+
+          aggregated = metrics.map do |author, author_metrics|
+            {
+              metric: author,
+              value: author_metrics.sum { |m| m[:value] },
+              date: @today
+            }
+          end
+
+          aggregated.sort_by { |m| -m[:value] }.first(10)
+        end
+
         def initialize_datasets
           {
             merged: [], closed: [], open: [],
             avg_time_to_merge: [], avg_reviews: [], avg_comments: [],
-            avg_additions: [], avg_deletions: [], avg_time_to_first_review: []
+            avg_additions: [], avg_deletions: [], avg_time_to_first_review: [],
+            merge_rate: [], avg_time_to_approval: [], avg_rework_cycles: [],
+            unreviewed_pr_rate: [], ci_success_rate: [], deploy_frequency: [],
+            hotfix_rate: [], time_to_green: []
           }
         end
 
@@ -167,6 +214,13 @@ module WttjMetrics
             </body>
             </html>
           HTML
+        end
+
+        def calculate_daily_deploy_frequency
+          daily = latest_metric('deploy_frequency_daily')
+          return daily if daily.nonzero?
+
+          (latest_metric('deploy_frequency_weekly') / 7.0).round(2)
         end
       end
     end

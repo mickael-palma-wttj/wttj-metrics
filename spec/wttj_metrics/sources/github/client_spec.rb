@@ -7,7 +7,11 @@ RSpec.describe WttjMetrics::Sources::Github::Client do
 
   let(:octokit) { instance_double(Octokit::Client) }
   let(:page_info) { double(hasNextPage: false, endCursor: nil) }
-  let(:response) { double(data: double(repository: double(pullRequests: double(nodes: [], pageInfo: page_info)))) }
+  let(:response) do
+    double(data: double(repository: double(pullRequests: double(nodes: [], pageInfo: page_info)))).tap do |r|
+      allow(r).to receive(:[]).with(:errors).and_return(nil)
+    end
+  end
 
   before do
     allow(Octokit::Client).to receive(:new).and_return(octokit)
@@ -23,7 +27,11 @@ RSpec.describe WttjMetrics::Sources::Github::Client do
 
   describe '#fetch_organization_pull_requests' do
     let(:search_data) { double(nodes: [], pageInfo: page_info, issueCount: 500) }
-    let(:response) { double(data: double(search: search_data)) }
+    let(:response) do
+      double(data: double(search: search_data)).tap do |r|
+        allow(r).to receive(:[]).with(:errors).and_return(nil)
+      end
+    end
 
     it 'fetches organization pull requests via GraphQL' do
       client.fetch_organization_pull_requests('org', '2024-01-01')
@@ -40,7 +48,7 @@ RSpec.describe WttjMetrics::Sources::Github::Client do
 
       let(:logger) { instance_double(Logger, info: nil) }
 
-      let(:progress_bar) { instance_double(ProgressBar::Base, 'progress=': nil, finish: nil, progress: 0) }
+      let(:progress_bar) { instance_double(ProgressBar::Base, 'progress=': nil, finish: nil, progress: 0, total: 500) }
 
       before do
         allow(ProgressBar).to receive(:create).and_return(progress_bar)

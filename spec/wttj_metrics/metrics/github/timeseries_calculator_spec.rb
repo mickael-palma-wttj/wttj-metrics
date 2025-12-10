@@ -63,7 +63,7 @@ RSpec.describe WttjMetrics::Metrics::Github::TimeseriesCalculator do
       avg_comments_row = day1_rows.find { |r| r[2] == 'avg_comments_per_pr' }
       avg_additions_row = day1_rows.find { |r| r[2] == 'avg_additions_per_pr' }
       avg_deletions_row = day1_rows.find { |r| r[2] == 'avg_deletions_per_pr' }
-      avg_time_first_review_row = day1_rows.find { |r| r[2] == 'avg_time_to_first_review_hours' }
+      avg_time_first_review_row = day1_rows.find { |r| r[2] == 'avg_time_to_first_review_days' }
 
       expect(avg_time_row).not_to be_nil
       expect(avg_time_row[3]).to eq(1.5)
@@ -71,7 +71,7 @@ RSpec.describe WttjMetrics::Metrics::Github::TimeseriesCalculator do
       expect(avg_comments_row[3]).to eq(2.0)
       expect(avg_additions_row[3]).to eq(75.0)
       expect(avg_deletions_row[3]).to eq(15.0)
-      expect(avg_time_first_review_row[3]).to eq(0.38)
+      expect(avg_time_first_review_row[3]).to eq(0.02)
 
       # 2025-01-02
       day2_rows = rows.select { |r| r[0] == '2025-01-02' }

@@ -58,5 +58,27 @@ RSpec.describe WttjMetrics::Metrics::Github::PrVelocityCalculator do
       # Avg: (0.0833 + 0.25) / 2 = 0.1666... -> 0.1667
       expect(result[:avg_time_to_first_review_days]).to eq(0.1667)
     end
+
+    it 'calculates merge_rate' do
+      # Add a CLOSED PR
+      pull_requests << { state: 'CLOSED', createdAt: '2025-01-01T10:00:00Z' }
+
+      result = calculator.calculate
+      # 2 Merged, 1 Closed. Total 3.
+      # 2/3 = 66.67%
+      expect(result[:merge_rate]).to eq(66.67)
+    end
+
+    it 'calculates avg_time_to_approval_days' do
+      # Add approval data
+      pull_requests[0][:reviews][:nodes] << { state: 'APPROVED', createdAt: '2025-01-01T14:00:00Z' } # 4 hours
+      pull_requests[1][:reviews][:nodes] << { state: 'APPROVED', createdAt: '2025-01-04T10:00:00Z' } # 24 hours (1 day)
+
+      result = calculator.calculate
+      # PR 1: 4 hours = 0.1667 days
+      # PR 2: 24 hours = 1.0 days
+      # Avg: (0.1667 + 1.0) / 2 = 0.58335 -> 0.5833 (if 0.166666...)
+      expect(result[:avg_time_to_approval_days]).to eq(0.5833)
+    end
   end
 end

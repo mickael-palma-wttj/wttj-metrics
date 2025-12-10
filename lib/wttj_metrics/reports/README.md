@@ -8,7 +8,6 @@ The reports layer is split by data source:
 
 ### Linear Reports
 - **Linear::ReportGenerator**: Main orchestrator for Linear reports
-- **Linear::HtmlGenerator**: Renders HTML reports using ERB templates
 - **Linear::ExcelReportBuilder**: Generates Excel reports
 - **MetricAccessor**: Provides cached access to parsed metrics
 - **TeamFilter**: Handles team filtering logic
@@ -392,33 +391,6 @@ generator = ReportGenerator.new('tmp/metrics.csv', days: 90)
 generator.generate('tmp/report.html')
 ```
 
-### HtmlGenerator
-
-Handles HTML report generation using ERB templates.
-
-**Responsibilities:**
-- Render ERB templates with report data
-- Generate fallback HTML when template is missing
-- Write HTML content to files
-
-**Key Methods:**
-```ruby
-generator = HtmlGenerator.new(report_generator)
-
-# Generate and write HTML
-generator.generate('tmp/report.html')
-# => Writes rendered HTML to file
-
-# Build HTML content
-html = generator.build_html
-# => Returns HTML string
-```
-
-**Benefits:**
-- **Separation**: HTML rendering isolated from data preparation
-- **Testability**: Template rendering can be tested independently
-- **Flexibility**: Easy to add alternative template formats
-
 ### WeeklyBugFlowBuilder
 
 Builds weekly bug flow data aggregated by team.
@@ -536,7 +508,7 @@ bundle exec rspec spec/wttj_metrics/reports/
 - All Calculators (Bug, Cycle, Team, Flow, etc.)
 - All Presenters (Bug, Cycle, Team, etc.)
 - All Helpers (Date, Formatting, Issue)
-- Templates (report.html.erb)
+- Templates (linear_report.html.erb)
 
 ## Output Examples
 

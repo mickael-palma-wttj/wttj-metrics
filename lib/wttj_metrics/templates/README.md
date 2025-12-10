@@ -4,7 +4,7 @@ This directory contains ERB (Embedded Ruby) templates used to generate the HTML 
 
 ## Files
 
-### report.html.erb
+### linear_report.html.erb
 
 The main HTML template for the comprehensive metrics report. This template generates a complete, interactive HTML page with charts, tables, and visualizations.
 
@@ -159,7 +159,7 @@ new Chart(ctx, {
 ## Template Structure
 
 ```
-report.html.erb
+linear_report.html.erb
 ├── <head>
 │   ├── <meta> tags
 │   ├── <title>

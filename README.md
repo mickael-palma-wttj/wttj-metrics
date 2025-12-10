@@ -407,7 +407,7 @@ wttj-metrics/
 │       │   └── team_metric_presenter.rb
 │       └── templates/            # ERB templates (README included)
 │           ├── README.md        # Templates documentation
-│           └── report.html.erb  # HTML report template
+│           └── linear_report.html.erb  # HTML report template
 ├── spec/                         # RSpec tests (485 examples)
 │   ├── cassettes/                # VCR HTTP recordings
 │   ├── support/                  # Test helpers & configuration

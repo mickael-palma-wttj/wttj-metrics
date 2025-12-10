@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'ruby-progressbar'
+
 module WttjMetrics
   module Services
     module Github
@@ -20,7 +22,10 @@ module WttjMetrics
 
           @logger.info "   Found #{filtered_prs.size} pull requests (created >= #{from_date})"
 
-          { pull_requests: filtered_prs }
+          releases = fetch_releases_data(filtered_prs, from_date)
+          @logger.info "   Found #{releases.size} releases"
+
+          { pull_requests: filtered_prs, releases: releases }
         rescue Octokit::Unauthorized
           # Already logged in client
           {}
@@ -50,6 +55,14 @@ module WttjMetrics
         def fetch_org_prs(org, from_date)
           @logger.info "   Fetching for organization: #{org}"
           cache_key = "github_prs_#{org}"
+
+          # Try fresh cache first (1 day TTL)
+          fresh_prs = cache.read(cache_key, max_age_hours: 24)
+          if fresh_prs
+            @logger.info '   ✨ Cache is fresh (< 24h). Skipping update.'
+            return fresh_prs
+          end
+
           cached_prs = cache.read(cache_key, max_age_hours: 87_600) || []
 
           prs = if cached_prs.any?
@@ -83,6 +96,59 @@ module WttjMetrics
             pr['createdAt'] >= from_date
           end
           filtered.map { |pr| deep_symbolize_keys(pr) }
+        end
+
+        def fetch_releases_data(prs, from_date)
+          if ENV['GITHUB_ORG']
+            cache_key = "github_releases_#{ENV['GITHUB_ORG']}"
+            fresh_releases = cache.read(cache_key, max_age_hours: 24)
+            if fresh_releases
+              @logger.info '   ✨ Releases cache is fresh (< 24h). Skipping update.'
+              return fresh_releases
+            end
+          end
+
+          repos = Set.new
+
+          if ENV['GITHUB_REPO']
+            repos.add(ENV['GITHUB_REPO'])
+          elsif ENV['GITHUB_ORG']
+            prs.each do |pr|
+              # Handle both symbol and string keys since filter_prs might have symbolized them
+              repo_name = pr.dig(:repository, :name) || pr.dig('repository', 'name')
+              repos.add("#{ENV.fetch('GITHUB_ORG', nil)}/#{repo_name}") if repo_name
+            end
+          end
+
+          return [] if repos.empty?
+
+          @logger.info "   Fetching releases for #{repos.size} repositories..."
+
+          progress_bar = ProgressBar.create(
+            title: 'Releases',
+            total: repos.size,
+            format: '%t: |%B| %p%% %e'
+          )
+
+          all_releases = []
+          repos.each do |repo|
+            releases = client.fetch_releases(repo, from_date)
+            releases = deep_stringify_keys(releases)
+
+            repo_name = repo.split('/').last
+            releases.each { |r| r['repository_name'] = repo_name }
+
+            all_releases.concat(releases)
+            progress_bar.increment
+          end
+          progress_bar.finish
+
+          if ENV['GITHUB_ORG']
+            cache_key = "github_releases_#{ENV['GITHUB_ORG']}"
+            cache.write(cache_key, all_releases)
+          end
+
+          all_releases
         end
 
         def client

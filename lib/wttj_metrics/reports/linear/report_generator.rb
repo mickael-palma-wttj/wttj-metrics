@@ -327,7 +327,7 @@ module WttjMetrics
         end
 
         def build_html
-          template_path = File.join(WttjMetrics.root, 'lib', 'wttj_metrics', 'templates', 'report.html.erb')
+          template_path = File.join(WttjMetrics.root, 'lib', 'wttj_metrics', 'templates', 'linear_report.html.erb')
 
           if File.exist?(template_path)
             template = ERB.new(File.read(template_path))

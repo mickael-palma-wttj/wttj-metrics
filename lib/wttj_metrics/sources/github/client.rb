@@ -31,6 +31,30 @@ module WttjMetrics
                   commits(first: 1) {
                     totalCount
                   }
+                  latestReviews(first: 10) {
+                    nodes {
+                      createdAt
+                      state
+                      author {
+                        login
+                      }
+                    }
+                  }
+                  lastCommit: commits(last: 1) {
+                    nodes {
+                      commit {
+                        statusCheckRollup {
+                          state
+                        }
+                        checkSuites(first: 10) {
+                          nodes {
+                            conclusion
+                            updatedAt
+                          }
+                        }
+                      }
+                    }
+                  }
                   author {
                     login
                   }
@@ -97,6 +121,24 @@ module WttjMetrics
                     changedFiles
                     commits(first: 1) {
                       totalCount
+                    }
+                    latestReviews(first: 10) {
+                      nodes {
+                        createdAt
+                        state
+                        author {
+                          login
+                        }
+                      }
+                    }
+                    lastCommit: commits(last: 1) {
+                      nodes {
+                        commit {
+                          statusCheckRollup {
+                            state
+                          }
+                        }
+                      }
                     }
                     author {
                       login
@@ -165,6 +207,20 @@ module WttjMetrics
           fetch_recursive(org, start_date, end_date, date_field: 'updated')
         end
 
+        def fetch_releases(repo, from_date)
+          repo.split('/')
+          # Use REST API for releases as it's simpler for this use case
+          # and we don't need complex graph traversal
+          releases = with_retries do
+            @client.releases(repo, per_page: 100)
+          end
+
+          releases.select { |r| r.created_at >= Date.parse(from_date).to_time }
+                  .map(&:to_h)
+        rescue Octokit::NotFound
+          []
+        end
+
         private
 
         def fetch_recursive(org, start_date, end_date, date_field: 'created')
@@ -204,7 +260,10 @@ module WttjMetrics
             results.concat(data.nodes)
             cursor = data.pageInfo.endCursor
             has_next = data.pageInfo.hasNextPage
-            progress_bar&.progress += data.nodes.size
+            if progress_bar
+              new_progress = progress_bar.progress + data.nodes.size
+              progress_bar.progress = [new_progress, progress_bar.total].min
+            end
           end
           progress_bar&.finish
 
@@ -216,14 +275,30 @@ module WttjMetrics
           response = with_retries do
             @client.post '/graphql', { query: COUNT_QUERY, variables: variables }.to_json
           end
+          handle_graphql_errors(response)
           response.data.search.issueCount
         end
 
         def execute_search_query(query_string, after_cursor)
           variables = { query: query_string, after: after_cursor }
-          with_retries do
+          response = with_retries do
             @client.post '/graphql', { query: SEARCH_QUERY, variables: variables }.to_json
           end
+          handle_graphql_errors(response)
+          response
+        end
+
+        def handle_graphql_errors(response)
+          if response[:errors]
+            error_msg = response[:errors].map { |e| e[:message] }.join(', ')
+            @logger&.error "❌ GraphQL Error: #{error_msg}"
+            raise "GraphQL Error: #{error_msg}"
+          end
+
+          return unless response.data.nil?
+
+          @logger&.error '❌ GraphQL Error: No data returned'
+          raise 'GraphQL Error: No data returned'
         end
 
         def with_retries

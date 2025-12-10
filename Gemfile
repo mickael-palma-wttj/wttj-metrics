@@ -29,3 +29,5 @@ end
 
 gem 'octokit', '~> 10.0'
 gem 'ruby-progressbar', '~> 1.13'
+
+gem "concurrent-ruby", "~> 1.3"

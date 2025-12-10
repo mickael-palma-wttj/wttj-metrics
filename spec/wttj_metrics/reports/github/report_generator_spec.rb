@@ -45,7 +45,16 @@ RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
                                         avg_deletions: 50,
                                         avg_changed_files: 5,
                                         avg_commits: 2,
-                                        avg_time_to_first_review: 0.5
+                                        avg_time_to_first_review: 0.5,
+                                        merge_rate: 0,
+                                        avg_time_to_approval: 0,
+                                        avg_rework_cycles: 0,
+                                        unreviewed_pr_rate: 0,
+                                        ci_success_rate: 0,
+                                        deploy_frequency: 0,
+                                        deploy_frequency_daily: 0.0,
+                                        hotfix_rate: 0,
+                                        time_to_green: 0
                                       })
     end
   end

@@ -11,7 +11,7 @@ RSpec.describe WttjMetrics::Services::Github::DataFetcher do
 
   before do
     allow(WttjMetrics::Sources::Github::Client).to receive(:new).and_return(client)
-    allow(client).to receive(:fetch_pull_requests).and_return(prs)
+    allow(client).to receive_messages(fetch_pull_requests: prs, fetch_releases: [])
     ENV['GITHUB_REPO'] = 'owner/repo'
     ENV.delete('GITHUB_ORG')
   end

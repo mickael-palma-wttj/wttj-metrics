@@ -24,7 +24,9 @@ test.describe('GitHub Report Structure', () => {
     test('has all main sections', async ({ page }) => {
         const sections = [
             'Key Metrics',
-            'Trends'
+            'Efficiency Trends',
+            'Quality & Health Trends',
+            'Collaboration Trends'
         ];
 
         for (const section of sections) {
@@ -35,8 +37,18 @@ test.describe('GitHub Report Structure', () => {
     test('has all charts', async ({ page }) => {
         const charts = [
             'Time to Merge History',
-            'Time to First Review History',
-            'Reviews & Comments History',
+            'Time to First Review History (Days)',
+            'Time to Approval History (Days)',
+            'CI Success Rate History',
+            'Acceptance Rate History',
+            'Unreviewed PR Rate History',
+            'Hotfix Rate History',
+            'Time to Green History (Hours)',
+            'Reviews per PR History',
+            'Comments per PR History',
+            'Rework Cycles History',
+            'Top 10 Active Repositories (PRs Created)',
+            'Top 10 Active Contributors (PRs Created)',
             'PR Size History'
         ];
 
