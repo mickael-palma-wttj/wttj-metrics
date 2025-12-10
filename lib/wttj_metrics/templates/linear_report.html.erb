@@ -74,6 +74,63 @@
       border-bottom-color: #151515;
     }
     .metric-card:hover .tooltip { visibility: visible; opacity: 1; }
+
+    /* Chart Tooltips */
+    .tooltip-icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      background: #EAE4DE;
+      color: #585858;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 18px;
+      font-size: 12px;
+      margin-left: 8px;
+      cursor: help;
+      position: relative;
+      vertical-align: middle;
+      border: 1px solid #DEDEDE;
+    }
+    .tooltip-icon:hover {
+      background: #585858;
+      color: #FFFFFF;
+      border-color: #585858;
+    }
+    .tooltip-icon .tooltip-text {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      transform: translateY(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      width: 250px;
+      text-align: left;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      margin-left: 10px;
+      font-weight: normal;
+      pointer-events: none;
+    }
+    .tooltip-icon .tooltip-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-right-color: #151515;
+    }
+    .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
+
     .metric-value {
       font-size: 2.5rem;
       font-weight: 700;
@@ -137,7 +194,7 @@
       font-size: 0.75rem;
       font-weight: 400;
       line-height: 1.3;
-      width: 180px;
+      width: 230px;
       text-align: left;
       z-index: 9999;
       transition: opacity 0.2s, visibility 0.2s;
@@ -161,9 +218,11 @@
       visibility: hidden;
       opacity: 0;
       position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 50%;
+      right: 100%;
+      left: auto;
+      bottom: auto;
+      transform: translateY(-50%);
       background: #151515;
       color: #FFFFFF;
       padding: 0.5rem 0.75rem;
@@ -171,23 +230,23 @@
       font-size: 0.75rem;
       font-weight: 400;
       line-height: 1.3;
-      width: 180px;
+      width: 230px;
       text-align: center;
       z-index: 9999;
       transition: opacity 0.2s, visibility 0.2s;
       border: 1px solid #151515;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      margin-bottom: 6px;
+      margin-right: 8px;
       white-space: normal;
     }
     .cycles-table td .cell-tooltip::after {
       content: '';
       position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 50%;
+      left: 100%;
+      transform: translateY(-50%);
       border: 5px solid transparent;
-      border-top-color: #151515;
+      border-left-color: #151515;
     }
     .cycles-table td:hover .cell-tooltip { visibility: visible; opacity: 1; }
     .cycles-table tr:hover { background: rgba(255, 205, 0, 0.1); }
@@ -457,33 +516,58 @@
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Bug Status</h3>
+          <h3 class="chart-title">
+            Bug Status
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Distribution of bugs by their current status (Open vs Closed).</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="bugStatusChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Open Bugs by Priority</h3>
+          <h3 class="chart-title">
+            Open Bugs by Priority
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Breakdown of currently open bugs by their priority level.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="bugsPriorityChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Bug Flow (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <h3 class="chart-title">
+            Bug Flow (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly comparison of new bugs created vs bugs closed. Helps track if the backlog is growing or shrinking.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="bugFlowChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Bugs Created by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <h3 class="chart-title">
+            Bugs Created by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly distribution of new bugs created, broken down by team.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="bugsByTeamChart"></canvas>
           </div>
         </div>
         <div class="chart-card full-width">
-          <h3 class="chart-title">Bug Stats by Team (All Time)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <h3 class="chart-title">
+            Bug Stats by Team (All Time)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Comprehensive statistics for each team including total bugs, resolution time (MTTR), and resolution rate.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <table class="cycles-table" id="bugStatsTable">
             <thead>
@@ -525,14 +609,24 @@
       <div class="section-content">
       <div class="charts-grid">
         <div class="chart-card">
-          <h3 class="chart-title">Tickets Created vs Completed<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <h3 class="chart-title">
+            Tickets Created vs Completed<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly flow of all tickets (features, bugs, chores) created vs completed.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="flowChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">State Transitions Distribution<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h3>
+          <h3 class="chart-title">
+            State Transitions Distribution<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly breakdown of ticket statuses. Shows how work moves through the workflow stages.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="transitionChart"></canvas>
@@ -553,25 +647,45 @@
       <div class="section-content">
       <div class="charts-grid">
         <div class="chart-card">
-          <h3 class="chart-title">Status Distribution</h3>
+          <h3 class="chart-title">
+            Status Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Current snapshot of all tickets by their status.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="statusChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Priority Distribution</h3>
+          <h3 class="chart-title">
+            Priority Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Current snapshot of all tickets by their priority.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="priorityChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Issue Type Distribution</h3>
+          <h3 class="chart-title">
+            Issue Type Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Current snapshot of all tickets by their type (Feature, Bug, etc.).</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="typeChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Top Assignees (WIP)</h3>
+          <h3 class="chart-title">
+            Top Assignees (WIP)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Team members with the most currently active tickets.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="assigneeChart"></canvas>
           </div>
@@ -1085,9 +1199,35 @@
       type: 'doughnut',
       data: {
         labels: <%= type_chart_data.map { |d| d[:label] }.to_json %>,
-        datasets: [{ data: <%= type_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'], borderWidth: 0 }]
+        datasets: [{
+          data: <%= type_chart_data.map { |d| d[:value] }.to_json %>,
+          backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'],
+          borderWidth: 0,
+          breakdown: <%= type_chart_data.map { |d| d[:breakdown] }.to_json %>
+        }]
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(context) {
+                const breakdown = context.dataset.breakdown[context.dataIndex];
+                if (!breakdown || Object.keys(breakdown).length === 0) return [];
+
+                const lines = [];
+                const sorted = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+                sorted.forEach(([label, count]) => {
+                  lines.push(`  ${label}: ${count}`);
+                });
+                return lines;
+              }
+            }
+          }
+        }
+      }
     });
     
     // Assignee Chart

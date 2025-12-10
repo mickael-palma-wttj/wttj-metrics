@@ -88,4 +88,39 @@ RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
       expect(File).to have_received(:write).with(output_path, anything)
     end
   end
+
+  describe '#weekly_breakdown' do
+    before do
+      daily_data = [
+        { date: '2025-12-01', metric: 'merged', value: 5 },
+        { date: '2025-12-01', metric: 'closed', value: 2 },
+        { date: '2025-12-01', metric: 'open', value: 10 },
+        { date: '2025-12-01', metric: 'created', value: 10 },
+        { date: '2025-12-01', metric: 'avg_time_to_merge_hours', value: 10.0 },
+        { date: '2025-12-02', metric: 'merged', value: 5 },
+        { date: '2025-12-02', metric: 'closed', value: 3 },
+        { date: '2025-12-02', metric: 'open', value: 12 },
+        { date: '2025-12-02', metric: 'created', value: 10 },
+        { date: '2025-12-02', metric: 'avg_time_to_merge_hours', value: 20.0 },
+        { date: '2025-12-08', metric: 'merged', value: 8 },
+        { date: '2025-12-08', metric: 'closed', value: 4 },
+        { date: '2025-12-08', metric: 'open', value: 15 },
+        { date: '2025-12-08', metric: 'created', value: 20 },
+        { date: '2025-12-08', metric: 'avg_time_to_merge_hours', value: 5.0 }
+      ]
+
+      parser = instance_double(WttjMetrics::Data::CsvParser)
+      allow(WttjMetrics::Data::CsvParser).to receive(:new).with(csv_path).and_return(parser)
+      allow(parser).to receive_messages(data: [], metrics_by_category: { 'github' => [], 'github_daily' => daily_data })
+    end
+
+    it 'aggregates metrics by week' do
+      breakdown = generator.weekly_breakdown
+
+      expect(breakdown[:labels]).to include('2025-12-01', '2025-12-08')
+      expect(breakdown[:datasets][:merged]).to eq([10, 8])
+      expect(breakdown[:datasets][:open]).to eq([12, 15])
+      expect(breakdown[:datasets][:avg_time_to_merge]).to eq([15.0, 5.0])
+    end
+  end
 end

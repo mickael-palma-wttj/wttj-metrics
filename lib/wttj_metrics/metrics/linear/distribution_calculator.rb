@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 module WttjMetrics
   module Metrics
     module Linear
@@ -10,6 +12,7 @@ module WttjMetrics
             status: status_distribution,
             priority: priority_distribution,
             type: type_distribution,
+            type_breakdown: type_breakdown,
             size: size_distribution,
             assignee: assignee_distribution
           }
@@ -68,6 +71,25 @@ module WttjMetrics
           end
 
           distribution
+        end
+
+        def type_breakdown
+          breakdown = Hash.new { |h, k| h[k] = Hash.new(0) }
+
+          issues.each do |issue|
+            type = classify_issue_type(issue)
+            labels = extract_labels(issue)
+
+            if labels.empty?
+              breakdown[type]['(No Label)'] += 1
+            else
+              labels.each do |label|
+                breakdown[type][label] += 1
+              end
+            end
+          end
+
+          breakdown.transform_values(&:to_json)
         end
 
         def classify_issue_type(issue)

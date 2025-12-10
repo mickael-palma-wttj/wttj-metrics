@@ -202,9 +202,12 @@ module WttjMetrics
           latest_suite = successful_suites.max_by { |cs| cs[:updatedAt] || cs['updatedAt'] }
           return unless latest_suite
 
-          pr_created_at = Time.parse(pull_request[:createdAt])
+          committed_date = last_commit[:committedDate] || last_commit['committedDate']
+          return unless committed_date
+
+          committed_at = Time.parse(committed_date)
           suite_updated_at = Time.parse(latest_suite[:updatedAt] || latest_suite['updatedAt'])
-          day_stats[:total_time_to_green] += (suite_updated_at - pr_created_at)
+          day_stats[:total_time_to_green] += (suite_updated_at - committed_at)
           day_stats[:count_with_green] += 1
         end
 

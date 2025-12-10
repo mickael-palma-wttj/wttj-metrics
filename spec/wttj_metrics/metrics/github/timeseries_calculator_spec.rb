@@ -21,7 +21,21 @@ RSpec.describe WttjMetrics::Metrics::Github::TimeseriesCalculator do
         },
         comments: { totalCount: 3 },
         additions: 100,
-        deletions: 20
+        deletions: 20,
+        lastCommit: {
+          nodes: [
+            {
+              commit: {
+                committedDate: '2025-01-01T11:30:00Z',
+                checkSuites: {
+                  nodes: [
+                    { conclusion: 'SUCCESS', updatedAt: '2025-01-01T11:45:00Z' }
+                  ]
+                }
+              }
+            }
+          ]
+        }
       },
       {
         createdAt: '2025-01-01T14:00:00Z',
@@ -35,7 +49,21 @@ RSpec.describe WttjMetrics::Metrics::Github::TimeseriesCalculator do
         },
         comments: { totalCount: 1 },
         additions: 50,
-        deletions: 10
+        deletions: 10,
+        lastCommit: {
+          nodes: [
+            {
+              commit: {
+                committedDate: '2025-01-01T14:30:00Z',
+                checkSuites: {
+                  nodes: [
+                    { conclusion: 'SUCCESS', updatedAt: '2025-01-01T14:45:00Z' }
+                  ]
+                }
+              }
+            }
+          ]
+        }
       },
       {
         createdAt: '2025-01-02T10:00:00Z',
@@ -64,6 +92,7 @@ RSpec.describe WttjMetrics::Metrics::Github::TimeseriesCalculator do
       avg_additions_row = day1_rows.find { |r| r[2] == 'avg_additions_per_pr' }
       avg_deletions_row = day1_rows.find { |r| r[2] == 'avg_deletions_per_pr' }
       avg_time_first_review_row = day1_rows.find { |r| r[2] == 'avg_time_to_first_review_days' }
+      avg_time_to_green_row = day1_rows.find { |r| r[2] == 'avg_time_to_green_hours' }
 
       expect(avg_time_row).not_to be_nil
       expect(avg_time_row[3]).to eq(1.5)
@@ -72,6 +101,7 @@ RSpec.describe WttjMetrics::Metrics::Github::TimeseriesCalculator do
       expect(avg_additions_row[3]).to eq(75.0)
       expect(avg_deletions_row[3]).to eq(15.0)
       expect(avg_time_first_review_row[3]).to eq(0.02)
+      expect(avg_time_to_green_row[3]).to eq(0.25)
 
       # 2025-01-02
       day2_rows = rows.select { |r| r[0] == '2025-01-02' }

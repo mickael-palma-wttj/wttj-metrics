@@ -150,7 +150,26 @@ module WttjMetrics
         end
 
         def type_chart_data
-          type_dist.map { |m| { label: m[:metric], value: m[:value].to_i } }
+          type_dist.map do |m|
+            {
+              label: m[:metric],
+              value: m[:value].to_i,
+              breakdown: type_breakdown_for(m[:metric])
+            }
+          end
+        end
+
+        def type_breakdown_for(type)
+          metric = type_breakdown.find { |m| m[:metric] == type }
+          return {} unless metric
+
+          JSON.parse(metric[:value])
+        rescue JSON::ParserError
+          {}
+        end
+
+        def type_breakdown
+          @type_breakdown ||= @parser.metrics_for('type_breakdown')
         end
 
         def assignee_chart_data

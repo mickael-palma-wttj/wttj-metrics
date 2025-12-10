@@ -54,5 +54,34 @@ RSpec.describe WttjMetrics::Metrics::Github::QualityCalculator do
         expect(calculator.calculate[:deploy_frequency_daily]).to be_within(0.01).of(0.21)
       end
     end
+
+    context 'with time to green data' do
+      let(:pull_requests) do
+        [
+          {
+            state: 'MERGED',
+            createdAt: '2025-01-01T10:00:00Z',
+            lastCommit: {
+              nodes: [
+                {
+                  commit: {
+                    committedDate: '2025-01-01T11:00:00Z',
+                    checkSuites: {
+                      nodes: [
+                        { conclusion: 'SUCCESS', updatedAt: '2025-01-01T11:30:00Z' } # 30 mins
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      end
+
+      it 'calculates time_to_green_hours' do
+        expect(calculator.calculate[:time_to_green_hours]).to eq(0.5)
+      end
+    end
   end
 end

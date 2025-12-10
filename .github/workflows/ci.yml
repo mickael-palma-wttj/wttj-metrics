@@ -100,14 +100,39 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Generate report
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Cache Linear metrics
+        id: cache-linear
+        uses: actions/cache@v4
+        with:
+          path: tmp/linear_metrics.csv
+          key: linear-metrics-${{ runner.os }}-${{ steps.date.outputs.date }}
+
+      - name: Collect Linear metrics
+        if: steps.cache-linear.outputs.cache-hit != 'true'
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        run: ./bin/wttj-metrics collect --sources linear
+
+      - name: Cache GitHub metrics
+        id: cache-github
+        uses: actions/cache@v4
+        with:
+          path: tmp/github_metrics.csv
+          key: github-metrics-${{ runner.os }}-${{ steps.date.outputs.date }}
+
+      - name: Collect GitHub metrics
+        if: steps.cache-github.outputs.cache-hit != 'true'
+        env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_ORG: ${{ vars.GH_ORG }}
-        run: |
-          ./bin/wttj-metrics collect --sources linear github
-          ./bin/wttj-metrics report tmp/metrics.csv --days 365 --sources linear github
+        run: ./bin/wttj-metrics collect --sources github
+
+      - name: Generate report
+        run: ./bin/wttj-metrics report --sources linear github
 
       - name: Run Playwright tests
         run: npm test

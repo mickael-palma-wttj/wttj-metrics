@@ -116,10 +116,13 @@ module WttjMetrics
             latest_suite = successful_suites.max_by { |cs| cs[:updatedAt] }
             next nil unless latest_suite
 
-            pr_created_at = Time.parse(pr[:createdAt])
+            committed_date = last_commit[:committedDate]
+            next nil unless committed_date
+
+            committed_at = Time.parse(committed_date)
             suite_updated_at = Time.parse(latest_suite[:updatedAt])
 
-            (suite_updated_at - pr_created_at) / 3600.0 # in hours
+            (suite_updated_at - committed_at) / 3600.0 # in hours
           end
 
           return 0.0 if times.empty?

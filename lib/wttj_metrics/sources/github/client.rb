@@ -43,6 +43,7 @@ module WttjMetrics
                   lastCommit: commits(last: 1) {
                     nodes {
                       commit {
+                        committedDate
                         statusCheckRollup {
                           state
                         }
@@ -134,8 +135,15 @@ module WttjMetrics
                     lastCommit: commits(last: 1) {
                       nodes {
                         commit {
+                          committedDate
                           statusCheckRollup {
                             state
+                          }
+                          checkSuites(first: 10) {
+                            nodes {
+                              conclusion
+                              updatedAt
+                            }
                           }
                         }
                       }

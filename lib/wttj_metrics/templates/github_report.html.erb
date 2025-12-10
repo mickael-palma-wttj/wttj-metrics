@@ -392,9 +392,9 @@
         </div>
         <div class="chart-card">
           <h3 class="chart-title">
-            Daily Deployment Frequency
+            Weekly Deployment Frequency
             <span class="tooltip-icon">?
-              <span class="tooltip-text">Number of releases created per day. Indicates delivery cadence.</span>
+              <span class="tooltip-text">Number of releases created per week. Indicates delivery cadence.</span>
             </span>
           </h3>
           <div class="chart-container">
@@ -474,7 +474,7 @@
           <h3 class="chart-title">
             PR Outcome History
             <span class="tooltip-icon">?
-              <span class="tooltip-text">Daily distribution of PRs by status (Merged, Closed, Open).</span>
+              <span class="tooltip-text">Weekly distribution of PRs by status (Merged, Closed, Open).</span>
             </span>
           </h3>
           <div class="chart-container">
@@ -647,7 +647,7 @@
     Chart.defaults.color = '#585858';
     Chart.defaults.borderColor = '#DEDEDE';
     
-    <% breakdown = daily_breakdown %>
+    <% breakdown = weekly_breakdown %>
     const breakdownLabels = <%= breakdown[:labels].to_json %>;
     const globalMetrics = <%= metrics.to_json %>;
 
@@ -1039,11 +1039,11 @@
         labels: breakdownLabels,
         datasets: [
           {
-            label: 'Daily Deploys',
+            label: 'Weekly Deploys',
             data: deployFrequency,
             backgroundColor: colors.purple
           },
-          createBaselineDataset(globalMetrics.deploy_frequency_daily, 'Period Avg', colors.purple)
+          createBaselineDataset(globalMetrics.deploy_frequency, 'Period Avg', colors.purple)
         ]
       },
       options: {

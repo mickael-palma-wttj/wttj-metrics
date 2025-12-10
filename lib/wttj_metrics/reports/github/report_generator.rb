@@ -100,12 +100,96 @@ module WttjMetrics
               datasets[:avg_rework_cycles] << get_value(metrics, 'avg_rework_cycles')
               datasets[:unreviewed_pr_rate] << get_value(metrics, 'unreviewed_pr_rate')
               datasets[:ci_success_rate] << get_value(metrics, 'ci_success_rate')
-              datasets[:deploy_frequency] << get_value(metrics, 'deploy_count')
+              datasets[:deploy_frequency] << get_value(metrics, 'releases_count')
               datasets[:hotfix_rate] << get_value(metrics, 'hotfix_rate')
-              datasets[:time_to_green] << get_value(metrics, 'time_to_green_hours')
+              datasets[:time_to_green] << get_value(metrics, 'avg_time_to_green_hours')
             end
 
             { labels: sorted_dates, datasets: datasets }
+          end
+        end
+
+        def weekly_breakdown
+          @weekly_breakdown ||= begin
+            daily_data = @parser.metrics_by_category['github_daily'] || []
+            grouped_by_week = daily_data.group_by do |m|
+              date = Date.parse(m[:date])
+              [date.cwyear, date.cweek]
+            end
+
+            sorted_weeks = grouped_by_week.keys.sort
+            datasets = initialize_datasets
+
+            sorted_weeks.each do |year, week|
+              metrics_in_week = grouped_by_week[[year, week]]
+              metrics_by_name = metrics_in_week.group_by { |m| m[:metric] }
+
+              sum_metric = ->(name) { metrics_by_name[name]&.sum { |m| m[:value] } || 0 }
+
+              weighted_avg = lambda do |avg_name, weight_name|
+                total_weight = 0
+                total_value = 0
+                by_date = metrics_in_week.group_by { |m| m[:date] }
+                by_date.each do |_date, daily_metrics|
+                  avg = daily_metrics.find { |m| m[:metric] == avg_name }&.dig(:value) || 0
+                  weight = daily_metrics.find { |m| m[:metric] == weight_name }&.dig(:value) || 0
+                  total_value += avg * weight
+                  total_weight += weight
+                end
+                total_weight > 0 ? (total_value / total_weight).round(2) : 0
+              end
+
+              simple_avg = lambda do |name|
+                values = metrics_by_name[name]&.map { |m| m[:value] } || []
+                values.any? ? (values.sum / values.size).round(2) : 0
+              end
+
+              calc_rate_from_daily = lambda do |rate_name, base_name|
+                total_base = 0
+                total_target = 0
+                by_date = metrics_in_week.group_by { |m| m[:date] }
+                by_date.each do |_date, daily_metrics|
+                  rate = daily_metrics.find { |m| m[:metric] == rate_name }&.dig(:value) || 0
+                  base = daily_metrics.find { |m| m[:metric] == base_name }&.dig(:value) || 0
+                  target = (rate * base / 100.0)
+                  total_base += base
+                  total_target += target
+                end
+                total_base > 0 ? (total_target / total_base * 100).round(2) : 0
+              end
+
+              datasets[:merged] << sum_metric.call('merged')
+              datasets[:closed] << sum_metric.call('closed')
+
+              last_day = metrics_in_week.map { |m| m[:date] }.max
+              last_day_metrics = metrics_in_week.select { |m| m[:date] == last_day }
+              datasets[:open] << get_value(last_day_metrics, 'open')
+
+              datasets[:avg_time_to_merge] << weighted_avg.call('avg_time_to_merge_hours', 'merged')
+              datasets[:avg_reviews] << weighted_avg.call('avg_reviews_per_pr', 'created')
+              datasets[:avg_comments] << weighted_avg.call('avg_comments_per_pr', 'created')
+              datasets[:avg_additions] << weighted_avg.call('avg_additions_per_pr', 'created')
+              datasets[:avg_deletions] << weighted_avg.call('avg_deletions_per_pr', 'created')
+              datasets[:avg_time_to_first_review] << simple_avg.call('avg_time_to_first_review_days')
+
+              total_merged = sum_metric.call('merged')
+              total_closed = sum_metric.call('closed')
+              datasets[:merge_rate] << (total_merged + total_closed > 0 ? (total_merged.to_f / (total_merged + total_closed) * 100).round(2) : 0)
+
+              datasets[:avg_time_to_approval] << simple_avg.call('avg_time_to_approval_days')
+              datasets[:avg_rework_cycles] << weighted_avg.call('avg_rework_cycles', 'created')
+              datasets[:unreviewed_pr_rate] << calc_rate_from_daily.call('unreviewed_pr_rate', 'created')
+              datasets[:ci_success_rate] << calc_rate_from_daily.call('ci_success_rate', 'created')
+              datasets[:deploy_frequency] << sum_metric.call('releases_count')
+              datasets[:hotfix_rate] << calc_rate_from_daily.call('hotfix_rate', 'releases_count')
+              datasets[:time_to_green] << simple_avg.call('avg_time_to_green_hours')
+            end
+
+            labels = sorted_weeks.map do |year, week|
+              Date.commercial(year, week, 1).to_s
+            end
+
+            { labels: labels, datasets: datasets }
           end
         end
 
