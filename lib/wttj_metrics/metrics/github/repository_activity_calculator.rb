@@ -4,41 +4,43 @@ module WttjMetrics
   module Metrics
     module Github
       class RepositoryActivityCalculator
+        CATEGORY = 'github_repo_activity'
+
         def initialize(pull_requests)
           @pull_requests = pull_requests
         end
 
-        def to_rows
-          # Group by date and repo
-          grouped = @pull_requests.group_by do |pr|
-            date = pr['createdAt'] || pr[:createdAt]
-            date = Date.parse(date.to_s).to_s
-            repo = extract_repo_name(pr)
-            [date, repo]
+        def calculate
+          @pull_requests.each_with_object(Hash.new(0)) do |pull_request, counts|
+            key = [extract_date(pull_request), extract_repo_name(pull_request)]
+            counts[key] += 1
           end
+        end
 
-          grouped.map do |(date, repo), prs|
-            [
-              date,
-              'github_repo_activity',
-              repo,
-              prs.count
-            ]
+        def to_rows
+          calculate.map do |(date, repo), count|
+            [date, CATEGORY, repo, count]
           end
         end
 
         private
 
+        def extract_date(pull_request)
+          date_str = pull_request[:createdAt] || pull_request['createdAt']
+          Date.parse(date_str.to_s).to_s
+        end
+
         def extract_repo_name(pull_request)
-          name = pull_request.dig('repository', 'name') || pull_request.dig(:repository, :name)
+          name = pull_request.dig(:repository, :name) || pull_request.dig('repository', 'name')
           return name if name
 
-          url = pull_request['url'] || pull_request[:url]
+          parse_repo_from_url(pull_request[:url] || pull_request['url'])
+        end
+
+        def parse_repo_from_url(url)
           return 'unknown' unless url
 
-          # Extract from URL like https://github.com/organization/repo-name/pull/123
-          match = url.match(%r{github\.com/[^/]+/([^/]+)})
-          match ? match[1] : 'unknown'
+          url.match(%r{github\.com/[^/]+/([^/]+)})&.captures&.first || 'unknown'
         end
       end
     end

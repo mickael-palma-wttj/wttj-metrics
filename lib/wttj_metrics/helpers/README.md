@@ -9,102 +9,106 @@ This directory contains utility modules that provide common formatting and data 
 Provides date manipulation and formatting utilities for working with weeks, dates, and time ranges.
 
 **Key Methods:**
-- `week_start_date(date)` - Returns the Monday of the week containing the given date
-- `week_end_date(date)` - Returns the Sunday of the week containing the given date
-- `format_week(date)` - Formats a date as "Week XX (Mon DD - Sun DD)"
-- `weeks_between(start_date, end_date)` - Returns an array of week start dates between two dates
-- `parse_date(date_string)` - Safely parses a date string, handling various formats
+- `parse_date(date_string)` - Safely parses a date string
+- `parse_datetime(date_string)` - Safely parses a datetime string
+- `monday_of_week(date)` - Returns the Monday of the week containing the given date
+- `format_week_label(date)` - Formats a date as "Mon DD" (e.g., "Dec 02")
+- `days_ago(days, from: Date.today)` - Returns date string for N days ago
+- `days_between(start_date, end_date)` - Calculates number of days between two dates
+- `hours_between(start_time, end_time)` - Calculates number of hours between two timestamps
 
 **Usage Example:**
 ```ruby
 include WttjMetrics::Helpers::DateHelper
 
-# Get week boundaries
-start = week_start_date(Date.today)  # => Monday of current week
-end_date = week_end_date(Date.today)  # => Sunday of current week
+# Get week start
+monday = monday_of_week(Date.today)
 
-# Format for display
-formatted = format_week(Date.today)  # => "Week 49 (Dec 02 - Dec 08)"
-
-# Get all weeks in a range
-weeks = weeks_between(Date.new(2024, 1, 1), Date.new(2024, 12, 31))
+# Calculate duration
+days = days_between('2024-01-01', '2024-01-10') # => 9
+hours = hours_between(start_time, end_time)
 ```
 
 ### FormattingHelper
 
-Provides consistent formatting utilities for numbers, percentages, and durations used across presenters and reports.
+Provides consistent formatting utilities for numbers, percentages, and metric names.
 
 **Key Methods:**
 - `format_percentage(value, total)` - Calculates and formats a percentage (returns integer)
-- `format_duration(hours)` - Converts hours to human-readable format (e.g., "2d 4h", "30m")
-- `format_number(value)` - Formats numbers with thousand separators
+- `format_with_unit(value, unit)` - Appends unit to value
+- `humanize_metric_name(name)` - Converts snake_case to human readable string
+- `format_count_display(completed, total)` - Formats as "X/Y"
+- `format_points_display(points)` - Formats as "X pts"
 
 **Usage Example:**
 ```ruby
 include WttjMetrics::Helpers::FormattingHelper
 
-# Format percentages (returns integers)
-pct = format_percentage(25, 100)  # => 25 (not 25.0)
+# Format percentages
+pct = format_percentage(25, 100)  # => 25
 
-# Format durations
-duration = format_duration(52.5)  # => "2d 4h"
-short = format_duration(0.5)      # => "30m"
-
-# Format large numbers
-formatted = format_number(1234567)  # => "1,234,567"
+# Humanize names
+name = humanize_metric_name('avg_cycle_time') # => "Avg cycle time"
 ```
 
-### IssueHelper
+### Linear::IssueHelper
 
-Provides utilities for working with Linear issues, including filtering, status checking, and team assignments.
+Provides utilities for extracting data from Linear issues.
 
 **Key Methods:**
-- `bug_issue?(issue)` - Determines if an issue is a bug based on labels
-- `team_for_issue(issue)` - Extracts team name from issue
-- `in_progress?(issue)` - Checks if issue is currently in progress
-- `completed?(issue)` - Checks if issue is completed
-- `issue_state(issue, workflow_states)` - Gets the current state of an issue
-- `filter_by_date_range(issues, start_date, end_date)` - Filters issues by date range
+- `issue_is_bug?(issue)` - Determines if an issue is a bug based on labels
+- `extract_labels(issue)` - Returns array of label names
+- `extract_team_name(issue)` - Extracts team name
+- `extract_assignee_name(issue)` - Extracts assignee name
+- `extract_priority_label(issue)` - Extracts priority label
+- `issue_completed?(issue)` - Checks if issue has completedAt date
+- `issue_started?(issue)` - Checks if issue has startedAt date
 
 **Usage Example:**
 ```ruby
-include WttjMetrics::Helpers::IssueHelper
+include WttjMetrics::Helpers::Linear::IssueHelper
 
-# Check issue types
-is_bug = bug_issue?(issue)  # => true/false based on labels
-
-# Get team assignment
-team = team_for_issue(issue)  # => "ATS" or "Global ATS"
-
-# Check status
-if in_progress?(issue)
-  puts "Issue is being worked on"
-elsif completed?(issue)
-  puts "Issue is done"
+if issue_is_bug?(issue)
+  team = extract_team_name(issue)
+  priority = extract_priority_label(issue)
 end
+```
 
-# Filter issues by date
-recent_issues = filter_by_date_range(all_issues, 30.days.ago, Date.today)
+### LoggerMixin
+
+Provides a shared logger configuration for CLI classes.
+
+**Key Methods:**
+- `logger` - Returns a configured Logger instance
+- `create_logger` - Creates a new Logger with custom formatter
+
+**Usage Example:**
+```ruby
+include WttjMetrics::Helpers::LoggerMixin
+
+def run
+  logger.info "Starting process..."
+end
 ```
 
 ## Design Principles
 
-1. **Single Responsibility**: Each helper focuses on a specific domain (dates, formatting, issues)
+1. **Single Responsibility**: Each helper focuses on a specific domain
 2. **Reusability**: Methods are designed to be used across multiple presenters and calculators
 3. **Consistency**: Provides standardized formatting throughout the application
-4. **Testability**: All helpers are fully unit tested with comprehensive test coverage
+4. **Testability**: All helpers are fully unit tested
 
 ## Dependencies
 
 - `date` - Ruby standard library for date manipulation
-- `time` - Ruby standard library for time operations
+- `logger` - Ruby standard library for logging
 
 ## Testing
 
 All helpers have comprehensive test coverage in `spec/wttj_metrics/helpers/`:
 - `date_helper_spec.rb` - Tests for date calculations and formatting
 - `formatting_helper_spec.rb` - Tests for number and percentage formatting
-- `issue_helper_spec.rb` - Tests for issue filtering and status checking
+- `linear/issue_helper_spec.rb` - Tests for issue filtering and status checking
 
 Run tests with:
 ```bash

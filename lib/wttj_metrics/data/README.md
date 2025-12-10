@@ -17,7 +17,7 @@ Parses CSV metrics data files and provides structured access to metrics by categ
 
 **Responsibilities:**
 - Read and parse CSV files with metrics data
-- Organize metrics by category (bug, cycle, flow, team, timeseries)
+- Organize metrics by category (bug, cycle, flow, team, timeseries, github)
 - Provide filtered access to metrics by category and date
 - Handle timeseries data with date range filtering
 
@@ -44,6 +44,7 @@ date,category,metric,value
 2024-12-08,bug,open_bugs,15
 2024-12-08,cycle,avg_scope_change,12
 2024-12-08,team,ATS:velocity,25
+2024-12-08,github,avg_time_to_merge,48.5
 ```
 
 **Features:**
@@ -82,7 +83,7 @@ writer.append_rows(new_rows)
 
 **CSV Headers:**
 - `date` - Date of the metric (YYYY-MM-DD format)
-- `category` - Metric category (bug, cycle, flow, team, timeseries)
+- `category` - Metric category (bug, cycle, flow, team, timeseries, github)
 - `metric` - Metric name (e.g., total_bugs, avg_completion)
 - `value` - Metric value (numeric or string)
 

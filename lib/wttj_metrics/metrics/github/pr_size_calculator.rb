@@ -6,6 +6,14 @@ module WttjMetrics
   module Metrics
     module Github
       class PrSizeCalculator
+        CATEGORY = 'github'
+        METRICS = {
+          avg_additions: 'avg_additions_per_pr',
+          avg_deletions: 'avg_deletions_per_pr',
+          avg_changed_files: 'avg_changed_files_per_pr',
+          avg_commits: 'avg_commits_per_pr'
+        }.freeze
+
         def initialize(pull_requests)
           @pull_requests = pull_requests
         end
@@ -13,31 +21,28 @@ module WttjMetrics
         def calculate
           return {} if @pull_requests.empty?
 
-          total_additions = @pull_requests.sum { |pr| pr[:additions] || 0 }
-          total_deletions = @pull_requests.sum { |pr| pr[:deletions] || 0 }
-          total_files = @pull_requests.sum { |pr| pr[:changedFiles] || 0 }
-          total_commits = @pull_requests.sum { |pr| pr.dig(:commits, :totalCount) || 0 }
-          count = @pull_requests.size
-
           {
-            avg_additions: (total_additions.to_f / count).round(2),
-            avg_deletions: (total_deletions.to_f / count).round(2),
-            avg_changed_files: (total_files.to_f / count).round(2),
-            avg_commits: (total_commits.to_f / count).round(2)
+            avg_additions: average_metric { |pr| pr[:additions] },
+            avg_deletions: average_metric { |pr| pr[:deletions] },
+            avg_changed_files: average_metric { |pr| pr[:changedFiles] },
+            avg_commits: average_metric { |pr| pr.dig(:commits, :totalCount) }
           }
         end
 
         def to_rows
-          stats = calculate
-          return [] if stats.empty?
+          return [] if @pull_requests.empty?
 
           date = Date.today.to_s
-          [
-            [date, 'github', 'avg_additions_per_pr', stats[:avg_additions]],
-            [date, 'github', 'avg_deletions_per_pr', stats[:avg_deletions]],
-            [date, 'github', 'avg_changed_files_per_pr', stats[:avg_changed_files]],
-            [date, 'github', 'avg_commits_per_pr', stats[:avg_commits]]
-          ]
+          calculate.map do |metric_key, value|
+            [date, CATEGORY, METRICS[metric_key], value]
+          end
+        end
+
+        private
+
+        def average_metric
+          total = @pull_requests.sum { |pr| yield(pr) || 0 }
+          (total.to_f / @pull_requests.size).round(2)
         end
       end
     end

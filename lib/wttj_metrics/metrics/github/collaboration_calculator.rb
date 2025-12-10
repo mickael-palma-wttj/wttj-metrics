@@ -6,54 +6,63 @@ module WttjMetrics
   module Metrics
     module Github
       class CollaborationCalculator
+        CATEGORY = 'github'
+
+        attr_reader :pull_requests
+
         def initialize(pull_requests)
           @pull_requests = pull_requests
         end
 
         def calculate
-          return {} if @pull_requests.empty?
-
-          total_reviews = @pull_requests.sum { |pr| pr[:reviews][:totalCount] }
-          total_comments = @pull_requests.sum { |pr| pr[:comments][:totalCount] }
-          count = @pull_requests.size
+          return {} if pull_requests.empty?
 
           {
-            avg_reviews_per_pr: (total_reviews.to_f / count).round(2),
-            avg_comments_per_pr: (total_comments.to_f / count).round(2),
-            avg_rework_cycles: calculate_rework_cycles(count),
-            unreviewed_pr_rate: calculate_unreviewed_rate(count)
+            avg_reviews_per_pr: avg_reviews_per_pr,
+            avg_comments_per_pr: avg_comments_per_pr,
+            avg_rework_cycles: avg_rework_cycles,
+            unreviewed_pr_rate: unreviewed_pr_rate
           }
         end
 
         def to_rows
-          stats = calculate
-          return [] if stats.empty?
-
-          date = Date.today.to_s
-          [
-            [date, 'github', 'avg_reviews_per_pr', stats[:avg_reviews_per_pr]],
-            [date, 'github', 'avg_comments_per_pr', stats[:avg_comments_per_pr]],
-            [date, 'github', 'avg_rework_cycles', stats[:avg_rework_cycles]],
-            [date, 'github', 'unreviewed_pr_rate', stats[:unreviewed_pr_rate]]
-          ]
+          calculate.map do |metric, value|
+            [Date.today.to_s, CATEGORY, metric.to_s, value]
+          end
         end
 
         private
 
-        def calculate_rework_cycles(count)
-          total_changes_requested = @pull_requests.sum do |pr|
-            # Handle both symbol and string keys
-            reviews = pr.dig(:reviews, :nodes) || pr.dig('reviews', 'nodes')
-
-            changes_requested_count = reviews&.count { |r| (r[:state] || r['state']) == 'CHANGES_REQUESTED' } || 0
-            changes_requested_count
-          end
-          (total_changes_requested.to_f / count).round(2)
+        def count
+          @count ||= pull_requests.size
         end
 
-        def calculate_unreviewed_rate(count)
-          unreviewed = @pull_requests.count { |pr| pr[:reviews][:totalCount].zero? }
+        def avg_reviews_per_pr
+          calculate_average { |pr| pr.dig(:reviews, :totalCount) || 0 }
+        end
+
+        def avg_comments_per_pr
+          calculate_average { |pr| pr.dig(:comments, :totalCount) || 0 }
+        end
+
+        def avg_rework_cycles
+          total = pull_requests.sum { |pr| count_changes_requested(pr) }
+          (total.to_f / count).round(2)
+        end
+
+        def unreviewed_pr_rate
+          unreviewed = pull_requests.count { |pr| (pr.dig(:reviews, :totalCount) || 0).zero? }
           (unreviewed.to_f / count * 100).round(2)
+        end
+
+        def calculate_average(&)
+          total = pull_requests.sum(&)
+          (total.to_f / count).round(2)
+        end
+
+        def count_changes_requested(pull_request)
+          reviews = pull_request.dig(:reviews, :nodes) || []
+          reviews.count { |review| review[:state] == 'CHANGES_REQUESTED' }
         end
       end
     end
