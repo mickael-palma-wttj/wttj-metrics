@@ -5,13 +5,14 @@ module WttjMetrics
     # Presenter for cycle metrics (velocity, commitment accuracy, carryover)
     class CycleMetricPresenter < BasePresenter
       TOOLTIPS = {
-        'current_cycle_velocity' => 'Total story points completed in the current cycle.',
+        'avg_cycle_velocity' => 'Average story points completed per cycle across all completed cycles.',
         'cycle_commitment_accuracy' => 'Average percentage of planned work completed across all completed cycles.',
         'cycle_carryover_count' => 'Average number of issues carried over per completed cycle.'
       }.freeze
 
       def label
         name.tr('_', ' ')
+            .gsub('avg ', '')
             .gsub('current ', '')
             .gsub('cycle ', '')
             .strip

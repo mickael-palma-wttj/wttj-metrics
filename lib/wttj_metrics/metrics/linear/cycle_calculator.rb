@@ -14,7 +14,7 @@ module WttjMetrics
 
         def calculate
           {
-            current_cycle_velocity: current_cycle_velocity,
+            avg_cycle_velocity: avg_cycle_velocity,
             cycle_commitment_accuracy: cycle_commitment_accuracy,
             cycle_carryover_count: cycle_carryover_count
           }
@@ -32,10 +32,11 @@ module WttjMetrics
 
         attr_reader :cycles, :today
 
-        def current_cycle_velocity
-          return 0 unless current_cycle
+        def avg_cycle_velocity
+          return 0 if completed_cycles.empty?
 
-          completed_points(current_cycle)
+          total_velocity = completed_cycles.sum { |cycle| completed_points(cycle) }
+          (total_velocity.to_f / completed_cycles.size).round(1)
         end
 
         def cycle_commitment_accuracy

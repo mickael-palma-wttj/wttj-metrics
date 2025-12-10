@@ -15,12 +15,16 @@ module WttjMetrics
       }.freeze
 
       def label
-        name.tr('_', ' ')
-            .gsub('bugs ', '')
-            .gsub('bug ', '')
-            .gsub('avg ', 'Avg ')
-            .strip
-            .capitalize
+        case name
+        when 'bug_ratio' then 'Issues are bugs'
+        else
+          name.tr('_', ' ')
+              .gsub('bugs ', '')
+              .gsub('bug ', '')
+              .gsub('avg ', 'Avg ')
+              .strip
+              .capitalize
+        end
       end
 
       def tooltip

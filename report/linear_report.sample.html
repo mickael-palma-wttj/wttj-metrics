@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Linear Metrics Dashboard - 2025-12-09</title>
+  <title>Linear Metrics Dashboard - 2025-12-10</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -74,6 +74,63 @@
       border-bottom-color: #151515;
     }
     .metric-card:hover .tooltip { visibility: visible; opacity: 1; }
+
+    /* Chart Tooltips */
+    .tooltip-icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      background: #EAE4DE;
+      color: #585858;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 18px;
+      font-size: 12px;
+      margin-left: 8px;
+      cursor: help;
+      position: relative;
+      vertical-align: middle;
+      border: 1px solid #DEDEDE;
+    }
+    .tooltip-icon:hover {
+      background: #585858;
+      color: #FFFFFF;
+      border-color: #585858;
+    }
+    .tooltip-icon .tooltip-text {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      transform: translateY(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      width: 250px;
+      text-align: left;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      margin-left: 10px;
+      font-weight: normal;
+      pointer-events: none;
+    }
+    .tooltip-icon .tooltip-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-right-color: #151515;
+    }
+    .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
+
     .metric-value {
       font-size: 2.5rem;
       font-weight: 700;
@@ -137,7 +194,7 @@
       font-size: 0.75rem;
       font-weight: 400;
       line-height: 1.3;
-      width: 180px;
+      width: 230px;
       text-align: left;
       z-index: 9999;
       transition: opacity 0.2s, visibility 0.2s;
@@ -161,9 +218,11 @@
       visibility: hidden;
       opacity: 0;
       position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 50%;
+      right: 100%;
+      left: auto;
+      bottom: auto;
+      transform: translateY(-50%);
       background: #151515;
       color: #FFFFFF;
       padding: 0.5rem 0.75rem;
@@ -171,23 +230,23 @@
       font-size: 0.75rem;
       font-weight: 400;
       line-height: 1.3;
-      width: 180px;
+      width: 230px;
       text-align: center;
       z-index: 9999;
       transition: opacity 0.2s, visibility 0.2s;
       border: 1px solid #151515;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      margin-bottom: 6px;
+      margin-right: 8px;
       white-space: normal;
     }
     .cycles-table td .cell-tooltip::after {
       content: '';
       position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 50%;
+      left: 100%;
+      transform: translateY(-50%);
       border: 5px solid transparent;
-      border-top-color: #151515;
+      border-left-color: #151515;
     }
     .cycles-table td:hover .cell-tooltip { visibility: visible; opacity: 1; }
     .cycles-table tr:hover { background: rgba(255, 205, 0, 0.1); }
@@ -393,7 +452,7 @@
   <div class="container">
     <header>
       <h1>&#128202; Linear Metrics Dashboard</h1>
-      <p class="subtitle">Generated on 2025-12-09 • Last 90 days (2025-09-10 to 2025-12-09)</p>
+      <p class="subtitle">Generated on 2025-12-10 • Last 365 days (2024-12-10 to 2025-12-10)</p>
       <button class="collapse-all-btn" onclick="toggleAllSections()">
         <span id="toggleAllIcon">▼</span> <span id="toggleAllText">Collapse All</span>
       </button>
@@ -412,7 +471,7 @@
 
         <div class="metric-card">
           <span class="tooltip">Average time from when work starts on an issue until it's completed.</span>
-          <div class="metric-value">10 days</div>
+          <div class="metric-value">9 days</div>
           <div class="metric-label">Avg cycle time</div>
         </div>
 
@@ -430,20 +489,20 @@
 
         <div class="metric-card">
           <span class="tooltip">Number of issues completed in the last 7 days.</span>
-          <div class="metric-value">85 issues</div>
+          <div class="metric-value">72 issues</div>
           <div class="metric-label">Weekly throughput</div>
         </div>
 
         <div class="metric-card">
           <span class="tooltip">Work In Progress: issues currently being worked on.</span>
-          <div class="metric-value">139 issues</div>
+          <div class="metric-value">133 issues</div>
           <div class="metric-label">Wip</div>
         </div>
 
 
         <div class="metric-card">
-          <span class="tooltip">Total story points completed in the current cycle.</span>
-          <div class="metric-value">0</div>
+          <span class="tooltip">Average story points completed per cycle across all completed cycles.</span>
+          <div class="metric-value">2</div>
           <div class="metric-label">Velocity</div>
         </div>
 
@@ -462,7 +521,7 @@
 
         <div class="metric-card">
           <span class="tooltip">Percentage of issues completed vs total issues.</span>
-          <div class="metric-value">38%</div>
+          <div class="metric-value">39%</div>
           <div class="metric-label">Completion rate</div>
         </div>
 
@@ -492,25 +551,25 @@
 
             <div class="metric-card">
               <span class="tooltip">Total number of issues labeled as bugs.</span>
-              <div class="metric-value">681</div>
+              <div class="metric-value">678</div>
               <div class="metric-label">Total bugs</div>
             </div>
 
             <div class="metric-card">
               <span class="tooltip">Bugs that are not yet completed.</span>
-              <div class="metric-value">85</div>
+              <div class="metric-value">213</div>
               <div class="metric-label">Open bugs</div>
             </div>
 
             <div class="metric-card">
               <span class="tooltip">Bugs that have been completed.</span>
-              <div class="metric-value">596</div>
+              <div class="metric-value">465</div>
               <div class="metric-label">Closed bugs</div>
             </div>
 
             <div class="metric-card">
               <span class="tooltip">New bugs created in the last 30 days.</span>
-              <div class="metric-value">31</div>
+              <div class="metric-value">32</div>
               <div class="metric-label">Created last 30d</div>
             </div>
 
@@ -528,40 +587,65 @@
 
             <div class="metric-card">
               <span class="tooltip">Percentage of issues that are bugs.</span>
-              <div class="metric-value">11.2%</div>
-              <div class="metric-label">Ratio</div>
+              <div class="metric-value">11.1%</div>
+              <div class="metric-label">Issues are bugs</div>
             </div>
 
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Bug Status</h3>
+          <h3 class="chart-title">
+            Bug Status
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Distribution of bugs by their current status (Open vs Closed).</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="bugStatusChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Open Bugs by Priority</h3>
+          <h3 class="chart-title">
+            Open Bugs by Priority
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Breakdown of currently open bugs by their priority level.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="bugsPriorityChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Bug Flow (Last 90 Days)<span class="filter-badge">Filtered</span></h3>
+          <h3 class="chart-title">
+            Bug Flow (Last 365 Days)<span class="filter-badge">Filtered</span>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly comparison of new bugs created vs bugs closed. Helps track if the backlog is growing or shrinking.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <div class="chart-container tall">
             <canvas id="bugFlowChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Bugs Created by Team (Last 90 Days)<span class="filter-badge">Filtered</span></h3>
+          <h3 class="chart-title">
+            Bugs Created by Team (Last 365 Days)<span class="filter-badge">Filtered</span>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly distribution of new bugs created, broken down by team.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <div class="chart-container tall">
             <canvas id="bugsByTeamChart"></canvas>
           </div>
         </div>
         <div class="chart-card full-width">
-          <h3 class="chart-title">Bug Stats by Team (All Time)<span class="filter-badge">Filtered</span></h3>
+          <h3 class="chart-title">
+            Bug Stats by Team (All Time)<span class="filter-badge">Filtered</span>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Comprehensive statistics for each team including total bugs, resolution time (MTTR), and resolution rate.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <table class="cycles-table" id="bugStatsTable">
             <thead>
@@ -578,8 +662,8 @@
 
               <tr>
                 <td><strong>Sourcing</strong></td>
-                <td>153</td>
-                <td>136</td>
+                <td>151</td>
+                <td>134</td>
                 <td>17</td>
                 <td>18d</td>
                 <td><span class="status-badge status-active">89%</span></td>
@@ -587,11 +671,11 @@
 
               <tr>
                 <td><strong>Talents</strong></td>
-                <td>109</td>
-                <td>95</td>
-                <td>14</td>
-                <td>40d</td>
-                <td><span class="status-badge status-active">87%</span></td>
+                <td>107</td>
+                <td>94</td>
+                <td>13</td>
+                <td>39d</td>
+                <td><span class="status-badge status-active">88%</span></td>
               </tr>
 
               <tr>
@@ -605,29 +689,29 @@
 
               <tr>
                 <td><strong>ROI</strong></td>
-                <td>164</td>
-                <td>156</td>
+                <td>159</td>
+                <td>151</td>
                 <td>8</td>
-                <td>26d</td>
+                <td>27d</td>
                 <td><span class="status-badge status-active">95%</span></td>
               </tr>
 
               <tr>
                 <td><strong>Marketplace</strong></td>
-                <td>7</td>
-                <td>3</td>
                 <td>4</td>
+                <td>3</td>
+                <td>1</td>
                 <td>24d</td>
-                <td><span class="status-badge status-past">43%</span></td>
+                <td><span class="status-badge status-upcoming">75%</span></td>
               </tr>
 
               <tr>
                 <td><strong>Platform</strong></td>
-                <td>12</td>
-                <td>11</td>
+                <td>9</td>
+                <td>8</td>
                 <td>1</td>
-                <td>5d</td>
-                <td><span class="status-badge status-active">92%</span></td>
+                <td>9d</td>
+                <td><span class="status-badge status-active">89%</span></td>
               </tr>
 
               <tr>
@@ -648,7 +732,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128640; Ticket Flow (Last 90 Days)</h2>
+        <h2 class="section-title"><span class="chevron">▼</span> &#128640; Ticket Flow (Last 365 Days)</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -657,14 +741,24 @@
       <div class="section-content">
       <div class="charts-grid">
         <div class="chart-card">
-          <h3 class="chart-title">Tickets Created vs Completed<span class="filter-badge">Filtered</span></h3>
+          <h3 class="chart-title">
+            Tickets Created vs Completed<span class="filter-badge">Filtered</span>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly flow of all tickets (features, bugs, chores) created vs completed.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <div class="chart-container tall">
             <canvas id="flowChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">State Transitions Distribution<span class="filter-badge">Filtered</span></h3>
+          <h3 class="chart-title">
+            State Transitions Distribution<span class="filter-badge">Filtered</span>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly breakdown of ticket statuses. Shows how work moves through the workflow stages.</span>
+            </span>
+          </h3>
           <p class="chart-subtitle">Teams: ATS, Global ATS, Marketplace, Platform, ROI, Sourcing, Talents</p>
           <div class="chart-container tall">
             <canvas id="transitionChart"></canvas>
@@ -685,25 +779,45 @@
       <div class="section-content">
       <div class="charts-grid">
         <div class="chart-card">
-          <h3 class="chart-title">Status Distribution</h3>
+          <h3 class="chart-title">
+            Status Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Current snapshot of all tickets by their status.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="statusChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Priority Distribution</h3>
+          <h3 class="chart-title">
+            Priority Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Current snapshot of all tickets by their priority.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="priorityChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Issue Type Distribution</h3>
+          <h3 class="chart-title">
+            Issue Type Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Current snapshot of all tickets by their type (Feature, Bug, etc.).</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="typeChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3 class="chart-title">Top Assignees (WIP)</h3>
+          <h3 class="chart-title">
+            Top Assignees (WIP)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Team members with the most currently active tickets.</span>
+            </span>
+          </h3>
           <div class="chart-container">
             <canvas id="assigneeChart"></canvas>
           </div>
@@ -741,107 +855,107 @@
 
             <tr>
               <td><strong>ATS</strong></td>
-              <td>6/10</td>
+              <td>8/14</td>
               <td>0 pts</td>
-              <td>1</td>
-              <td>1</td>
+              <td>4</td>
+              <td>2</td>
               <td>0</td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 89%"></div></div>
-                <small>89%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 90%"></div></div>
+                <small>90%</small>
               </td>
-              <td>11</td>
-              <td class="scope-increased">+71%</td>
+              <td>18</td>
+              <td class="scope-increased">+59%</td>
             </tr>
 
             <tr>
               <td><strong>Global ATS</strong></td>
               <td>1/3</td>
               <td>0 pts</td>
-              <td>5</td>
+              <td>11</td>
               <td>9</td>
-              <td>0</td>
+              <td>1</td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 10%"></div></div>
-                <small>10%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 22%"></div></div>
+                <small>22%</small>
               </td>
               <td>0</td>
-              <td class="scope-neutral">0%</td>
+              <td class="scope-increased">+17%</td>
             </tr>
 
             <tr>
               <td><strong>Marketplace</strong></td>
-              <td>5/10</td>
+              <td>5/14</td>
               <td>0 pts</td>
-              <td>12</td>
+              <td>14</td>
               <td>5</td>
               <td>1</td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 83%"></div></div>
-                <small>83%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 86%"></div></div>
+                <small>86%</small>
               </td>
               <td>65</td>
-              <td class="scope-increased">+125%</td>
+              <td class="scope-increased">+126%</td>
             </tr>
 
             <tr>
               <td><strong>Platform</strong></td>
-              <td>3/5</td>
-              <td>1 pts</td>
-              <td>8</td>
-              <td>4</td>
+              <td>4/6</td>
+              <td>4 pts</td>
+              <td>10</td>
+              <td>5</td>
               <td>0</td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 65%"></div></div>
-                <small>65%</small>
+                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 70%"></div></div>
+                <small>70%</small>
               </td>
-              <td>99</td>
+              <td>149</td>
               <td class="scope-neutral">0%</td>
             </tr>
 
             <tr>
               <td><strong>ROI</strong></td>
-              <td>8/9</td>
+              <td>14/15</td>
               <td>0 pts</td>
-              <td>20</td>
+              <td>22</td>
               <td>5</td>
-              <td>1</td>
+              <td>2</td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 83%"></div></div>
-                <small>83%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 89%"></div></div>
+                <small>89%</small>
               </td>
-              <td>67</td>
-              <td class="scope-increased">+4%</td>
+              <td>163</td>
+              <td class="scope-increased">+8%</td>
             </tr>
 
             <tr>
               <td><strong>Sourcing</strong></td>
-              <td>8/9</td>
-              <td>26 pts</td>
-              <td>32</td>
+              <td>14/15</td>
+              <td>15 pts</td>
+              <td>31</td>
               <td>9</td>
-              <td>3</td>
+              <td>2</td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 77%"></div></div>
-                <small>77%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 84%"></div></div>
+                <small>84%</small>
               </td>
-              <td>349</td>
-              <td class="scope-increased">+7%</td>
+              <td>533</td>
+              <td class="scope-increased">+8%</td>
             </tr>
 
             <tr>
               <td><strong>Talents</strong></td>
-              <td>2/5</td>
+              <td>4/7</td>
               <td>0 pts</td>
-              <td>22</td>
+              <td>36</td>
               <td>7</td>
               <td>1</td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 74%"></div></div>
-                <small>74%</small>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 86%"></div></div>
+                <small>86%</small>
               </td>
-              <td>30</td>
-              <td class="scope-increased">+19%</td>
+              <td>70</td>
+              <td class="scope-increased">+109%</td>
             </tr>
 
           </tbody>
@@ -1040,6 +1154,70 @@
               <td class="scope-increased has-tooltip">+300%<span class="cell-tooltip">Initial: 1 issues → Final: 4 issues</span></td>
             </tr>
 
+            <tr>
+              <td>Cycle 12</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
+              </td>
+              <td>0/0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>1</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 1 issues → Final: 1 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 11</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
+              </td>
+              <td>1/1</td>
+              <td>0</td>
+              <td>1</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 1 issues → Final: 1 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 10</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
+              </td>
+              <td>0/0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 9</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 84%"></div></div>
+                <small>84%</small>
+              </td>
+              <td>21/25</td>
+              <td>0</td>
+              <td>8</td>
+              <td>0 pts</td>
+              <td>1</td>
+              <td>7</td>
+              <td class="scope-increased has-tooltip">+44%<span class="cell-tooltip">Initial: 18 issues → Final: 26 issues</span></td>
+            </tr>
+
           </tbody>
         </table>
       </div>
@@ -1099,16 +1277,16 @@
               <td>Cycle 20</td>
               <td><span class="status-badge status-active">active</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 10%"></div></div>
-                <small>10%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 22%"></div></div>
+                <small>22%</small>
               </td>
-              <td>5/50</td>
+              <td>11/50</td>
               <td>0</td>
               <td>9</td>
               <td>0 pts</td>
+              <td>1</td>
               <td>0</td>
-              <td>0</td>
-              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 53 issues → Final: 53 issues</span></td>
+              <td class="scope-increased has-tooltip">+17%<span class="cell-tooltip">Initial: 53 issues → Final: 62 issues</span></td>
             </tr>
 
           </tbody>
@@ -1170,16 +1348,16 @@
               <td>Cycle 19</td>
               <td><span class="status-badge status-active">active</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 28%"></div></div>
-                <small>28%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 45%"></div></div>
+                <small>45%</small>
               </td>
-              <td>8/29</td>
+              <td>15/33</td>
               <td>0</td>
               <td>8</td>
               <td>0 pts</td>
               <td>1</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 29 issues → Final: 29 issues</span></td>
+              <td class="scope-increased has-tooltip">+7%<span class="cell-tooltip">Initial: 29 issues → Final: 31 issues</span></td>
             </tr>
 
             <tr>
@@ -1280,6 +1458,70 @@
 
             <tr>
               <td>Cycle 12</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
+              </td>
+              <td>0/0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 11</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
+              </td>
+              <td>0/0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 10</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
+              </td>
+              <td>0/0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 9</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
+                <small>0%</small>
+              </td>
+              <td>0/0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 0 issues → Final: 0 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 8</td>
               <td><span class="status-badge status-completed">completed</span></td>
               <td>
                 <div class="progress-bar"><div class="progress-fill completion-low" style="width: 0%"></div></div>
@@ -1397,6 +1639,22 @@
               <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 8 issues → Final: 8 issues</span></td>
             </tr>
 
+            <tr>
+              <td>Cycle 8</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 86%"></div></div>
+                <small>86%</small>
+              </td>
+              <td>18/21</td>
+              <td>0</td>
+              <td>8</td>
+              <td>11 pts</td>
+              <td>0</td>
+              <td>50</td>
+              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 19 issues → Final: 19 issues</span></td>
+            </tr>
+
           </tbody>
         </table>
       </div>
@@ -1440,16 +1698,16 @@
               <td>Cycle 19</td>
               <td><span class="status-badge status-active">active</span></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 6%"></div></div>
-                <small>6%</small>
+                <div class="progress-bar"><div class="progress-fill completion-low" style="width: 9%"></div></div>
+                <small>9%</small>
               </td>
-              <td>2/33</td>
+              <td>3/35</td>
               <td>0</td>
               <td>3</td>
               <td>0 pts</td>
               <td>0</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 32 issues → Final: 32 issues</span></td>
+              <td class="scope-increased has-tooltip">+6%<span class="cell-tooltip">Initial: 32 issues → Final: 34 issues</span></td>
             </tr>
 
             <tr>
@@ -1564,6 +1822,102 @@
               <td class="scope-decreased has-tooltip">-33%<span class="cell-tooltip">Initial: 46 issues → Final: 31 issues</span></td>
             </tr>
 
+            <tr>
+              <td>Cycle 11</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 96%"></div></div>
+                <small>96%</small>
+              </td>
+              <td>23/24</td>
+              <td>0</td>
+              <td>5</td>
+              <td>0 pts</td>
+              <td>2</td>
+              <td>0</td>
+              <td class="scope-decreased has-tooltip">-24%<span class="cell-tooltip">Initial: 29 issues → Final: 22 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 10</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
+              </td>
+              <td>6/6</td>
+              <td>0</td>
+              <td>4</td>
+              <td>0 pts</td>
+              <td>0</td>
+              <td>12</td>
+              <td class="scope-increased has-tooltip">+20%<span class="cell-tooltip">Initial: 15 issues → Final: 18 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 9</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 95%"></div></div>
+                <small>95%</small>
+              </td>
+              <td>19/20</td>
+              <td>0</td>
+              <td>5</td>
+              <td>0 pts</td>
+              <td>1</td>
+              <td>1</td>
+              <td class="scope-decreased has-tooltip">-19%<span class="cell-tooltip">Initial: 26 issues → Final: 21 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 8</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
+              </td>
+              <td>27/27</td>
+              <td>0</td>
+              <td>5</td>
+              <td>0 pts</td>
+              <td>2</td>
+              <td>10</td>
+              <td class="scope-increased has-tooltip">+58%<span class="cell-tooltip">Initial: 24 issues → Final: 38 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 7</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 88%"></div></div>
+                <small>88%</small>
+              </td>
+              <td>44/50</td>
+              <td>0</td>
+              <td>6</td>
+              <td>0 pts</td>
+              <td>1</td>
+              <td>50</td>
+              <td class="scope-increased has-tooltip">+47%<span class="cell-tooltip">Initial: 91 issues → Final: 134 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>__blank__</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 94%"></div></div>
+                <small>94%</small>
+              </td>
+              <td>33/35</td>
+              <td>0</td>
+              <td>5</td>
+              <td>0 pts</td>
+              <td>6</td>
+              <td>23</td>
+              <td class="scope-decreased has-tooltip">-17%<span class="cell-tooltip">Initial: 71 issues → Final: 59 issues</span></td>
+            </tr>
+
           </tbody>
         </table>
       </div>
@@ -1612,11 +1966,11 @@
               </td>
               <td>1/50</td>
               <td>0</td>
-              <td>7</td>
+              <td>8</td>
               <td>0 pts</td>
               <td>0</td>
               <td>0</td>
-              <td class="scope-neutral has-tooltip">0%<span class="cell-tooltip">Initial: 90 issues → Final: 90 issues</span></td>
+              <td class="scope-increased has-tooltip">+4%<span class="cell-tooltip">Initial: 90 issues → Final: 94 issues</span></td>
             </tr>
 
             <tr>
@@ -1731,6 +2085,102 @@
               <td class="scope-decreased has-tooltip">-3%<span class="cell-tooltip">Initial: 153 issues → Final: 148 issues</span></td>
             </tr>
 
+            <tr>
+              <td>Cycle 12</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
+              </td>
+              <td>27/27</td>
+              <td>0</td>
+              <td>11</td>
+              <td>0 pts</td>
+              <td>2</td>
+              <td>31</td>
+              <td class="scope-decreased has-tooltip">-16%<span class="cell-tooltip">Initial: 74 issues → Final: 62 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 11</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 96%"></div></div>
+                <small>96%</small>
+              </td>
+              <td>22/23</td>
+              <td>0</td>
+              <td>8</td>
+              <td>0 pts</td>
+              <td>2</td>
+              <td>44</td>
+              <td class="scope-increased has-tooltip">+38%<span class="cell-tooltip">Initial: 48 issues → Final: 66 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 10</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
+              </td>
+              <td>34/34</td>
+              <td>0</td>
+              <td>7</td>
+              <td>0 pts</td>
+              <td>2</td>
+              <td>23</td>
+              <td class="scope-increased has-tooltip">+9%<span class="cell-tooltip">Initial: 53 issues → Final: 58 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 9</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
+              </td>
+              <td>31/31</td>
+              <td>0</td>
+              <td>7</td>
+              <td>0 pts</td>
+              <td>2</td>
+              <td>3</td>
+              <td class="scope-decreased has-tooltip">-31%<span class="cell-tooltip">Initial: 51 issues → Final: 35 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 8</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-medium" style="width: 73%"></div></div>
+                <small>73%</small>
+              </td>
+              <td>29/40</td>
+              <td>0</td>
+              <td>6</td>
+              <td>0 pts</td>
+              <td>2</td>
+              <td>33</td>
+              <td class="scope-decreased has-tooltip">-28%<span class="cell-tooltip">Initial: 88 issues → Final: 63 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 7</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 92%"></div></div>
+                <small>92%</small>
+              </td>
+              <td>33/36</td>
+              <td>0</td>
+              <td>10</td>
+              <td>0 pts</td>
+              <td>1</td>
+              <td>50</td>
+              <td class="scope-increased has-tooltip">+83%<span class="cell-tooltip">Initial: 63 issues → Final: 115 issues</span></td>
+            </tr>
+
           </tbody>
         </table>
       </div>
@@ -1832,6 +2282,38 @@
               <td>1</td>
               <td>22</td>
               <td class="scope-increased has-tooltip">+65%<span class="cell-tooltip">Initial: 34 issues → Final: 56 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 8</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 100%"></div></div>
+                <small>100%</small>
+              </td>
+              <td>50/50</td>
+              <td>0</td>
+              <td>5</td>
+              <td>0 pts</td>
+              <td>1</td>
+              <td>19</td>
+              <td class="scope-increased has-tooltip">+159%<span class="cell-tooltip">Initial: 29 issues → Final: 75 issues</span></td>
+            </tr>
+
+            <tr>
+              <td>Cycle 7</td>
+              <td><span class="status-badge status-completed">completed</span></td>
+              <td>
+                <div class="progress-bar"><div class="progress-fill completion-high" style="width: 96%"></div></div>
+                <small>96%</small>
+              </td>
+              <td>48/50</td>
+              <td>0</td>
+              <td>9</td>
+              <td>0 pts</td>
+              <td>1</td>
+              <td>21</td>
+              <td class="scope-increased has-tooltip">+238%<span class="cell-tooltip">Initial: 21 issues → Final: 71 issues</span></td>
             </tr>
 
           </tbody>
@@ -1978,19 +2460,29 @@
     Chart.defaults.color = '#585858';
     Chart.defaults.borderColor = '#DEDEDE';
     
+    // Store chart instances for resize handling
+    const chartInstances = {};
+    
+    // Function to create all charts
+    function createCharts() {
+      // Destroy existing charts
+      Object.values(chartInstances).forEach(chart => {
+        if (chart) chart.destroy();
+      });
+      
 
     // Flow Chart
     const flowCtx = document.getElementById('flowChart').getContext('2d');
-    const createdRaw = [23,69,51,128,97,97,77,74,273,85,151,101,104,43];
-    const completedRaw = [33,44,46,58,62,79,74,77,84,62,60,123,77,20];
+    const createdRaw = [50,68,24,21,49,44,61,60,53,47,35,54,26,57,34,57,55,40,46,20,16,19,36,45,23,65,36,52,41,69,58,66,56,59,68,59,59,107,81,50,69,51,128,97,97,77,74,273,85,151,101,104,60];
+    const completedRaw = [20,27,15,25,39,40,62,39,19,53,42,27,41,22,21,25,45,22,16,39,11,7,20,28,20,32,31,49,39,56,41,49,53,41,49,36,38,41,51,49,44,46,58,62,79,74,77,84,62,60,123,77,36];
     
-    new Chart(flowCtx, {
+    chartInstances.flow = new Chart(flowCtx, {
       type: 'bar',
       data: {
-        labels: ["Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
+        labels: ["Dec 09","Dec 16","Dec 23","Dec 30","Jan 06","Jan 13","Jan 20","Jan 27","Feb 03","Feb 10","Feb 17","Feb 24","Mar 03","Mar 10","Mar 17","Mar 24","Mar 31","Apr 07","Apr 14","Apr 21","Apr 28","May 05","May 12","May 19","May 26","Jun 02","Jun 09","Jun 16","Jun 23","Jun 30","Jul 07","Jul 14","Jul 21","Jul 28","Aug 04","Aug 11","Aug 18","Aug 25","Sep 01","Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
         datasets: [
-          { label: 'Created', data: [41,61,53,69,61,55,51,49,76,58,72,45,57,68], backgroundColor: colors.black, rawData: createdRaw },
-          { label: 'Completed', data: [59,39,47,31,39,45,49,51,24,42,28,55,43,32], backgroundColor: colors.yellow, rawData: completedRaw }
+          { label: 'Created', data: [71,72,62,46,56,52,50,61,74,47,45,67,39,72,62,70,55,65,74,34,59,73,64,62,53,67,54,51,51,55,59,57,51,59,58,62,61,72,61,51,61,53,69,61,55,51,49,76,58,72,45,57,63], backgroundColor: colors.black, rawData: createdRaw },
+          { label: 'Completed', data: [29,28,38,54,44,48,50,39,26,53,55,33,61,28,38,30,45,35,26,66,41,27,36,38,47,33,46,49,49,45,41,43,49,41,42,38,39,28,39,49,39,47,31,39,45,49,51,24,42,28,55,43,38], backgroundColor: colors.yellow, rawData: completedRaw }
         ]
       },
       options: {
@@ -2028,25 +2520,25 @@
       'Canceled': 'rgba(220, 38, 38, 0.8)',
     };
     
-    new Chart(transitionCtx, {
+    chartInstances.transition = new Chart(transitionCtx, {
       type: 'bar',
       data: {
-        labels: ["Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
+        labels: ["Dec 09","Dec 16","Dec 23","Dec 30","Jan 02","Jan 06","Jan 13","Jan 20","Jan 27","Feb 03","Feb 10","Feb 17","Feb 24","Mar 03","Mar 10","Mar 17","Mar 24","Mar 31","Apr 07","Apr 14","Apr 21","Apr 28","May 05","May 12","May 19","May 26","Jun 02","Jun 09","Jun 16","Jun 23","Jun 30","Jul 07","Jul 14","Jul 21","Jul 28","Aug 04","Aug 11","Aug 18","Aug 25","Sep 01","Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
         datasets: [
 
-          { label: 'Backlog', data: [5.2,11.3,5.6,6.2,3.3,3.2,3.8,3.7,5.2,2.8,3.6,7.9,6.7,12.4], backgroundColor: transitionColors['Backlog'], rawData: [6,17,9,17,7,10,12,11,13,6,13,34,25,13] },
+          { label: 'Backlog', data: [2.6,2.4,0.3,0.0,0.0,3.9,2.2,1.4,4.4,5.2,5.5,6.5,6.3,5.6,4.5,2.4,0.9,3.6,4.5,6.2,4.5,6.6,7.8,3.1,1.6,2.4,2.4,1.9,4.0,7.2,5.9,8.4,5.7,6.8,3.2,5.5,1.8,4.2,4.8,6.4,9.1,6.6,4.7,2.7,3.8,3.0,4.4,3.2,3.2,3.0,3.5,2.7,4.3,2.8], backgroundColor: transitionColors['Backlog'], rawData: [15,32,1,0,0,53,26,31,40,40,101,78,70,53,44,16,7,37,30,45,49,48,49,25,16,21,32,21,42,89,251,134,85,92,28,76,22,75,62,122,152,93,66,79,66,86,112,76,60,55,120,80,85,28] },
 
-          { label: 'Todo', data: [12.1,8.0,5.0,7.7,9.5,3.5,7.1,3.4,5.6,6.9,8.0,8.6,10.2,2.9], backgroundColor: transitionColors['Todo'], rawData: [14,12,8,21,20,11,22,10,14,15,29,37,38,3] },
+          { label: 'Todo', data: [6.1,7.3,5.9,1.6,1.1,6.9,7.6,4.5,12.0,9.1,6.0,10.8,10.0,11.8,9.0,9.6,6.7,5.7,7.8,7.3,14.4,8.2,11.3,5.0,6.3,5.0,5.7,4.4,3.5,8.3,7.7,10.1,9.7,6.1,7.9,8.2,8.3,9.7,7.4,8.9,10.3,10.4,10.1,5.6,9.2,6.5,7.3,6.5,7.3,7.5,6.7,5.3,8.1,9.9], backgroundColor: transitionColors['Todo'], rawData: [36,96,20,5,3,94,89,99,108,70,110,130,112,111,88,65,52,58,52,53,156,59,71,40,62,44,75,48,37,102,329,160,145,83,69,113,103,172,96,170,172,147,141,162,161,182,187,154,136,137,232,158,159,98] },
 
-          { label: 'In Progress', data: [22.4,20.7,28.6,23.7,22.3,20.9,22.8,17.2,16.4,24.5,18.6,14.2,16.6,14.3], backgroundColor: transitionColors['In Progress'], rawData: [26,31,46,65,47,65,71,51,41,53,67,61,62,15] },
+          { label: 'In Progress', data: [17.9,24.1,23.1,23.6,20.5,21.0,22.0,21.1,19.8,22.7,20.4,19.9,23.2,22.7,23.4,21.6,23.8,20.4,20.8,20.9,17.5,20.4,16.5,14.7,14.3,15.7,18.4,17.8,22.5,17.2,17.9,20.9,26.1,24.7,28.5,27.8,32.7,28.9,26.5,28.5,27.9,27.3,27.4,24.5,25.1,25.5,23.4,22.5,21.1,23.6,22.0,19.1,22.1,25.4], backgroundColor: transitionColors['In Progress'], rawData: [105,316,78,76,58,287,259,460,178,174,372,239,259,214,229,147,186,207,139,151,190,147,103,118,140,139,243,194,237,211,763,333,391,336,248,384,408,514,344,542,465,386,382,709,440,719,603,530,396,429,759,566,437,250] },
 
-          { label: 'In Review', data: [9.5,14.7,14.9,14.2,14.7,27.7,26.6,31.3,23.6,18.1,26.9,24.0,20.1,30.5], backgroundColor: transitionColors['In Review'], rawData: [11,22,24,39,31,86,83,93,59,39,97,103,75,32] },
+          { label: 'In Review', data: [17.7,11.6,13.6,13.4,24.4,15.8,12.1,19.1,14.7,11.5,15.8,12.7,10.1,5.8,13.2,11.2,14.4,12.8,9.1,13.0,8.0,15.2,2.6,20.0,17.9,21.0,16.3,12.3,11.0,11.3,14.0,10.0,7.3,7.3,8.6,6.0,7.9,10.3,7.4,7.2,8.5,12.2,17.3,18.1,19.2,29.5,27.5,31.4,24.0,26.2,26.2,34.1,29.8,30.5], backgroundColor: transitionColors['In Review'], rawData: [104,152,46,43,69,215,142,417,132,88,288,152,113,55,129,76,112,130,61,94,87,110,16,160,176,186,215,134,116,139,596,159,109,99,75,83,99,184,96,137,142,173,241,524,337,833,707,739,449,476,902,1010,587,301] },
 
-          { label: 'Testing', data: [12.9,10.7,7.5,15.0,10.4,5.1,3.8,7.1,4.4,6.5,10.8,9.6,4.8,4.8], backgroundColor: transitionColors['Testing'], rawData: [15,16,12,41,22,16,12,21,11,14,39,41,18,5] },
+          { label: 'Testing', data: [20.4,19.5,24.9,24.8,24.0,17.6,18.3,19.6,16.1,18.9,18.4,15.4,17.8,17.4,17.1,15.9,17.2,18.6,19.0,16.0,17.4,14.8,21.6,25.2,28.8,28.0,24.7,24.7,19.4,18.1,19.3,17.0,18.1,20.8,17.4,22.8,20.7,15.0,19.8,17.6,15.5,12.9,12.1,15.5,11.3,6.3,5.9,6.4,10.1,9.8,14.9,10.4,6.9,4.2], backgroundColor: transitionColors['Testing'], rawData: [120,256,84,80,68,240,215,427,145,145,335,185,199,164,167,108,134,189,127,116,189,107,135,202,283,248,326,269,205,223,823,271,271,283,151,314,258,268,257,334,258,183,169,448,198,179,152,151,189,178,513,308,137,41] },
 
-          { label: 'Done', data: [31.0,31.3,31.1,29.2,33.6,31.2,27.2,31.0,41.2,31.9,24.9,34.5,29.9,21.9], backgroundColor: transitionColors['Done'], rawData: [36,47,50,80,71,97,85,92,103,69,90,148,112,23] },
+          { label: 'Done', data: [33.2,31.8,32.0,36.3,29.0,31.8,34.6,30.0,27.5,28.8,30.1,27.0,28.3,31.6,29.8,36.2,34.9,37.0,36.0,31.8,36.6,31.2,37.7,29.3,29.3,26.5,31.0,36.6,37.3,34.6,30.9,31.2,32.5,33.7,31.9,26.3,26.9,30.2,32.4,28.3,24.2,26.7,26.5,31.9,28.3,25.7,27.8,28.2,32.4,26.2,24.7,27.3,25.5,23.1], backgroundColor: transitionColors['Done'], rawData: [195,417,108,117,82,434,407,654,247,221,549,324,316,298,292,246,272,376,241,230,398,225,236,235,287,235,409,398,393,426,1319,497,487,458,277,363,335,538,421,539,402,378,369,921,497,725,715,665,606,475,851,807,504,228] },
 
-          { label: 'Canceled', data: [6.9,3.3,7.5,4.0,6.2,8.4,8.7,6.4,3.6,9.3,7.2,1.2,11.8,13.3], backgroundColor: transitionColors['Canceled'], rawData: [8,5,12,11,13,26,27,19,9,20,26,5,44,14] }
+          { label: 'Canceled', data: [2.0,3.3,0.0,0.3,1.1,3.1,3.2,4.1,5.5,3.9,3.6,7.7,4.4,5.1,3.1,3.1,2.2,2.0,2.8,4.7,1.7,3.6,2.6,2.6,1.7,1.6,1.6,2.2,2.4,3.3,4.2,2.3,0.8,0.7,2.4,3.4,1.8,1.7,1.8,3.0,4.4,3.8,1.9,1.7,3.2,3.4,3.7,1.7,2.0,3.6,1.9,1.0,3.2,4.1], backgroundColor: transitionColors['Canceled'], rawData: [12,43,0,1,3,42,38,90,49,30,66,92,49,48,30,21,17,20,19,34,18,26,16,21,17,14,21,24,25,40,181,37,12,9,21,47,22,30,23,58,73,54,27,48,56,96,96,40,37,66,67,29,64,40] }
 
         ]
       },
@@ -2075,11 +2567,11 @@
 
 
     // Bug Status (Open vs Closed)
-    new Chart(document.getElementById('bugStatusChart').getContext('2d'), {
+    chartInstances.bugStatus = new Chart(document.getElementById('bugStatusChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: ['Open', 'Closed'],
-        datasets: [{ data: [85, 596], backgroundColor: [colors.red, colors.green], borderWidth: 0 }]
+        datasets: [{ data: [213, 465], backgroundColor: [colors.red, colors.green], borderWidth: 0 }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
     });
@@ -2087,9 +2579,9 @@
     // Bugs by Priority
     const bugsPriorityColors = { 'Urgent': colors.red, 'High': colors.orange, 'Medium': colors.yellow, 'Low': colors.green, 'No priority': 'rgba(148, 163, 184, 0.8)' };
     const bugsPriorityLabels = ["Urgent","High","Medium","Low","No priority"];
-    const bugsPriorityData = [2,16,11,22,34];
+    const bugsPriorityData = [4,34,33,53,89];
     
-    new Chart(document.getElementById('bugsPriorityChart').getContext('2d'), {
+    chartInstances.bugsPriority = new Chart(document.getElementById('bugsPriorityChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: bugsPriorityLabels,
@@ -2100,13 +2592,13 @@
 
     // Bug Flow Chart
 
-    new Chart(document.getElementById('bugFlowChart').getContext('2d'), {
+    chartInstances.bugFlow = new Chart(document.getElementById('bugFlowChart').getContext('2d'), {
       type: 'bar',
       data: {
-        labels: ["Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
+        labels: ["Dec 09","Dec 16","Dec 23","Dec 30","Jan 06","Jan 13","Jan 20","Jan 27","Feb 03","Feb 10","Feb 17","Feb 24","Mar 03","Mar 10","Mar 17","Mar 24","Mar 31","Apr 07","Apr 14","Apr 21","Apr 28","May 05","May 12","May 19","May 26","Jun 02","Jun 09","Jun 16","Jun 23","Jun 30","Jul 07","Jul 14","Jul 21","Jul 28","Aug 04","Aug 11","Aug 18","Aug 25","Sep 01","Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"],
         datasets: [
-          { label: 'Bugs Created', data: [67,77,57,50,100,69,30,36,60,50,67,42,33,100], backgroundColor: 'rgba(220, 38, 38, 0.8)', borderRadius: 0, raw: [4,10,13,5,11,11,3,5,12,9,10,5,3,2] },
-          { label: 'Bugs Closed', data: [33,23,43,50,0,31,70,64,40,50,33,58,67,0], backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 0, raw: [2,3,10,5,0,5,7,9,8,9,5,7,6,0] }
+          { label: 'Bugs Created', data: [62,77,64,57,54,57,48,61,56,57,60,60,37,80,58,92,47,78,60,20,71,75,74,46,27,55,63,33,43,53,56,10,44,56,67,56,50,83,40,69,73,55,50,100,69,30,36,61,47,71,42,33,100], backgroundColor: 'rgba(220, 38, 38, 0.8)', borderRadius: 0, raw: [8,17,7,12,14,12,11,17,5,8,9,9,7,12,11,22,7,7,3,4,10,3,14,6,4,6,10,6,3,8,10,1,4,5,8,5,3,5,6,9,8,12,5,11,11,3,5,11,8,10,5,3,3] },
+          { label: 'Bugs Closed', data: [38,23,36,43,46,43,52,39,44,43,40,40,63,20,42,8,53,22,40,80,29,25,26,54,73,45,38,67,57,47,44,90,56,44,33,44,50,17,60,31,27,45,50,0,31,70,64,39,53,29,58,67,0], backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 0, raw: [5,5,4,9,12,9,12,11,4,6,6,6,12,3,8,2,8,2,2,16,4,1,5,7,11,5,6,12,4,7,8,9,5,4,4,4,3,1,9,4,3,10,5,0,5,7,9,7,9,4,7,6,0] }
         ]
       },
       options: {
@@ -2157,22 +2649,22 @@
     });
 
     // Calculate percentages for 100% stacked chart
-    const teamLabels = ["Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"];
+    const teamLabels = ["Dec 09","Dec 16","Dec 23","Dec 30","Jan 06","Jan 13","Jan 20","Jan 27","Feb 03","Feb 10","Feb 17","Feb 24","Mar 03","Mar 10","Mar 17","Mar 24","Mar 31","Apr 07","Apr 14","Apr 21","Apr 28","May 05","May 12","May 19","May 26","Jun 02","Jun 09","Jun 16","Jun 23","Jun 30","Jul 07","Jul 14","Jul 21","Jul 28","Aug 04","Aug 11","Aug 18","Aug 25","Sep 01","Sep 08","Sep 15","Sep 22","Sep 29","Oct 06","Oct 13","Oct 20","Oct 27","Nov 03","Nov 10","Nov 17","Nov 24","Dec 01","Dec 08"];
     const teamRawData = {
 
-      'ATS': [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      'ATS': [0,0,0,0,0,0,0,5,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 
-      'Global ATS': [0,3,5,4,9,9,2,2,8,6,4,1,0,1],
+      'Global ATS': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,3,0,0,0,1,2,2,0,0,0,3,5,4,9,9,2,2,8,6,4,1,0,1],
 
-      'Marketplace': [1,3,1,0,0,0,1,0,0,0,0,0,0,0],
+      'Marketplace': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,0,1],
 
-      'Platform': [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      'Platform': [0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 
-      'ROI': [1,4,0,1,1,1,0,2,2,2,5,1,2,1],
+      'ROI': [3,6,1,2,1,1,0,4,3,6,4,3,4,6,5,7,2,6,2,3,8,2,1,4,4,4,8,4,2,6,3,1,0,1,5,0,1,1,2,2,4,0,1,1,1,0,2,1,1,5,1,2,1],
 
-      'Sourcing': [1,0,5,0,0,1,0,1,2,1,0,3,1,0],
+      'Sourcing': [2,10,6,10,11,10,11,3,0,2,5,3,2,5,5,15,4,0,0,0,2,0,3,0,0,0,1,0,0,0,3,0,0,2,0,3,0,1,1,4,0,5,0,0,1,0,1,2,1,0,3,1,0],
 
-      'Talents': [1,0,2,0,1,0,0,0,0,0,1,0,0,0]
+      'Talents': [3,1,0,0,2,1,0,2,2,0,0,3,0,1,1,0,1,0,1,1,0,1,10,2,0,2,1,2,1,1,0,0,4,2,2,0,0,3,2,2,0,2,0,1,0,0,0,0,0,1,0,0,0]
 
     };
     
@@ -2188,7 +2680,7 @@
       );
     });
 
-    new Chart(document.getElementById('bugsByTeamChart').getContext('2d'), {
+    chartInstances.bugsByTeam = new Chart(document.getElementById('bugsByTeamChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: teamLabels,
@@ -2221,13 +2713,13 @@
     // Status Chart
     const statusColors = { 'Backlog': 'rgba(148, 163, 184, 0.8)', 'To Do': 'rgba(59, 130, 246, 0.8)', 'In Progress': 'rgba(255, 205, 0, 0.9)', 'In Review': 'rgba(88, 88, 88, 0.8)', 'Done': 'rgba(34, 197, 94, 0.8)' };
     const statusLabels = ["Backlog","To Do","In Progress","In Review","Done"];
-    const statusBreakdown = [[{"name":"Backlog","count":698},{"name":"Archived","count":179},{"name":"Triage","count":34}],[{"name":"Todo","count":262},{"name":"To Do","count":39},{"name":"To Qualify","count":16},{"name":"To dev","count":13},{"name":"To do","count":6},{"name":"To design","count":5}],[{"name":"In Progress","count":68},{"name":"In progress","count":3}],[{"name":"In Review","count":49},{"name":"To test","count":13},{"name":"To Validate","count":2},{"name":"To Merge (main)","count":2},{"name":"To Review","count":2}],[{"name":"Done","count":2473},{"name":"Released","count":1538},{"name":"Canceled","count":495},{"name":"Duplicate","count":134},{"name":"Auto-closed","count":43}]];
+    const statusBreakdown = [[{"name":"Backlog","count":708},{"name":"Archived","count":179},{"name":"Triage","count":35}],[{"name":"Todo","count":257},{"name":"To Do","count":40},{"name":"To Qualify","count":17},{"name":"To dev","count":13},{"name":"To do","count":6},{"name":"To design","count":5}],[{"name":"In Progress","count":62},{"name":"In progress","count":3}],[{"name":"In Review","count":44},{"name":"To test","count":15},{"name":"To Review","count":4},{"name":"To Merge (main)","count":3},{"name":"To Validate","count":2}],[{"name":"Done","count":2489},{"name":"Released","count":1537},{"name":"Canceled","count":497},{"name":"Duplicate","count":134},{"name":"Auto-closed","count":43}]];
     
-    new Chart(document.getElementById('statusChart').getContext('2d'), {
+    chartInstances.status = new Chart(document.getElementById('statusChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: statusLabels,
-        datasets: [{ data: [911,341,71,68,4683], backgroundColor: statusLabels.map(l => statusColors[l] || colors.purple), borderWidth: 0 }]
+        datasets: [{ data: [922,338,65,68,4700], backgroundColor: statusLabels.map(l => statusColors[l] || colors.purple), borderWidth: 0 }]
       },
       options: {
         responsive: true,
@@ -2252,31 +2744,57 @@
     });
     
     // Priority Chart
-    new Chart(document.getElementById('priorityChart').getContext('2d'), {
+    chartInstances.priority = new Chart(document.getElementById('priorityChart').getContext('2d'), {
       type: 'doughnut',
       data: {
-        labels: ["No priority","High","Low","Medium","Urgent"],
-        datasets: [{ data: [3805,934,532,629,174], backgroundColor: ['rgba(148, 163, 184, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(255, 205, 0, 0.9)', 'rgba(249, 115, 22, 0.8)', 'rgba(220, 38, 38, 0.8)'], borderWidth: 0 }]
+        labels: ["Low","No priority","Medium","High","Urgent"],
+        datasets: [{ data: [536,3813,630,940,174], backgroundColor: ['rgba(148, 163, 184, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(255, 205, 0, 0.9)', 'rgba(249, 115, 22, 0.8)', 'rgba(220, 38, 38, 0.8)'], borderWidth: 0 }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
     });
     
     // Type Chart
-    new Chart(document.getElementById('typeChart').getContext('2d'), {
+    chartInstances.type = new Chart(document.getElementById('typeChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: ["Feature","Bug","Improvement","Tech Debt","Task","Documentation","Other"],
-        datasets: [{ data: [172,736,210,241,146,117,4452], backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'], borderWidth: 0 }]
+        datasets: [{
+          data: [172,733,210,242,146,117,4473],
+          backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'],
+          borderWidth: 0,
+          breakdown: [{"enhancement":10,"front-end":19,"back-end":15,"feature flag":9,"mco":3,"backend_aitx":1,"ai-feature":14,"(No Label)":24,"beta prep":1,"shape":1,"build":16,"data":1,"feature":82,"cooldown":1,"tech":1,"[sourcing] - attach assets to initial message":1,"migrated":80,"filler":5,"stack: email":2,"needs design":2,"stack: backend":10,"stack: toolbox":2,"needs refinement":6,"stack: app":1,"stack: search app":1},{"bug":577,"3 - medium":13,"(No Label)":16,"front-end":152,"team 1":4,"4 - minor":7,"team 2":3,"data science":9,"back-end":141,"sentry":6,"profile editor":7,"zendesk":81,"bugs":217,"content fix":24,"qa":8,"design":3,"locations":1,"agent":8,"beta prep":6,"expansion firefighting":1,"production":36,"easyapply":2,"datadog":1,"slack":47,"rebranding":1,"cooldown":71,"data":6,"build":104,"to dig":2,"improvement(s)":6,"stack: backend":1,"stack: toolbox":1,"onboarding":4,"stack: hire app":4,"equality index":1,"user":6,"featured":3,"development":13,"other":2,"members":11,"2 - major":7,"team manual testing":20,"cypress":3,"audit security":9,"imported from platform":6,"1 - critical":1,"translation":1,"wttj-front":2,"accounts":1,"tech":8,"profile":1,"candidates search":1,"to check status":1,"meet your team":1,"figma bug":2,"stack: search app":1,"recruiters proposals":1,"ebal":1,"migrated":16,"wttj-api":1,"stack: email":1,"l2_to_l3":2,"jobs-importer":1},{"improvement(s)":93,"back-end":28,"(No Label)":41,"front-end":58,"team 1":2,"improvement":11,"design":5,"refinement":5,"beta prep":1,"data science":1,"week 1":1,"profile editor":12,"build":24,"backend":1,"future improvement":6,"zendesk":4,"blocked":2,"analytics":3,"translation":1,"cooldown":8,"reward":1,"labels":1,"perks & benefits":1,"members":14,"slack":11,"4 - minor":1,"production":4,"component upgrade":1,"sourcing iteration":2,"3 - medium":2,"profile":1,"writing":1,"2 - major":3,"common-elixir":1,"ebal":1,"wttj-api":2,"wttj-front":2,"migrated":7,"stack: backend":1,"stack: email":1,"stack: search app":2,"needs refinement":2,"stack: marketing":1},{"(No Label)":67,"back-end":27,"technical_debt":2,"data science":1,"front-end":70,"team 1":1,"mco":7,"maintenance":4,"build":4,"component upgrade":22,"design":2,"blocked":1,"tech":11,"meet your team":1,"audit-log":2,"members":1,"imported from platform":1,"grandmax":2,"paul":2,"clémence":1,"aurore":1,"accounts":1,"task":20,"migrated":25,"mailer":1,"story":4,"jira_escalated":1},{"(No Label)":31,"build":76,"back-end":44,"cooldown":100,"to dig":12,"front-end":32,"data":3,"data science":1,"shape":1,"zendesk":2,"sentry":6,"stack: hire app":1,"design":3,"qa":1,"team manual testing":2,"members":5,"translation":1},{"writing":98,"(No Label)":7,"team 1":1,"front-end":6,"style guide":1,"back-end":4,"research":1,"build":18,"members":10,"[sourcing] - attach assets to initial message":1,"design":1,"tech":1,"wttj-api":1,"ats":1,"doc":3,"wttj-front":1},{"(No Label)":1821,"front-end":1132,"back-end":752,"easyapply":9,"expansion":1,"team 2":10,"todo":1,"zendesk":131,"sentry":48,"design":70,"qa":52,"data":37,"data science":39,"mco":5,"goog for peer programming":2,"team 1":15,"agent":7,"translation":17,"people data lab":1,"data-required":1,"post release":19,"technical_debt":3,"terminology":10,"welcome jobs":2,"stack: backend":8,"stack: email":2,"beta prep":23,"refinement":5,"expansion firefighting":12,"maintenance":15,"datadog":6,"internal delight":2,"mvp":9,"component creation":7,"build":431,"week 1":4,"labels":1,"shape":9,"stack: search app":3,"slack":5,"not priority":1,"style guide":2,"needs refinement":1,"metrics":1,"stack: hire app":8,"chargebee ui":2,"planning":3,"research":2,"admin":1,"profile editor":6,"user":2,"stack: toolbox":5,"onboarding":15,"stack: marketing":1,"blocked":3,"tech":35,"mobile":3,"equality index":3,"aurore":9,"grandmax":6,"paul":9,"wttj-cli":3,"retrospective":3,"wait & see":5,"sre bypass-qualif":7,"2 - major":1,"members":17,"move to notion":2,"featured":1,"workshop":6,"features iteration":3,"meet your team":3,"company culture test":1,"deps between streams":2,"sourcing iteration":14,"4 - minor":1,"production":2,"back done":9,"rebranding":2,"wttj-api":9,"audit-log":10,"analytics":1,"candidates search":1,"select global kpis period":3,"backend":4,"design needed":4,"[sourcing] sync jobs":4,"[sourcing] - attach assets to initial message":11,"contact talent":2,"charles":1,"support week":1,"development":1,"[wttj] list recruiters proposal":9,"[sourcing] update talent lead list":4,"clémence":6,"ats":3,"[wttj] reply recruiters proposals":19,"common-elixir":48,"recruiters proposals":10,"mailer":5,"recruiter proposal drawer":5,"ebal":2,"list follow-ups":2,"🟥":3,"acl":3,"wttj-front":7,"stack: app":1,"alerts":7,"accounts":2,"filler":1,"coverage":2}]
+        }]
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(context) {
+                const breakdown = context.dataset.breakdown[context.dataIndex];
+                if (!breakdown || Object.keys(breakdown).length === 0) return [];
+
+                const lines = [];
+                const sorted = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+                sorted.forEach(([label, count]) => {
+                  lines.push(`  ${label}: ${count}`);
+                });
+                return lines;
+              }
+            }
+          }
+        }
+      }
     });
     
     // Assignee Chart
-    new Chart(document.getElementById('assigneeChart').getContext('2d'), {
+    chartInstances.assignee = new Chart(document.getElementById('assigneeChart').getContext('2d'), {
       type: 'bar',
       data: {
-        labels: ["Unassigned","David Julien","Jonathan Herbault","Camille Nairi","Valentin Mariette","Benjamin WAN NAN WO","Daryna Panicheva","Brice Thomas","Amélie BRESSON","Zeid Fazazi","Cédric Garcia","Simon Degraeve","Baptiste TRUCHET","Clement Quaresma","Jade Mihami"],
-        datasets: [{ label: 'Active Issues', data: [34,8,5,5,4,4,4,4,4,4,4,4,4,3,3], backgroundColor: 'rgba(255, 205, 0, 0.9)', borderRadius: 4 }]
+        labels: ["Unassigned","David Julien","Simon Degraeve","Camille Nairi","Jonathan Herbault","Brice Thomas","Amélie BRESSON","Daryna Panicheva","Zeid Fazazi","Benjamin WAN NAN WO","Valentin Mariette","Paul-Xavier Ceccaldi","Baptiste TRUCHET","Jérôme RAFFIN","Nicolas Briere"],
+        datasets: [{ label: 'Active Issues', data: [34,8,5,5,5,4,4,4,4,4,4,4,4,4,3], backgroundColor: 'rgba(255, 205, 0, 0.9)', borderRadius: 4 }]
       },
       options: {
         responsive: true,
@@ -2285,6 +2803,19 @@
         plugins: { legend: { display: false } },
         scales: { x: { beginAtZero: true } }
       }
+    });
+    }
+    
+    // Create charts on load
+    createCharts();
+    
+    // Debounced resize handler to recreate charts
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        createCharts();
+      }, 250);
     });
   </script>
 </body>

@@ -267,7 +267,7 @@
   <div class="container">
     <header>
       <h1>&#128025; GitHub Metrics Dashboard</h1>
-      <p class="subtitle">Generated on <%= @today %> • Last <%= days_to_show %> days</p>
+      <p class="subtitle">Generated on <%= @today %> • Last <%= days_to_show %> days (<%= cutoff_date %> to <%= @today %>)</p>
       <button class="collapse-all-btn" onclick="toggleAllSections()">
         <span id="toggleAllIcon">▼</span> <span id="toggleAllText">Collapse All</span>
       </button>
@@ -664,11 +664,21 @@
       };
     }
 
+    // Store chart instances for resize handling
+    const chartInstances = {};
+    
+    // Function to create all charts
+    function createCharts() {
+      // Destroy existing charts
+      Object.values(chartInstances).forEach(chart => {
+        if (chart) chart.destroy();
+      });
+      
     // Time to Merge Chart
     const avgTimeMergeHours = <%= breakdown[:datasets][:avg_time_to_merge].to_json %>;
     const avgTimeMergeDays = avgTimeMergeHours.map(h => (h / 24).toFixed(2));
 
-    new Chart(document.getElementById('timeToMergeChart').getContext('2d'), {
+    chartInstances.timeToMerge = new Chart(document.getElementById('timeToMergeChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -696,7 +706,7 @@
     // Data is already in days
     const avgTimeFirstReviewDays = avgTimeFirstReviewRaw.map(d => Number(d).toFixed(2));
 
-    new Chart(document.getElementById('timeToFirstReviewChart').getContext('2d'), {
+    chartInstances.timeToFirstReview = new Chart(document.getElementById('timeToFirstReviewChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -720,7 +730,7 @@
     });
 
     // Time to Approval Chart
-    new Chart(document.getElementById('timeToApprovalChart').getContext('2d'), {
+    chartInstances.timeToApproval = new Chart(document.getElementById('timeToApprovalChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -748,7 +758,7 @@
     const avgComments = <%= breakdown[:datasets][:avg_comments].to_json %>;
     const avgRework = <%= breakdown[:datasets][:avg_rework_cycles].to_json %>;
 
-    new Chart(document.getElementById('reviewsChart').getContext('2d'), {
+    chartInstances.reviews = new Chart(document.getElementById('reviewsChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -771,7 +781,7 @@
       }
     });
 
-    new Chart(document.getElementById('commentsChart').getContext('2d'), {
+    chartInstances.comments = new Chart(document.getElementById('commentsChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -794,7 +804,7 @@
       }
     });
 
-    new Chart(document.getElementById('reworkCyclesChart').getContext('2d'), {
+    chartInstances.reworkCycles = new Chart(document.getElementById('reworkCyclesChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -825,7 +835,7 @@
     const additionsPct = avgAdditionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
     const deletionsPct = avgDeletionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
 
-    new Chart(document.getElementById('prSizeChart').getContext('2d'), {
+    chartInstances.prSize = new Chart(document.getElementById('prSizeChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: breakdownLabels,
@@ -877,7 +887,7 @@
     const closedPct = closedRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
     const openPct = openRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
 
-    new Chart(document.getElementById('dailyBreakdownChart').getContext('2d'), {
+    chartInstances.dailyBreakdown = new Chart(document.getElementById('dailyBreakdownChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: breakdownLabels,
@@ -913,7 +923,7 @@
     const mergeRate = <%= breakdown[:datasets][:merge_rate].to_json %>;
     const unreviewedRate = <%= breakdown[:datasets][:unreviewed_pr_rate].to_json %>;
 
-    new Chart(document.getElementById('ciSuccessRateChart').getContext('2d'), {
+    chartInstances.ciSuccessRate = new Chart(document.getElementById('ciSuccessRateChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -936,7 +946,7 @@
       }
     });
 
-    new Chart(document.getElementById('mergeRateChart').getContext('2d'), {
+    chartInstances.mergeRate = new Chart(document.getElementById('mergeRateChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -959,7 +969,7 @@
       }
     });
 
-    new Chart(document.getElementById('unreviewedPRRateChart').getContext('2d'), {
+    chartInstances.unreviewedPRRate = new Chart(document.getElementById('unreviewedPRRateChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -983,7 +993,7 @@
     });
 
     // Hotfix Rate Chart
-    new Chart(document.getElementById('hotfixRateChart').getContext('2d'), {
+    chartInstances.hotfixRate = new Chart(document.getElementById('hotfixRateChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -1007,7 +1017,7 @@
     });
 
     // Time to Green Chart
-    new Chart(document.getElementById('timeToGreenChart').getContext('2d'), {
+    chartInstances.timeToGreen = new Chart(document.getElementById('timeToGreenChart').getContext('2d'), {
       type: 'line',
       data: {
         labels: breakdownLabels,
@@ -1033,7 +1043,7 @@
     // Deployment Frequency Chart
     const deployFrequency = <%= breakdown[:datasets][:deploy_frequency].to_json %>;
 
-    new Chart(document.getElementById('deployFrequencyChart').getContext('2d'), {
+    chartInstances.deployFrequency = new Chart(document.getElementById('deployFrequencyChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: breakdownLabels,
@@ -1060,7 +1070,7 @@
     const topRepoData = <%= top_repos.map { |r| r[:value] }.to_json %>;
 
     if (topRepoLabels.length > 0) {
-      new Chart(document.getElementById('topReposChart').getContext('2d'), {
+      chartInstances.topRepos = new Chart(document.getElementById('topReposChart').getContext('2d'), {
         type: 'bar',
         data: {
           labels: topRepoLabels,
@@ -1093,7 +1103,7 @@
     const topContributorData = <%= contributors_data.map { |r| r[:value] }.to_json %>;
 
     if (topContributorLabels.length > 0) {
-      new Chart(document.getElementById('topContributorsChart').getContext('2d'), {
+      chartInstances.topContributors = new Chart(document.getElementById('topContributorsChart').getContext('2d'), {
         type: 'bar',
         data: {
           labels: topContributorLabels,
@@ -1119,6 +1129,19 @@
         }
       });
     }
+    }
+    
+    // Create charts on load
+    createCharts();
+    
+    // Debounced resize handler to recreate charts
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        createCharts();
+      }, 250);
+    });
   </script>
 </body>
 </html>

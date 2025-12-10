@@ -932,13 +932,23 @@
     Chart.defaults.color = '#585858';
     Chart.defaults.borderColor = '#DEDEDE';
     
+    // Store chart instances for resize handling
+    const chartInstances = {};
+    
+    // Function to create all charts
+    function createCharts() {
+      // Destroy existing charts
+      Object.values(chartInstances).forEach(chart => {
+        if (chart) chart.destroy();
+      });
+      
 <% flow = weekly_flow_data %>
     // Flow Chart
     const flowCtx = document.getElementById('flowChart').getContext('2d');
     const createdRaw = <%= flow[:created_raw].to_json %>;
     const completedRaw = <%= flow[:completed_raw].to_json %>;
     
-    new Chart(flowCtx, {
+    chartInstances.flow = new Chart(flowCtx, {
       type: 'bar',
       data: {
         labels: <%= flow[:labels].to_json %>,
@@ -982,7 +992,7 @@
       'Canceled': 'rgba(220, 38, 38, 0.8)',
     };
     
-    new Chart(transitionCtx, {
+    chartInstances.transition = new Chart(transitionCtx, {
       type: 'bar',
       data: {
         labels: <%= trans[:labels].to_json %>,
@@ -1020,7 +1030,7 @@
   closed_bugs_count = bug_metrics.find { |m| m[:metric] == 'closed_bugs' }&.dig(:value).to_i
 %>
     // Bug Status (Open vs Closed)
-    new Chart(document.getElementById('bugStatusChart').getContext('2d'), {
+    chartInstances.bugStatus = new Chart(document.getElementById('bugStatusChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: ['Open', 'Closed'],
@@ -1034,7 +1044,7 @@
     const bugsPriorityLabels = <%= sorted_bugs.map { |m| m[:metric] }.to_json %>;
     const bugsPriorityData = <%= sorted_bugs.map { |m| m[:value].to_i }.to_json %>;
     
-    new Chart(document.getElementById('bugsPriorityChart').getContext('2d'), {
+    chartInstances.bugsPriority = new Chart(document.getElementById('bugsPriorityChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: bugsPriorityLabels,
@@ -1045,7 +1055,7 @@
 
     // Bug Flow Chart
 <% bug_flow = weekly_bug_flow_data %>
-    new Chart(document.getElementById('bugFlowChart').getContext('2d'), {
+    chartInstances.bugFlow = new Chart(document.getElementById('bugFlowChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: <%= bug_flow[:labels].to_json %>,
@@ -1121,7 +1131,7 @@
       );
     });
 
-    new Chart(document.getElementById('bugsByTeamChart').getContext('2d'), {
+    chartInstances.bugsByTeam = new Chart(document.getElementById('bugsByTeamChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: teamLabels,
@@ -1156,7 +1166,7 @@
     const statusLabels = <%= status_chart_data.map { |d| d[:label] }.to_json %>;
     const statusBreakdown = <%= status_chart_data.map { |d| d[:breakdown] }.to_json %>;
     
-    new Chart(document.getElementById('statusChart').getContext('2d'), {
+    chartInstances.status = new Chart(document.getElementById('statusChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: statusLabels,
@@ -1185,7 +1195,7 @@
     });
     
     // Priority Chart
-    new Chart(document.getElementById('priorityChart').getContext('2d'), {
+    chartInstances.priority = new Chart(document.getElementById('priorityChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: <%= priority_chart_data.map { |d| d[:label] }.to_json %>,
@@ -1195,7 +1205,7 @@
     });
     
     // Type Chart
-    new Chart(document.getElementById('typeChart').getContext('2d'), {
+    chartInstances.type = new Chart(document.getElementById('typeChart').getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: <%= type_chart_data.map { |d| d[:label] }.to_json %>,
@@ -1231,7 +1241,7 @@
     });
     
     // Assignee Chart
-    new Chart(document.getElementById('assigneeChart').getContext('2d'), {
+    chartInstances.assignee = new Chart(document.getElementById('assigneeChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: <%= assignee_chart_data.map { |d| d[:label] }.to_json %>,
@@ -1244,6 +1254,19 @@
         plugins: { legend: { display: false } },
         scales: { x: { beginAtZero: true } }
       }
+    });
+    }
+    
+    // Create charts on load
+    createCharts();
+    
+    // Debounced resize handler to recreate charts
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        createCharts();
+      }, 250);
     });
   </script>
 </body>

@@ -199,6 +199,10 @@ module WttjMetrics
           @parser.metrics_by_category['github'] || []
         end
 
+        def cutoff_date
+          @cutoff_date ||= (Date.today - @days_to_show).to_s
+        end
+
         def build_html
           template_path = File.join(WttjMetrics.root, 'lib', 'wttj_metrics', 'templates', 'github_report.html.erb')
 
