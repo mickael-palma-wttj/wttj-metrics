@@ -7,6 +7,8 @@ module WttjMetrics
     module Linear
       # Calculates distribution metrics (status, priority, type, size, assignee)
       class DistributionCalculator < Base
+        include Helpers::Linear::IssueHelper
+
         def calculate
           {
             status: status_distribution,
@@ -19,15 +21,9 @@ module WttjMetrics
         end
 
         def to_rows
-          rows = []
-
-          calculate.each do |category, distribution|
-            distribution.each do |key, value|
-              rows << [today.to_s, category.to_s, key.to_s, value]
-            end
+          calculate.flat_map do |category, distribution|
+            build_distribution_rows(category, distribution)
           end
-
-          rows
         end
 
         # Also expose backlog age as an issue characteristic
@@ -41,33 +37,33 @@ module WttjMetrics
 
         private
 
-        def status_distribution
-          issues.each_with_object(Hash.new(0)) do |issue, dist|
-            state = issue.dig('state', 'name') || 'Unknown'
-            dist[state] += 1
+        def build_distribution_rows(category, distribution)
+          distribution.map do |key, value|
+            [today.to_s, category.to_s, key.to_s, value]
           end
         end
 
+        def status_distribution
+          count_by_attribute { |issue| issue.dig('state', 'name') || 'Unknown' }
+        end
+
         def priority_distribution
-          issues.each_with_object(Hash.new(0)) do |issue, dist|
-            priority = issue['priorityLabel'] || 'No priority'
-            dist[priority] += 1
+          count_by_attribute { |issue| extract_priority_label(issue) }
+        end
+
+        def count_by_attribute(collection = issues, &)
+          collection.each_with_object(Hash.new(0)) do |issue, dist|
+            dist[yield(issue)] += 1
           end
         end
 
         def type_distribution
-          distribution = {
-            'Feature' => 0,
-            'Bug' => 0,
-            'Improvement' => 0,
-            'Tech Debt' => 0,
-            'Task' => 0,
-            'Documentation' => 0,
-            'Other' => 0
-          }
+          default_types = ['Feature', 'Bug', 'Improvement', 'Tech Debt', 'Task', 'Documentation', 'Other']
+          distribution = default_types.to_h { |type| [type, 0] }
 
           issues.each do |issue|
-            distribution[classify_issue_type(issue)] += 1
+            issue_type = classify_issue_type(issue)
+            distribution[issue_type] += 1
           end
 
           distribution
@@ -77,27 +73,35 @@ module WttjMetrics
           breakdown = Hash.new { |h, k| h[k] = Hash.new(0) }
 
           issues.each do |issue|
-            type = classify_issue_type(issue)
-            labels = extract_labels(issue)
-
-            if labels.empty?
-              breakdown[type]['(No Label)'] += 1
-            else
-              labels.each do |label|
-                breakdown[type][label] += 1
-              end
-            end
+            populate_type_breakdown(breakdown, issue)
           end
 
           breakdown.transform_values(&:to_json)
         end
 
+        def populate_type_breakdown(breakdown, issue)
+          issue_type = classify_issue_type(issue)
+          labels = extract_labels(issue)
+
+          if labels.empty?
+            breakdown[issue_type]['(No Label)'] += 1
+          else
+            labels.each { |label| breakdown[issue_type][label] += 1 }
+          end
+        end
+
         def classify_issue_type(issue)
           labels = extract_labels(issue)
-          title = (issue['title'] || '').downcase
+          title = extract_title(issue)
 
-          # Priority order matters - check most specific first
-          # Try label-based classification first (more reliable)
+          classify_by_labels(labels) || classify_by_title(title) || 'Other'
+        end
+
+        def extract_title(issue)
+          (issue['title'] || '').downcase
+        end
+
+        def classify_by_labels(labels)
           return 'Bug' if bug_pattern?(labels)
           return 'Feature' if feature_pattern?(labels)
           return 'Improvement' if improvement_pattern?(labels)
@@ -105,7 +109,10 @@ module WttjMetrics
           return 'Task' if task_pattern?(labels)
           return 'Documentation' if documentation_pattern?(labels)
 
-          # Fallback to title-based patterns for unlabeled issues
+          nil
+        end
+
+        def classify_by_title(title)
           return 'Bug' if title_indicates_bug?(title)
           return 'Feature' if title_indicates_feature?(title)
           return 'Improvement' if title_indicates_improvement?(title)
@@ -113,36 +120,42 @@ module WttjMetrics
           return 'Task' if title_indicates_task?(title)
           return 'Documentation' if title_indicates_documentation?(title)
 
-          'Other'
+          nil
         end
 
         def bug_pattern?(labels)
-          labels.any? { |l| l =~ /\b(bug|bugs|hotfix|fix)\b/ }
+          match_any_label?(labels, /\b(bug|bugs|hotfix|fix)\b/)
         end
 
         def feature_pattern?(labels)
-          labels.any? { |l| l =~ /\b(feature|enhancement|ai-feature)\b/ }
+          match_any_label?(labels, /\b(feature|enhancement|ai-feature)\b/)
         end
 
         def improvement_pattern?(labels)
-          labels.any? { |l| l =~ /\bimprovement/ }
+          match_any_label?(labels, /\bimprovement/)
         end
 
         def tech_debt_pattern?(labels)
-          labels.any? do |l|
-            l =~ /\b(debt|refactor|migration|migrated|upgrade|component upgrade)\b/ &&
-              !l.include?('front-end') &&
-              !l.include?('back-end') &&
-              l != 'tech'
-          end
+          labels.any? { |label| tech_debt_label?(label) }
+        end
+
+        def tech_debt_label?(label)
+          label =~ /\b(debt|refactor|migration|migrated|upgrade|component upgrade)\b/ &&
+            !label.include?('front-end') &&
+            !label.include?('back-end') &&
+            label != 'tech'
         end
 
         def task_pattern?(labels)
-          labels.any? { |l| l =~ /\b(task|chore|cooldown|testing|manual testing)\b/ }
+          match_any_label?(labels, /\b(task|chore|cooldown|testing|manual testing)\b/)
         end
 
         def documentation_pattern?(labels)
-          labels.any? { |l| l =~ /\b(doc|documentation|writing|content fix)\b/ }
+          match_any_label?(labels, /\b(doc|documentation|writing|content fix)\b/)
+        end
+
+        def match_any_label?(labels, pattern)
+          labels.any? { |label| label =~ pattern }
         end
 
         # Title-based classification methods (fallback for unlabeled issues)
@@ -173,15 +186,13 @@ module WttjMetrics
           title =~ /\bdocument|docs|readme|guide|tutorial|example|write\s+doc/i
         end
 
-        def extract_labels(issue)
-          (issue.dig('labels', 'nodes') || []).map { |l| l['name'].downcase }
-        end
-
         def size_distribution
-          distribution = { 'No estimate' => 0, 'Small (1-2)' => 0, 'Medium (3-5)' => 0, 'Large (8+)' => 0 }
+          size_categories = ['No estimate', 'Small (1-2)', 'Medium (3-5)', 'Large (8+)']
+          distribution = size_categories.to_h { |category| [category, 0] }
 
           issues.each do |issue|
-            distribution[classify_size(issue['estimate'])] += 1
+            size_category = classify_size(issue['estimate'])
+            distribution[size_category] += 1
           end
 
           distribution
@@ -197,26 +208,30 @@ module WttjMetrics
         end
 
         def assignee_distribution
-          in_progress_issues.each_with_object(Hash.new(0)) do |issue, dist|
-            assignee = issue.dig('assignee', 'name') || 'Unassigned'
-            dist[assignee] += 1
-          end
+          count_by_attribute(in_progress_issues) { |issue| extract_assignee_name(issue) }
         end
 
         def in_progress_issues
-          issues.select { |i| i.dig('state', 'type') == 'started' }
+          filter_issues_by_state('started')
+        end
+
+        def filter_issues_by_state(state_type)
+          issues.select { |issue| issue.dig('state', 'type') == state_type }
         end
 
         def avg_backlog_age
-          backlog = issues.select { |i| i.dig('state', 'type') == 'backlog' }
-          return 0 if backlog.empty?
+          backlog_issues = filter_issues_by_state('backlog')
+          return 0 if backlog_issues.empty?
 
-          total_days = backlog.sum do |issue|
+          total_days = calculate_total_age(backlog_issues)
+          (total_days / backlog_issues.size).round(2)
+        end
+
+        def calculate_total_age(issues_list)
+          issues_list.sum do |issue|
             created = parse_datetime(issue['createdAt'])
             (today.to_datetime - created).to_f
           end
-
-          (total_days / backlog.size).round(2)
         end
       end
     end

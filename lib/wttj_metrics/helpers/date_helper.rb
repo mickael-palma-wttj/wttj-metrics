@@ -6,8 +6,13 @@ module WttjMetrics
   module Helpers
     # Common date manipulation helpers
     module DateHelper
-      def parse_date(date_string)
-        Date.parse(date_string) if date_string
+      def parse_date(date_string, format: :date)
+        return nil unless date_string
+
+        parsed = Date.parse(date_string.to_s)
+        format == :string ? parsed.to_s : parsed
+      rescue Date::Error
+        nil
       end
 
       def parse_datetime(date_string)

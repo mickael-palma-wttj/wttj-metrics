@@ -62,14 +62,45 @@ Provides detailed statistical analysis for team performance.
 - **Quality Metrics**: Detailed breakdown of bug rates and resolution efficiency.
 - **Capacity Utilization**: How effectively the team uses its planned capacity.
 
-### TimeseriesCollector
-Aggregates metric data over time for trend analysis and charting.
+### TimeseriesCalculator
+Calculates timeseries metrics from Linear issues, tracking daily statistics for tickets, bugs, and state transitions.
 
 **Features:**
-- **Period Aggregation**: Groups data by day, week, or month.
-- **Interpolation**: Fills in gaps for missing periods to ensure continuous charts.
-- **Multi-Metric Support**: Can aggregate counts, sums, or averages.
-- **Chart.js Ready**: Formats output specifically for Chart.js visualization.
+- **Composition Pattern**: Uses specialized metric classes (TicketMetrics, BugMetrics, TransitionMetrics)
+- **Single Responsibility**: Each metric class handles one type of data
+- **Date-Based Grouping**: Tracks metrics per date for accurate timeseries
+- **Team Breakdowns**: Provides team-specific metrics for all tracked data
+- **MTTR Calculation**: Tracks Mean Time To Resolve for bugs by team
+
+See [timeseries/README.md](timeseries/README.md) for detailed documentation.
+
+## Supporting Modules
+
+### CycleParser
+Parses and organizes cycle metrics by team.
+
+**Responsibilities:**
+- Parses cycle metric data from CSV format
+- Organizes metrics by team and cycle
+- Applies appropriate type conversions (integer, float, string)
+
+**Configuration:**
+- Uses `CycleParserConfig` module for parser configuration
+- Supports custom team selection
+- Handles metric validation and parsing errors
+
+### CycleParserConfig
+Configuration module for cycle metric parsing.
+
+**Constants:**
+- **DEFAULT_TEAMS**: Default teams for cycle parsing
+- **METRIC_PARTS_COUNT**: Expected parts when splitting metric keys
+- **METRIC_PARSERS**: Maps metric names to parser functions (integer, rounded float, string)
+
+**Design Note:**
+- Extracted from `CycleParser` to follow Single Responsibility Principle
+- Configuration modules are expected to contain multiple constants
+- Uses lambda functions for type conversion flexibility
 
 ## Usage
 

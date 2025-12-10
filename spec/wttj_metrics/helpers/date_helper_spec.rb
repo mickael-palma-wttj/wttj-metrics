@@ -10,12 +10,36 @@ RSpec.describe WttjMetrics::Helpers::DateHelper do
   end
 
   describe '#parse_date' do
-    it 'parses a valid date string' do
-      expect(helper.parse_date('2024-12-05')).to eq(Date.new(2024, 12, 5))
+    context 'when returning Date object (default)' do
+      it 'parses a valid date string' do
+        expect(helper.parse_date('2024-12-05')).to eq(Date.new(2024, 12, 5))
+      end
+
+      it 'returns nil for nil input' do
+        expect(helper.parse_date(nil)).to be_nil
+      end
+
+      it 'returns nil for invalid date string' do
+        expect(helper.parse_date('invalid')).to be_nil
+      end
     end
 
-    it 'returns nil for nil input' do
-      expect(helper.parse_date(nil)).to be_nil
+    context 'when returning string (format: :string)' do
+      it 'parses a valid date string and returns string' do
+        expect(helper.parse_date('2024-12-05', format: :string)).to eq('2024-12-05')
+      end
+
+      it 'returns nil for nil input' do
+        expect(helper.parse_date(nil, format: :string)).to be_nil
+      end
+
+      it 'returns nil for invalid date string' do
+        expect(helper.parse_date('invalid', format: :string)).to be_nil
+      end
+
+      it 'handles datetime strings and converts to date string' do
+        expect(helper.parse_date('2024-12-05T10:30:00Z', format: :string)).to eq('2024-12-05')
+      end
     end
   end
 

@@ -7,6 +7,8 @@ module WttjMetrics
   module Metrics
     module Github
       class TimeseriesCalculator
+        include Helpers::DateHelper
+
         CATEGORY = 'github_daily'
 
         def initialize(pull_requests, releases = [])
@@ -26,24 +28,16 @@ module WttjMetrics
           stats = Hash.new { |h, k| h[k] = Timeseries::DailyStats.new }
 
           @pull_requests.each do |pr|
-            date = parse_date(pr[:createdAt] || pr['createdAt'])
+            date = parse_date(pr[:createdAt] || pr['createdAt'], format: :string)
             stats[date].record_pr(pr) if date
           end
 
           @releases.each do |release|
-            date = parse_date(release['created_at'] || release[:created_at])
+            date = parse_date(release['created_at'] || release[:created_at], format: :string)
             stats[date].record_release(release) if date
           end
 
           stats
-        end
-
-        def parse_date(date_str)
-          return nil unless date_str
-
-          Date.parse(date_str.to_s).to_s
-        rescue Date::Error
-          nil
         end
       end
     end

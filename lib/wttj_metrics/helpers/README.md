@@ -9,7 +9,7 @@ This directory contains utility modules that provide common formatting and data 
 Provides date manipulation and formatting utilities for working with weeks, dates, and time ranges.
 
 **Key Methods:**
-- `parse_date(date_string)` - Safely parses a date string
+- `parse_date(date_string, format: :date)` - Safely parses a date string, returns Date object by default or string (YYYY-MM-DD) if format: :string. Returns nil on error.
 - `parse_datetime(date_string)` - Safely parses a datetime string
 - `monday_of_week(date)` - Returns the Monday of the week containing the given date
 - `format_week_label(date)` - Formats a date as "Mon DD" (e.g., "Dec 02")
