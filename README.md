@@ -22,6 +22,7 @@ A Ruby CLI tool to collect metrics from [Linear](https://linear.app) and generat
 - [Configuration](#configuration)
   - [Environment Variables](#environment-variables)
   - [Team Filtering](#team-filtering)
+  - [Team Configuration](#team-configuration)
   - [Customizing Default Teams](#customizing-default-teams)
 - [Metrics Reference](#metrics-reference)
   - [Flow Metrics](#flow-metrics)
@@ -208,6 +209,7 @@ Create HTML dashboard from collected metrics:
 | `--sources` | `-s` | `linear` | Data sources to include (linear, github) |
 | `--days` | `-d` | `90` | Number of days to show in charts |
 | `--teams` | `-t` | *default list* | Teams to include in report |
+| `--teams-config` | `-c` | `lib/config/teams.yml` | Path to team configuration YAML |
 | `--all-teams` | | `false` | Include all teams (no filter) |
 | `--excel` | `-x` | `false` | Also generate Excel spreadsheet |
 | `--excel-path` | | `report/report.xlsx` | Excel output file path |
@@ -259,6 +261,29 @@ By default, the report filters metrics to selected teams. You can control this v
 ```
 
 > **Note:** Filtered charts display a "Filtered" badge. When using `--all-teams`, all teams from the data are included and no filter badge is shown.
+
+### Team Configuration
+
+To handle discrepancies between team names in Linear and GitHub (e.g., "Platform" vs "platform-core"), you can use a configuration file.
+
+1.  Create a `lib/config/teams.yml` file (or specify a custom path with `--teams-config`).
+2.  Define your team mappings:
+
+```yaml
+teams:
+  # Logical Name used in CLI
+  Platform:
+    linear: "Platform"
+    github: 
+      - "platform-core"
+      - "platform-infra"
+
+  Marketplace:
+    linear: "Marketplace"
+    github: "marketplace-integrations"
+```
+
+When you run `wttj-metrics report --teams Platform`, the tool will automatically filter for "Platform" in Linear data and both "platform-core" and "platform-infra" in GitHub data.
 
 ### Customizing Default Teams
 

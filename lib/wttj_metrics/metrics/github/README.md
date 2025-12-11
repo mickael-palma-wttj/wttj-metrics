@@ -13,6 +13,25 @@ Calculates velocity-related metrics for Pull Requests.
 - **Avg Reviews per PR**: Average number of reviews received per PR.
 - **Avg Comments per PR**: Average number of comments (general comments) per PR.
 
+### QualityCalculator
+Analyzes code quality indicators.
+
+**Metrics:**
+- **Merge Rate**: Percentage of PRs that are merged.
+- **Unreviewed PR Rate**: Percentage of PRs merged without review.
+- **CI Success Rate**: Percentage of successful CI runs.
+- **Hotfix Rate**: Percentage of PRs identified as hotfixes.
+- **Time to Green**: Average time for CI to pass.
+
+### PrSizeCalculator
+Analyzes the size of Pull Requests.
+
+**Metrics:**
+- **Avg Additions**: Average lines added per PR.
+- **Avg Deletions**: Average lines deleted per PR.
+- **Avg Changed Files**: Average files changed per PR.
+- **Avg Commits**: Average commits per PR.
+
 ### RepositoryActivityCalculator
 Analyzes activity levels across different repositories.
 

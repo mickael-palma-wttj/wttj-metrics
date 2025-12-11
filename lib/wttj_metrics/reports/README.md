@@ -16,8 +16,10 @@ The reports layer is split by data source:
 
 ### GitHub Reports
 - **Github::ReportGenerator**: Main orchestrator for GitHub reports
-- **Github::ExcelReportBuilder**: Generates Excel reports for GitHub metrics
-- **Github::ChartDataBuilder**: Prepares GitHub chart data
+- **Github::MetricsCalculator**: Facade for all metric calculations
+- **Github::TeamService**: Handles team-specific metric aggregation
+- **Github::HtmlReportBuilder**: Renders the HTML report
+- **Github::ExcelReportBuilder**: Generates Excel reports
 
 ## Classes
 
@@ -55,11 +57,12 @@ CSV File → CsvParser → Metrics Calculators → Presenters → ERB Template �
 
 **Generated Sections (GitHub):**
 1. Key Metrics (Merge time, Review time, etc.)
-2. Daily Breakdown (Created, Merged, Closed, Open)
-3. Top 10 Active Repositories
-4. PR Size Distribution
-5. Review & Comment Stats
-5. All charts (scatter, bar, line, pie)
+2. Team Metrics (Detailed breakdown by team)
+3. Daily Breakdown (Created, Merged, Closed, Open)
+4. Top 10 Active Repositories
+5. PR Size Distribution
+6. Review & Comment Stats
+7. All charts (scatter, bar, line, pie)
 
 **Configuration:**
 - `days` - Number of days to include in the report (default: 90)

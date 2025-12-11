@@ -53,10 +53,10 @@ RSpec.describe WttjMetrics::Values::TeamConfiguration do
   end
 
   context 'when config file does not exist' do
-    let(:config_path) { 'non_existent.yml' }
+    let(:config_path) { 'tmp/non_existent.yml' }
 
     before do
-      allow(File).to receive(:exist?).with('non_existent.yml').and_return(false)
+      allow(File).to receive(:exist?).with('tmp/non_existent.yml').and_return(false)
     end
 
     it 'returns empty defined teams' do
