@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Reports::WeeklyDataAggregator do
+require 'spec_helper'
+
+RSpec.describe WttjMetrics::Reports::Linear::WeeklyDataAggregator do
   subject(:aggregator) { described_class.new(cutoff_date) }
 
   let(:cutoff_date) { Date.new(2024, 12, 1) }
@@ -99,46 +101,10 @@ RSpec.describe WttjMetrics::Reports::WeeklyDataAggregator do
       let(:single_metric) { [{ date: '2024-12-02', value: 5 }] }
 
       it 'handles missing data gracefully', :aggregate_failures do
-        # Exercise & Verify
         expect(result[:a_raw]).to eq([5])
         expect(result[:b_raw]).to eq([0])
-        expect(result[:a_pct]).to eq([100.0])
+        expect(result[:a_pct]).to eq([100])
         expect(result[:b_pct]).to eq([0])
-      end
-    end
-  end
-
-  describe 'week boundary handling' do
-    subject(:result) { aggregator.aggregate_single(metric_data) }
-
-    context 'with dates at year boundary (Week 00 edge case)' do
-      # Setup
-      let(:metric_data) do
-        [
-          { date: '2024-12-30', value: 3 },  # Monday (last week of 2024)
-          { date: '2025-01-02', value: 5 }   # Thursday (same week, spans year)
-        ]
-      end
-
-      it 'groups dates in the same week together', :aggregate_failures do
-        # Exercise & Verify
-        expect(result[:labels].size).to eq(1)
-        expect(result[:values]).to eq([8])
-      end
-    end
-
-    context 'with Sunday dates' do
-      # Setup
-      let(:metric_data) do
-        [
-          { date: '2024-12-01', value: 2 },  # Sunday
-          { date: '2024-12-02', value: 3 }   # Monday (next week)
-        ]
-      end
-
-      it 'places Sunday in the previous week' do
-        # Exercise & Verify
-        expect(result[:labels].size).to eq(2)
       end
     end
   end

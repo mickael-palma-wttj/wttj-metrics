@@ -9,6 +9,44 @@ module WttjMetrics
   module Reports
     module Github
       class ReportGenerator
+        METRIC_MAPPING = {
+          avg_time_to_merge: 'avg_time_to_merge_days',
+          total_merged: 'total_merged_prs',
+          avg_reviews: 'avg_reviews_per_pr',
+          avg_comments: 'avg_comments_per_pr',
+          avg_time_to_first_review: 'avg_time_to_first_review_days',
+          avg_additions: 'avg_additions_per_pr',
+          avg_deletions: 'avg_deletions_per_pr',
+          avg_changed_files: 'avg_changed_files_per_pr',
+          avg_commits: 'avg_commits_per_pr',
+          merge_rate: 'merge_rate',
+          avg_time_to_approval: 'avg_time_to_approval_days',
+          avg_rework_cycles: 'avg_rework_cycles',
+          unreviewed_pr_rate: 'unreviewed_pr_rate',
+          ci_success_rate: 'ci_success_rate',
+          deploy_frequency: 'deploy_frequency_weekly',
+          hotfix_rate: 'hotfix_rate',
+          time_to_green: 'time_to_green_hours'
+        }.freeze
+
+        DAILY_METRIC_MAPPING = {
+          merged: 'merged', closed: 'closed', open: 'open',
+          avg_time_to_merge: 'avg_time_to_merge_hours',
+          avg_reviews: 'avg_reviews_per_pr',
+          avg_comments: 'avg_comments_per_pr',
+          avg_additions: 'avg_additions_per_pr',
+          avg_deletions: 'avg_deletions_per_pr',
+          avg_time_to_first_review: 'avg_time_to_first_review_days',
+          merge_rate: 'merge_rate',
+          avg_time_to_approval: 'avg_time_to_approval_days',
+          avg_rework_cycles: 'avg_rework_cycles',
+          unreviewed_pr_rate: 'unreviewed_pr_rate',
+          ci_success_rate: 'ci_success_rate',
+          deploy_frequency: 'releases_count',
+          hotfix_rate: 'hotfix_rate',
+          time_to_green: 'avg_time_to_green_hours'
+        }.freeze
+
         attr_reader :data, :days_to_show, :today
 
         def initialize(csv_path, days: 90, teams: nil)
@@ -33,78 +71,19 @@ module WttjMetrics
         end
 
         def metrics
-          @metrics ||= {
-            avg_time_to_merge: latest_metric('avg_time_to_merge_days'),
-            total_merged: latest_metric('total_merged_prs'),
-            avg_reviews: latest_metric('avg_reviews_per_pr'),
-            avg_comments: latest_metric('avg_comments_per_pr'),
-            avg_time_to_first_review: latest_metric('avg_time_to_first_review_days'),
-            avg_additions: latest_metric('avg_additions_per_pr'),
-            avg_deletions: latest_metric('avg_deletions_per_pr'),
-            avg_changed_files: latest_metric('avg_changed_files_per_pr'),
-            avg_commits: latest_metric('avg_commits_per_pr'),
-            merge_rate: latest_metric('merge_rate'),
-            avg_time_to_approval: latest_metric('avg_time_to_approval_days'),
-            avg_rework_cycles: latest_metric('avg_rework_cycles'),
-            unreviewed_pr_rate: latest_metric('unreviewed_pr_rate'),
-            ci_success_rate: latest_metric('ci_success_rate'),
-            deploy_frequency: latest_metric('deploy_frequency_weekly'),
-            deploy_frequency_daily: calculate_daily_deploy_frequency,
-            hotfix_rate: latest_metric('hotfix_rate'),
-            time_to_green: latest_metric('time_to_green_hours')
-          }
+          @metrics ||= METRIC_MAPPING.transform_values { |name| latest_metric(name) }
+                                     .merge(deploy_frequency_daily: calculate_daily_deploy_frequency)
         end
 
         def history
-          @history ||= {
-            avg_time_to_merge: history_for('avg_time_to_merge_days'),
-            total_merged: history_for('total_merged_prs'),
-            avg_reviews: history_for('avg_reviews_per_pr'),
-            avg_comments: history_for('avg_comments_per_pr'),
-            avg_time_to_first_review: history_for('avg_time_to_first_review_days'),
-            avg_additions: history_for('avg_additions_per_pr'),
-            avg_deletions: history_for('avg_deletions_per_pr'),
-            avg_changed_files: history_for('avg_changed_files_per_pr'),
-            avg_commits: history_for('avg_commits_per_pr'),
-            merge_rate: history_for('merge_rate'),
-            avg_time_to_approval: history_for('avg_time_to_approval_days'),
-            avg_rework_cycles: history_for('avg_rework_cycles'),
-            unreviewed_pr_rate: history_for('unreviewed_pr_rate'),
-            ci_success_rate: history_for('ci_success_rate'),
-            deploy_frequency: history_for('deploy_frequency_weekly'),
-            hotfix_rate: history_for('hotfix_rate'),
-            time_to_green: history_for('time_to_green_hours')
-          }
+          @history ||= METRIC_MAPPING.transform_values { |name| history_for(name) }
         end
 
         def daily_breakdown
           @daily_breakdown ||= begin
-            daily_data = @parser.metrics_by_category['github_daily'] || []
-            grouped = daily_data.group_by { |m| m[:date] }
-            sorted_dates = grouped.keys.sort
-
-            datasets = initialize_datasets
-
-            sorted_dates.each do |date|
-              metrics = grouped[date]
-              datasets[:merged] << get_value(metrics, 'merged')
-              datasets[:closed] << get_value(metrics, 'closed')
-              datasets[:open] << get_value(metrics, 'open')
-              datasets[:avg_time_to_merge] << get_value(metrics, 'avg_time_to_merge_hours')
-              datasets[:avg_reviews] << get_value(metrics, 'avg_reviews_per_pr')
-              datasets[:avg_comments] << get_value(metrics, 'avg_comments_per_pr')
-              datasets[:avg_additions] << get_value(metrics, 'avg_additions_per_pr')
-              datasets[:avg_deletions] << get_value(metrics, 'avg_deletions_per_pr')
-              datasets[:avg_time_to_first_review] << get_value(metrics, 'avg_time_to_first_review_days')
-              datasets[:merge_rate] << get_value(metrics, 'merge_rate')
-              datasets[:avg_time_to_approval] << get_value(metrics, 'avg_time_to_approval_days')
-              datasets[:avg_rework_cycles] << get_value(metrics, 'avg_rework_cycles')
-              datasets[:unreviewed_pr_rate] << get_value(metrics, 'unreviewed_pr_rate')
-              datasets[:ci_success_rate] << get_value(metrics, 'ci_success_rate')
-              datasets[:deploy_frequency] << get_value(metrics, 'releases_count')
-              datasets[:hotfix_rate] << get_value(metrics, 'hotfix_rate')
-              datasets[:time_to_green] << get_value(metrics, 'avg_time_to_green_hours')
-            end
+            grouped_data = group_daily_data
+            sorted_dates = grouped_data.keys.sort
+            datasets = build_datasets(grouped_data, sorted_dates)
 
             { labels: sorted_dates, datasets: datasets }
           end
@@ -131,50 +110,45 @@ module WttjMetrics
         end
 
         def top_repositories
-          start_date = (Date.today - @days_to_show).to_s
-
-          metrics = (@parser.metrics_by_category['github_repo_activity'] || [])
-                    .select { |m| m[:date] >= start_date }
-                    .group_by { |m| m[:metric] }
-
-          aggregated = metrics.map do |repo_name, repo_metrics|
-            {
-              metric: repo_name,
-              value: repo_metrics.sum { |m| m[:value] },
-              date: @today
-            }
-          end
-
-          aggregated.sort_by { |m| -m[:value] }.first(10)
+          top_metrics_for('github_repo_activity')
         end
 
         def top_contributors
-          start_date = (Date.today - @days_to_show).to_s
+          top_metrics_for('github_contributor_activity')
+        end
 
-          metrics = (@parser.metrics_by_category['github_contributor_activity'] || [])
-                    .select { |m| m[:date] >= start_date }
-                    .group_by { |m| m[:metric] }
+        def group_daily_data
+          (@parser.metrics_by_category['github_daily'] || []).group_by { |m| m[:date] }
+        end
 
-          aggregated = metrics.map do |author, author_metrics|
-            {
-              metric: author,
-              value: author_metrics.sum { |m| m[:value] },
-              date: @today
-            }
+        def build_datasets(grouped_data, dates)
+          datasets = Hash.new { |h, k| h[k] = [] }
+          dates.each do |date|
+            metrics = grouped_data[date]
+            DAILY_METRIC_MAPPING.each do |key, metric_name|
+              datasets[key] << get_value(metrics, metric_name)
+            end
+          end
+          datasets
+        end
+
+        def top_metrics_for(category)
+          metrics = filter_and_group_metrics(category)
+          aggregate_and_sort_metrics(metrics)
+        end
+
+        def filter_and_group_metrics(category)
+          (@parser.metrics_by_category[category] || [])
+            .select { |m| m[:date] >= cutoff_date }
+            .group_by { |m| m[:metric] }
+        end
+
+        def aggregate_and_sort_metrics(grouped_metrics)
+          aggregated = grouped_metrics.map do |name, metrics|
+            { metric: name, value: metrics.sum { |m| m[:value] }, date: @today }
           end
 
           aggregated.sort_by { |m| -m[:value] }.first(10)
-        end
-
-        def initialize_datasets
-          {
-            merged: [], closed: [], open: [],
-            avg_time_to_merge: [], avg_reviews: [], avg_comments: [],
-            avg_additions: [], avg_deletions: [], avg_time_to_first_review: [],
-            merge_rate: [], avg_time_to_approval: [], avg_rework_cycles: [],
-            unreviewed_pr_rate: [], ci_success_rate: [], deploy_frequency: [],
-            hotfix_rate: [], time_to_green: []
-          }
         end
 
         def get_value(metrics, name)

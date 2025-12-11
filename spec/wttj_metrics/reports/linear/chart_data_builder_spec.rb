@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-RSpec.describe WttjMetrics::Reports::ChartDataBuilder do
+require 'wttj_metrics/reports/linear/chart_data_builder'
+
+RSpec.describe WttjMetrics::Reports::Linear::ChartDataBuilder do
   subject(:builder) { described_class.new(parser) }
 
   let(:parser) { instance_double(WttjMetrics::Data::CsvParser) }

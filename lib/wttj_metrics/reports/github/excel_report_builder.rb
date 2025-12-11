@@ -7,6 +7,29 @@ module WttjMetrics
     module Github
       # Builds Excel reports from GitHub metrics data
       class ExcelReportBuilder
+        KEY_METRICS_CONFIG = [
+          { label: 'Avg Time to Merge', key: :avg_time_to_merge, unit: 'days' },
+          { label: 'Total Merged PRs', key: :total_merged, unit: '' },
+          { label: 'Avg Reviews/PR', key: :avg_reviews, unit: '' },
+          { label: 'Avg Comments/PR', key: :avg_comments, unit: '' },
+          { label: 'Avg Time to First Review', key: :avg_time_to_first_review, unit: 'days' },
+          { label: 'Merge Rate', key: :merge_rate, unit: '%' },
+          { label: 'Time to Approval', key: :avg_time_to_approval, unit: 'days' },
+          { label: 'Rework Cycles', key: :avg_rework_cycles, unit: '' },
+          { label: 'CI Success Rate', key: :ci_success_rate, unit: '%' },
+          { label: 'Daily Deploys', key: :deploy_frequency_daily, unit: '' },
+          { label: 'Avg Additions/PR', key: :avg_additions, unit: 'lines' },
+          { label: 'Avg Deletions/PR', key: :avg_deletions, unit: 'lines' },
+          { label: 'Avg Changed Files/PR', key: :avg_changed_files, unit: '' },
+          { label: 'Avg Commits/PR', key: :avg_commits, unit: '' }
+        ].freeze
+
+        DAILY_BREAKDOWN_HEADERS = %w[Date Merged Closed Open Avg_Merge_Time(h) Avg_Reviews Avg_Comments Avg_Additions
+                                     Avg_Deletions Avg_Time_To_First_Review(h)].freeze
+
+        DAILY_DATASET_KEYS = %i[merged closed open avg_time_to_merge avg_reviews avg_comments avg_additions
+                                avg_deletions avg_time_to_first_review].freeze
+
         def initialize(data)
           @data = data
           @package = Axlsx::Package.new
@@ -37,60 +60,48 @@ module WttjMetrics
 
         def add_key_metrics_sheet
           @workbook.add_worksheet(name: 'Key Metrics') do |sheet|
-            sheet.add_row ["GitHub Metrics Report - #{@data[:today]}"], style: @header_style
-            sheet.merge_cells('A1:B1')
-            sheet.add_row []
-
-            sheet.add_row %w[Metric Value], style: @header_style
-
-            metrics = @data[:metrics]
-            add_metric_row(sheet, 'Avg Time to Merge', metrics[:avg_time_to_merge], 'days')
-            add_metric_row(sheet, 'Total Merged PRs', metrics[:total_merged], '')
-            add_metric_row(sheet, 'Avg Reviews/PR', metrics[:avg_reviews], '')
-            add_metric_row(sheet, 'Avg Comments/PR', metrics[:avg_comments], '')
-            add_metric_row(sheet, 'Avg Time to First Review', metrics[:avg_time_to_first_review], 'days')
-            add_metric_row(sheet, 'Merge Rate', metrics[:merge_rate], '%')
-            add_metric_row(sheet, 'Time to Approval', metrics[:avg_time_to_approval], 'days')
-            add_metric_row(sheet, 'Rework Cycles', metrics[:avg_rework_cycles], '')
-            add_metric_row(sheet, 'CI Success Rate', metrics[:ci_success_rate], '%')
-            add_metric_row(sheet, 'Daily Deploys', metrics[:deploy_frequency_daily], '')
-            add_metric_row(sheet, 'Avg Additions/PR', metrics[:avg_additions], 'lines')
-            add_metric_row(sheet, 'Avg Deletions/PR', metrics[:avg_deletions], 'lines')
-            add_metric_row(sheet, 'Avg Changed Files/PR', metrics[:avg_changed_files], '')
-            add_metric_row(sheet, 'Avg Commits/PR', metrics[:avg_commits], '')
-
+            setup_key_metrics_header(sheet)
+            add_key_metrics_rows(sheet)
             sheet.column_widths 30, 20
           end
         end
 
+        def setup_key_metrics_header(sheet)
+          sheet.add_row ["GitHub Metrics Report - #{@data[:today]}"], style: @header_style
+          sheet.merge_cells('A1:B1')
+          sheet.add_row []
+          sheet.add_row %w[Metric Value], style: @header_style
+        end
+
+        def add_key_metrics_rows(sheet)
+          metrics = @data[:metrics]
+          KEY_METRICS_CONFIG.each do |config|
+            add_metric_row(sheet, config[:label], metrics[config[:key]], config[:unit])
+          end
+        end
+
         def add_metric_row(sheet, label, value, unit)
-          formatted_value = value.is_a?(Float) ? value.round(1) : value.to_i
-          unit_suffix = unit.empty? ? '' : " #{unit}"
-          sheet.add_row [label, "#{formatted_value}#{unit_suffix}"]
+          sheet.add_row [label, format_metric_value(value, unit)]
+        end
+
+        def format_metric_value(value, unit)
+          formatted_num = value.is_a?(Float) ? value.round(1) : value.to_i
+          unit_suffix = unit.to_s.empty? ? '' : " #{unit}"
+          "#{formatted_num}#{unit_suffix}"
         end
 
         def add_daily_breakdown_sheet
           @workbook.add_worksheet(name: 'Daily Breakdown') do |sheet|
-            headers = %w[Date Merged Closed Open Avg_Merge_Time(h) Avg_Reviews Avg_Comments Avg_Additions
-                         Avg_Deletions Avg_Time_To_First_Review(h)]
-            sheet.add_row headers, style: @header_style
+            sheet.add_row DAILY_BREAKDOWN_HEADERS, style: @header_style
+            add_daily_rows(sheet)
+          end
+        end
 
-            daily = @data[:daily_breakdown]
-            datasets = daily[:datasets]
-            daily[:labels].each_with_index do |date, index|
-              sheet.add_row [
-                date,
-                datasets[:merged][index],
-                datasets[:closed][index],
-                datasets[:open][index],
-                datasets[:avg_time_to_merge][index],
-                datasets[:avg_reviews][index],
-                datasets[:avg_comments][index],
-                datasets[:avg_additions][index],
-                datasets[:avg_deletions][index],
-                datasets[:avg_time_to_first_review][index]
-              ]
-            end
+        def add_daily_rows(sheet)
+          daily = @data[:daily_breakdown]
+          daily[:labels].each_with_index do |date, index|
+            row_values = [date] + DAILY_DATASET_KEYS.map { |key| daily[:datasets][key][index] }
+            sheet.add_row row_values
           end
         end
 

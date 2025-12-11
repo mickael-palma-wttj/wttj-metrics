@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Refactored
+
+- **Linear Reports Architecture**: Major refactoring of the Linear reporting module
+  - **Namespace Consolidation**: Moved all Linear-specific reporting classes to `WttjMetrics::Reports::Linear` namespace
+    - `MetricAccessor` → `Linear::MetricAccessor`
+    - `TeamFilter` → `Linear::TeamFilter`
+    - `BugsByTeamBuilder` → `Linear::BugsByTeamBuilder`
+    - `WeeklyBugFlowBuilder` → `Linear::WeeklyBugFlowBuilder`
+    - `WeeklyDataAggregator` → `Linear::WeeklyDataAggregator`
+  - **ReportGenerator**: Refactored to use Facade pattern and `Forwardable` for cleaner delegation
+  - **Excel Reporting**: Extracted `ExcelFormatter` from `ExcelReportBuilder` for better separation of concerns
+  - **Code Quality**: Resolved Reek (LongParameterList) and RuboCop issues across the module
+
 ### Added
 
 - **GitHub Metrics Integration**: Full support for GitHub pull request metrics

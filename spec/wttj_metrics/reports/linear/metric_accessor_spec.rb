@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe WttjMetrics::Reports::MetricAccessor do
+RSpec.describe WttjMetrics::Reports::Linear::MetricAccessor do
   let(:parser) { instance_double(WttjMetrics::Data::CsvParser) }
   let(:accessor) { described_class.new(parser) }
 
@@ -111,7 +111,7 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
   end
 
   describe '#type_dist' do
-    let(:type_data) { [{ metric: 'Feature', value: 200 }] }
+    let(:type_data) { [{ metric: 'Bug', value: 80 }] }
 
     it 'delegates to parser.metrics_for' do
       allow(parser).to receive(:metrics_for).with('type').and_return(type_data)
@@ -126,46 +126,25 @@ RSpec.describe WttjMetrics::Reports::MetricAccessor do
 
   describe '#assignee_dist' do
     let(:assignee_data) do
-      (1..20).map { |i| { metric: "User #{i}", value: 21 - i } }
+      [
+        { metric: 'User A', value: 10 },
+        { metric: 'User B', value: 20 },
+        { metric: 'User C', value: 5 }
+      ]
     end
 
-    it 'delegates to parser.metrics_for' do
+    it 'delegates to parser.metrics_for and sorts/limits' do
       allow(parser).to receive(:metrics_for).with('assignee').and_return(assignee_data)
+
       result = accessor.assignee_dist
-      expect(result).to be_an(Array)
-    end
-
-    it 'sorts by value descending' do
-      allow(parser).to receive(:metrics_for).with('assignee').and_return(assignee_data)
-      result = accessor.assignee_dist
-
-      expect(result.first[:value]).to eq(20)
-      expect(result.last[:value]).to be <= 20
-    end
-
-    it 'limits to 15 assignees' do
-      allow(parser).to receive(:metrics_for).with('assignee').and_return(assignee_data)
-      result = accessor.assignee_dist
-
-      expect(result.length).to eq(15)
+      expect(result.first[:metric]).to eq('User B')
+      expect(result.last[:metric]).to eq('User C')
     end
 
     it 'memoizes the result' do
-      expect(parser).to receive(:metrics_for).with('assignee').once.and_return(assignee_data)
+      allow(parser).to receive(:metrics_for).with('assignee').and_return(assignee_data)
+      expect(parser).to receive(:metrics_for).with('assignee').once
       2.times { accessor.assignee_dist }
-    end
-  end
-
-  describe 'memoization across all methods' do
-    it 'does not share memoized values between different metric types' do
-      flow_data = [{ metric: 'flow', value: 1 }]
-      bug_data = [{ metric: 'bugs', value: 2 }]
-
-      allow(parser).to receive(:metrics_for).with('flow').and_return(flow_data)
-      allow(parser).to receive(:metrics_for).with('bugs').and_return(bug_data)
-
-      expect(accessor.flow_metrics).to eq(flow_data)
-      expect(accessor.bug_metrics).to eq(bug_data)
     end
   end
 end

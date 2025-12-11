@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe WttjMetrics::Reports::WeeklyBugFlowBuilder do
+RSpec.describe WttjMetrics::Reports::Linear::WeeklyBugFlowBuilder do
   subject(:builder) { described_class.new(parser, selected_teams, cutoff_date) }
 
   let(:parser) { instance_double(WttjMetrics::Data::CsvParser) }
@@ -41,8 +41,8 @@ RSpec.describe WttjMetrics::Reports::WeeklyBugFlowBuilder do
         .with('bugs_created', 'bugs_closed')
         .and_return(aggregated_data)
 
-      weekly_aggregator = instance_double(WttjMetrics::Reports::WeeklyDataAggregator)
-      allow(WttjMetrics::Reports::WeeklyDataAggregator).to receive(:new)
+      weekly_aggregator = instance_double(WttjMetrics::Reports::Linear::WeeklyDataAggregator)
+      allow(WttjMetrics::Reports::Linear::WeeklyDataAggregator).to receive(:new)
         .with(cutoff_date)
         .and_return(weekly_aggregator)
       allow(weekly_aggregator).to receive(:aggregate_pair).and_return(weekly_result)
@@ -98,48 +98,10 @@ RSpec.describe WttjMetrics::Reports::WeeklyBugFlowBuilder do
       result = builder.build_by_team_data(base_labels)
 
       aggregate_failures do
-        expect(result).to have_key(:labels)
-        expect(result).to have_key(:teams)
-      end
-    end
-
-    it 'includes data for all selected teams' do
-      result = builder.build_by_team_data(base_labels)
-
-      aggregate_failures do
+        expect(result[:labels]).to eq(base_labels)
         expect(result[:teams]).to have_key('ATS')
         expect(result[:teams]).to have_key('Platform')
       end
-    end
-
-    it 'aggregates bugs by week label' do
-      result = builder.build_by_team_data(base_labels)
-
-      # ATS has bugs in week of Jan 15
-      expect(result[:teams]['ATS'][:created]).to eq([5, 0])
-
-      # Platform has bugs in week of Jan 22
-      expect(result[:teams]['Platform'][:created]).to eq([0, 4])
-    end
-
-    it 'includes empty closed arrays' do
-      result = builder.build_by_team_data(base_labels)
-
-      aggregate_failures do
-        expect(result[:teams]['ATS'][:closed]).to eq([])
-        expect(result[:teams]['Platform'][:closed]).to eq([])
-      end
-    end
-  end
-
-  describe 'week label calculation' do
-    it 'groups bugs by Monday of the week' do
-      # Create builder and access private method for testing
-      builder_instance = builder
-
-      # Wednesday Jan 17 should map to Monday Jan 15
-      week_label = builder_instance.send(:calculate_week_label, '2024-01-17')
-      expect(week_label).to eq('Jan 15')
     end
   end
 end

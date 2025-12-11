@@ -454,9 +454,9 @@ wttj-metrics/
 | **MetricsCalculator** | Facade coordinating specialized calculators |
 | **Metrics::*** | Single-responsibility metric calculators |
 | **ReportGenerator** | Report orchestration, template rendering |
-| **MetricAccessor** | Memoized metric retrieval from CSV parser |
-| **TeamFilter** | Team selection and discovery logic |
-| **BugsByTeamBuilder** | Bug statistic aggregation by team |
+| **Linear::MetricAccessor** | Memoized metric retrieval from CSV parser |
+| **Linear::TeamFilter** | Team selection and discovery logic |
+| **Linear::BugsByTeamBuilder** | Bug statistic aggregation by team |
 | **Presenters** | Data formatting for HTML/Excel display |
 | **Helpers::LoggerMixin** | Shared logger configuration |
 | **FileCache** | JSON-based response caching |
@@ -485,7 +485,7 @@ wttj-metrics/
 7. ReportGenerator coordinates data transformation
    │
    ▼
-8. ChartDataBuilder + Presenters format data
+8. Linear::ChartDataBuilder + Presenters format data
    │
    ▼
 9. ERB template renders HTML (or ExcelReportBuilder generates .xlsx)
@@ -802,8 +802,8 @@ The codebase follows Ruby best practices and design patterns:
 - **Service Objects**: Business logic encapsulated in service classes
 - **Value Objects**: Immutable objects for options and configuration
 - **Presenters**: Formatting logic separate from business logic
-- **Builder Pattern**: Complex object construction (BugsByTeamBuilder)
-- **Strategy Pattern**: Flexible behavior (TeamFilter)
+- **Builder Pattern**: Complex object construction (Linear::BugsByTeamBuilder)
+- **Strategy Pattern**: Flexible behavior (Linear::TeamFilter)
 - **Facade Pattern**: Simplified interfaces (ReportGenerator)
 
 See [REFACTORING_ANALYSIS.md](REFACTORING_ANALYSIS.md) for detailed architecture insights.

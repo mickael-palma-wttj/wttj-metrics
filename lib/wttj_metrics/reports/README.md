@@ -9,10 +9,10 @@ The reports layer is split by data source:
 ### Linear Reports
 - **Linear::ReportGenerator**: Main orchestrator for Linear reports
 - **Linear::ExcelReportBuilder**: Generates Excel reports
-- **MetricAccessor**: Provides cached access to parsed metrics
-- **TeamFilter**: Handles team filtering logic
-- **BugsByTeamBuilder**: Aggregates bug statistics by team
-- **ChartDataBuilder**: Prepares data for Chart.js visualizations
+- **Linear::MetricAccessor**: Provides cached access to parsed metrics
+- **Linear::TeamFilter**: Handles team filtering logic
+- **Linear::BugsByTeamBuilder**: Aggregates bug statistics by team
+- **Linear::ChartDataBuilder**: Prepares data for Chart.js visualizations
 
 ### GitHub Reports
 - **Github::ReportGenerator**: Main orchestrator for GitHub reports
@@ -66,7 +66,7 @@ CSV File → CsvParser → Metrics Calculators → Presenters → ERB Template �
 - Input: CSV file path with metrics
 - Output: HTML file path for the report
 
-### MetricAccessor
+### Linear::MetricAccessor
 
 Provides cached access to parsed metrics with automatic memoization.
 
@@ -77,7 +77,7 @@ Provides cached access to parsed metrics with automatic memoization.
 
 **Key Methods:**
 ```ruby
-accessor = MetricAccessor.new(parser)
+accessor = Linear::MetricAccessor.new(parser)
 
 # Access various metrics (all memoized)
 accessor.flow_metrics          # => Flow metrics array
@@ -96,7 +96,7 @@ accessor.assignee_dist         # => Top 15 assignees by count
 - **Clean Interface**: Single object for all metric access
 - **Separation of Concerns**: Parsing logic separate from usage
 
-### TeamFilter
+### Linear::TeamFilter
 
 Handles team filtering and discovery logic for reports.
 
@@ -108,16 +108,16 @@ Handles team filtering and discovery logic for reports.
 **Key Methods:**
 ```ruby
 # Use default teams
-filter = TeamFilter.new(parser)
+filter = Linear::TeamFilter.new(parser)
 filter.selected_teams  # => ['ATS', 'Global ATS', 'Marketplace', ...]
 
 # Discover all teams
-filter = TeamFilter.new(parser, teams: :all)
+filter = Linear::TeamFilter.new(parser, teams: :all)
 filter.selected_teams  # => ['ATS', 'Global ATS', 'Platform', 'ROI', ...]
 filter.all_teams_mode?  # => true
 
 # Custom team list
-filter = TeamFilter.new(parser, teams: ['ATS', 'Platform'])
+filter = Linear::TeamFilter.new(parser, teams: ['ATS', 'Platform'])
 filter.selected_teams  # => ['ATS', 'Platform']
 ```
 
@@ -127,7 +127,7 @@ filter.selected_teams  # => ['ATS', 'Platform']
 - Custom team filtering
 - Excludes 'Unknown' and nil teams
 
-### BugsByTeamBuilder
+### Linear::BugsByTeamBuilder
 
 Builds aggregated bug statistics by team from raw metrics.
 
@@ -139,7 +139,7 @@ Builds aggregated bug statistics by team from raw metrics.
 
 **Key Methods:**
 ```ruby
-builder = BugsByTeamBuilder.new(parser, selected_teams)
+builder = Linear::BugsByTeamBuilder.new(parser, selected_teams)
 bugs_by_team = builder.build
 
 # Returns hash like:
@@ -156,7 +156,7 @@ bugs_by_team = builder.build
 - Sorted by open bugs (descending)
 - Only includes selected teams
 
-### ChartDataBuilder
+### Linear::ChartDataBuilder
 
 Transforms raw metrics into Chart.js-compatible data structures for visualizations.
 
@@ -169,7 +169,7 @@ Transforms raw metrics into Chart.js-compatible data structures for visualizatio
 
 **Key Methods:**
 ```ruby
-builder = ChartDataBuilder.new(metrics_parser)
+builder = Linear::ChartDataBuilder.new(metrics_parser)
 
 # Status distribution (pie chart)
 status_data = builder.status_chart_data
@@ -211,7 +211,7 @@ scatter_data = builder.scope_vs_completion_data
 3. **Scatter Charts**: Scope change vs completion
 4. **Line Charts**: Bug flow over time, weekly trends
 
-### WeeklyDataAggregator
+### Linear::WeeklyDataAggregator
 
 Aggregates time-series metrics into weekly buckets with percentage calculations.
 
@@ -224,7 +224,7 @@ Aggregates time-series metrics into weekly buckets with percentage calculations.
 
 **Key Methods:**
 ```ruby
-aggregator = WeeklyDataAggregator.new(cutoff_date: Date.today)
+aggregator = Linear::WeeklyDataAggregator.new(cutoff_date: Date.today)
 
 # Aggregate two metrics for comparison
 result = aggregator.aggregate_pair(
@@ -290,14 +290,14 @@ builder.generate('tmp/report.xlsx')
    ↓
 2. CsvParser.new(csv_path)
    ↓
-3. ChartDataBuilder.new(parser)
+3. Linear::ChartDataBuilder.new(parser)
    ↓
-4. WeeklyDataAggregator.new(cutoff_date)
+4. Linear::WeeklyDataAggregator.new(cutoff_date)
    ↓
-5. ReportGenerator orchestrates:
+5. Linear::ReportGenerator orchestrates:
    - Calls calculators for all metrics
-   - Calls ChartDataBuilder for chart data
-   - Calls WeeklyDataAggregator for time-series
+   - Calls Linear::ChartDataBuilder for chart data
+   - Calls Linear::WeeklyDataAggregator for time-series
    - Passes data to presenters
    - Renders ERB template
    ↓
@@ -331,13 +331,17 @@ builder.generate('tmp/report.xlsx')
 ```
 reports/
 ├── README.md                    # This file
-├── report_generator.rb          # Main orchestrator
-├── metric_accessor.rb           # Memoized metric access
-├── team_filter.rb               # Team selection logic
-├── bugs_by_team_builder.rb      # Bug aggregation by team
-├── chart_data_builder.rb        # Chart data preparation
-├── weekly_data_aggregator.rb    # Weekly time-series aggregation
-└── excel_report_builder.rb      # Excel report generation
+├── github/                      # GitHub specific reports
+│   └── ...
+└── linear/                      # Linear specific reports
+    ├── report_generator.rb      # Main orchestrator
+    ├── metric_accessor.rb       # Memoized metric access
+    ├── team_filter.rb           # Team selection logic
+    ├── bugs_by_team_builder.rb  # Bug aggregation by team
+    ├── chart_data_builder.rb    # Chart data preparation
+    ├── weekly_data_aggregator.rb # Weekly time-series aggregation
+    ├── weekly_bug_flow_builder.rb # Weekly bug flow aggregation
+    └── excel_report_builder.rb  # Excel report generation
 ```
 
 ## Design Principles
@@ -375,7 +379,7 @@ reports/
 parser = CsvParser.new('tmp/metrics.csv')
 
 # 2. Build chart data
-chart_builder = ChartDataBuilder.new(parser)
+chart_builder = Linear::ChartDataBuilder.new(parser)
 charts = {
   status: chart_builder.status_chart_data,
   priority: chart_builder.priority_chart_data,
@@ -383,15 +387,15 @@ charts = {
 }
 
 # 3. Aggregate weekly data
-aggregator = WeeklyDataAggregator.new(cutoff_date: Date.today)
+aggregator = Linear::WeeklyDataAggregator.new(cutoff_date: Date.today)
 weekly = aggregator.aggregate_pair(opened_data, closed_data)
 
 # 4. Generate report
-generator = ReportGenerator.new('tmp/metrics.csv', days: 90)
-generator.generate('tmp/report.html')
+generator = Linear::ReportGenerator.new('tmp/metrics.csv', days: 90)
+generator.generate_html('tmp/report.html')
 ```
 
-### WeeklyBugFlowBuilder
+### Linear::WeeklyBugFlowBuilder
 
 Builds weekly bug flow data aggregated by team.
 
@@ -402,7 +406,7 @@ Builds weekly bug flow data aggregated by team.
 
 **Key Methods:**
 ```ruby
-builder = WeeklyBugFlowBuilder.new(parser, selected_teams, cutoff_date)
+builder = Linear::WeeklyBugFlowBuilder.new(parser, selected_teams, cutoff_date)
 
 # Build overall bug flow data
 flow_data = builder.build_flow_data
@@ -456,33 +460,34 @@ team_data = builder.build_by_team_data(flow_data[:labels])
 
 ```
 lib/wttj_metrics/reports/
-├── bugs_by_team_builder.rb       # Bug statistics aggregation by team
-├── chart_data_builder.rb         # Chart.js data preparation
-├── excel_report_builder.rb       # Excel report generation
-├── html_generator.rb             # HTML rendering with ERB templates
-├── metric_accessor.rb            # Cached metric access
-├── report_generator.rb           # Main orchestrator (294 lines, 34 methods)
-├── team_filter.rb                # Team filtering and discovery
-├── weekly_bug_flow_builder.rb    # Weekly bug flow aggregation
-└── weekly_data_aggregator.rb     # Time-series weekly aggregation
+├── github/                       # GitHub specific reports
+│   └── ...
+└── linear/                       # Linear specific reports
+    ├── bugs_by_team_builder.rb   # Bug statistics aggregation by team
+    ├── chart_data_builder.rb     # Chart.js data preparation
+    ├── excel_report_builder.rb   # Excel report generation
+    ├── metric_accessor.rb        # Cached metric access
+    ├── report_generator.rb       # Main orchestrator
+    ├── team_filter.rb            # Team filtering and discovery
+    ├── weekly_bug_flow_builder.rb # Weekly bug flow aggregation
+    └── weekly_data_aggregator.rb # Time-series weekly aggregation
 ```
 
 ## Testing
 
 All report classes have test coverage:
-- `spec/wttj_metrics/reports/report_generator_spec.rb`
-- `spec/wttj_metrics/reports/html_generator_spec.rb`
-- `spec/wttj_metrics/reports/metric_accessor_spec.rb`
-- `spec/wttj_metrics/reports/team_filter_spec.rb`
-- `spec/wttj_metrics/reports/bugs_by_team_builder_spec.rb`
-- `spec/wttj_metrics/reports/weekly_bug_flow_builder_spec.rb`
-- `spec/wttj_metrics/reports/chart_data_builder_spec.rb`
-- `spec/wttj_metrics/reports/weekly_data_aggregator_spec.rb`
-- `spec/wttj_metrics/reports/excel_report_builder_spec.rb`
+- `spec/wttj_metrics/reports/linear/report_generator_spec.rb`
+- `spec/wttj_metrics/reports/linear/metric_accessor_spec.rb`
+- `spec/wttj_metrics/reports/linear/team_filter_spec.rb`
+- `spec/wttj_metrics/reports/linear/bugs_by_team_builder_spec.rb`
+- `spec/wttj_metrics/reports/linear/weekly_bug_flow_builder_spec.rb`
+- `spec/wttj_metrics/reports/linear/chart_data_builder_spec.rb`
+- `spec/wttj_metrics/reports/linear/weekly_data_aggregator_spec.rb`
+- `spec/wttj_metrics/reports/linear/excel_report_builder_spec.rb`
 
 Run tests:
 ```bash
-bundle exec rspec spec/wttj_metrics/reports/
+bundle exec rspec spec/wttj_metrics/reports/linear/
 ```
 
 ## Dependencies
