@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Linear Metrics Dashboard - <%= @today %></title>
+  <title>Linear Metrics Dashboard - <%= today %></title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -153,7 +153,51 @@
     .chart-card.full-width { grid-column: 1 / -1; }
     .chart-title { font-size: 1.2rem; margin-bottom: 1rem; color: #151515; }
     .chart-subtitle { font-size: 0.8rem; color: #585858; margin-top: -0.5rem; margin-bottom: 1rem; }
-    .filter-badge { display: inline-block; background: #FFCD00; color: #151515; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem; font-weight: 500; }
+    .filter-badge {
+      display: inline-block;
+      background: #FFCD00;
+      color: #151515;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+      font-weight: 500;
+      position: relative;
+      cursor: help;
+    }
+    .filter-badge .tooltip-text {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151515;
+      color: #FFFFFF;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      width: 300px;
+      text-align: center;
+      z-index: 9999;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #151515;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      margin-top: 8px;
+      white-space: normal;
+      font-weight: normal;
+    }
+    .filter-badge .tooltip-text::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-bottom-color: #151515;
+    }
+    .filter-badge:hover .tooltip-text { visibility: visible; opacity: 1; }
     .chart-container { position: relative; height: 300px; }
     .chart-container.tall { height: 400px; }
     section { margin-bottom: 1rem; position: relative; }
@@ -384,7 +428,7 @@
       box-shadow: 0 0 0 2px rgba(255, 205, 0, 0.3);
     }
     .section-content {
-      max-height: 5000px;
+      max-height: 200000px;
       overflow-x: visible;
       overflow-y: hidden;
       transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
@@ -452,7 +496,7 @@
   <div class="container">
     <header>
       <h1>&#128202; Linear Metrics Dashboard</h1>
-      <p class="subtitle">Generated on <%= @today %> • Last <%= days_to_show %> days (<%= cutoff_date %> to <%= @today %>)</p>
+      <p class="subtitle">Generated on <%= today %> • Last <%= days_to_show %> days (<%= cutoff_date %> to <%= today %>)</p>
       <button class="collapse-all-btn" onclick="toggleAllSections()">
         <span id="toggleAllIcon">▼</span> <span id="toggleAllText">Collapse All</span>
       </button>
@@ -539,36 +583,33 @@
         </div>
         <div class="chart-card">
           <h3 class="chart-title">
-            Bug Flow (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            Bug Flow (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
             <span class="tooltip-icon">?
               <span class="tooltip-text">Weekly comparison of new bugs created vs bugs closed. Helps track if the backlog is growing or shrinking.</span>
             </span>
           </h3>
-          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="bugFlowChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
           <h3 class="chart-title">
-            Bugs Created by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            Bugs Created by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
             <span class="tooltip-icon">?
               <span class="tooltip-text">Weekly distribution of new bugs created, broken down by team.</span>
             </span>
           </h3>
-          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="bugsByTeamChart"></canvas>
           </div>
         </div>
         <div class="chart-card full-width">
           <h3 class="chart-title">
-            Bug Stats by Team (All Time)<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            Bug Stats by Team (All Time)<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
             <span class="tooltip-icon">?
               <span class="tooltip-text">Comprehensive statistics for each team including total bugs, resolution time (MTTR), and resolution rate.</span>
             </span>
           </h3>
-          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <table class="cycles-table" id="bugStatsTable">
             <thead>
               <tr>
@@ -610,24 +651,22 @@
       <div class="charts-grid">
         <div class="chart-card">
           <h3 class="chart-title">
-            Tickets Created vs Completed<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            Tickets Created vs Completed<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
             <span class="tooltip-icon">?
               <span class="tooltip-text">Weekly flow of all tickets (features, bugs, chores) created vs completed.</span>
             </span>
           </h3>
-          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="flowChart"></canvas>
           </div>
         </div>
         <div class="chart-card">
           <h3 class="chart-title">
-            State Transitions Distribution<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %>
+            State Transitions Distribution<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
             <span class="tooltip-icon">?
               <span class="tooltip-text">Weekly breakdown of ticket statuses. Shows how work moves through the workflow stages.</span>
             </span>
           </h3>
-          <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
           <div class="chart-container tall">
             <canvas id="transitionChart"></canvas>
           </div>
@@ -696,14 +735,13 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128101; Team Comparison<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h2>
+        <h2 class="section-title"><span class="chevron">▼</span> &#128101; Team Comparison<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %></h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
         </label>
       </div>
       <div class="section-content">
-      <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
       <div class="chart-card">
         <table class="cycles-table">
           <thead>
@@ -744,14 +782,13 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128197; Cycles by Team<% unless all_teams_mode %><span class="filter-badge">Filtered</span><% end %></h2>
+        <h2 class="section-title"><span class="chevron">▼</span> &#128197; Cycles by Team<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %></h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
         </label>
       </div>
       <div class="section-content">
-      <p class="chart-subtitle">Teams: <%= all_teams_mode ? 'All Teams' : selected_teams.join(', ') %></p>
 <% cycles_by_team_presented.each do |team, cycles| %>
       <div class="chart-card" style="margin-bottom: 1.5rem;">
         <h3 class="chart-title"><%= team %></h3>
@@ -922,11 +959,30 @@
       red: 'rgba(220, 38, 38, 0.8)',
       cyan: 'rgba(6, 182, 212, 0.8)',
       black: 'rgba(21, 21, 21, 0.8)',
+      teal: 'rgba(20, 184, 166, 0.8)',
+      indigo: 'rgba(99, 102, 241, 0.8)',
+      lime: 'rgba(132, 204, 22, 0.8)',
+      amber: 'rgba(245, 158, 11, 0.8)',
+      brown: 'rgba(120, 53, 15, 0.8)',
+      grey: 'rgba(107, 114, 128, 0.8)',
+      deepOrange: 'rgba(234, 88, 12, 0.8)',
+      lightBlue: 'rgba(14, 165, 233, 0.8)',
+      lightGreen: 'rgba(101, 163, 13, 0.8)',
+      deepPurple: 'rgba(126, 34, 206, 0.8)',
+      rose: 'rgba(244, 63, 94, 0.8)',
+      violet: 'rgba(139, 92, 246, 0.8)',
+      emerald: 'rgba(16, 185, 129, 0.8)',
+      fuchsia: 'rgba(217, 70, 239, 0.8)',
+      slate: 'rgba(100, 116, 139, 0.8)'
     };
     
     const colorPalette = [
       colors.yellow, colors.black, colors.blue, colors.green,
       colors.orange, colors.pink, colors.red, colors.cyan,
+      colors.purple, colors.teal, colors.indigo, colors.lime,
+      colors.amber, colors.brown, colors.grey, colors.deepOrange,
+      colors.lightBlue, colors.lightGreen, colors.deepPurple, colors.rose,
+      colors.violet, colors.emerald, colors.fuchsia, colors.slate
     ];
     
     Chart.defaults.color = '#585858';
@@ -1086,22 +1142,12 @@
 <% bug_flow_by_team = weekly_bug_flow_by_team_data %>
     // Extended color palette for dynamic team colors
     const teamColorPalette = [
-      'rgba(59, 130, 246, 0.8)',   // Blue
-      'rgba(34, 197, 94, 0.8)',    // Green
-      'rgba(255, 205, 0, 0.9)',    // Yellow
-      'rgba(249, 115, 22, 0.8)',   // Orange
-      'rgba(168, 85, 247, 0.8)',   // Purple
-      'rgba(236, 72, 153, 0.8)',   // Pink
-      'rgba(6, 182, 212, 0.8)',    // Cyan
-      'rgba(220, 38, 38, 0.8)',    // Red
-      'rgba(132, 204, 22, 0.8)',   // Lime
-      'rgba(99, 102, 241, 0.8)',   // Indigo
-      'rgba(244, 63, 94, 0.8)',    // Rose
-      'rgba(20, 184, 166, 0.8)',   // Teal
-      'rgba(251, 146, 60, 0.8)',   // Amber
-      'rgba(139, 92, 246, 0.8)',   // Violet
-      'rgba(45, 212, 191, 0.8)',   // Emerald
-      'rgba(251, 191, 36, 0.8)',   // Gold
+      colors.blue, colors.green, colors.yellow, colors.orange,
+      colors.purple, colors.pink, colors.cyan, colors.red,
+      colors.lime, colors.indigo, colors.rose, colors.teal,
+      colors.amber, colors.violet, colors.emerald, colors.deepOrange,
+      colors.lightBlue, colors.lightGreen, colors.deepPurple, colors.fuchsia,
+      colors.brown, colors.slate, colors.grey, colors.black
     ];
     
     // Build teamColors dynamically from available teams

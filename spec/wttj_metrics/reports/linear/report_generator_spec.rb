@@ -42,9 +42,8 @@ RSpec.describe WttjMetrics::Reports::Linear::ReportGenerator do
       expect(generator.data).not_to be_empty
     end
 
-    it 'sets default teams when none provided' do
-      # Check against the constant in DataProvider
-      expect(generator.selected_teams).to eq(WttjMetrics::Reports::Linear::DataProvider::SELECTED_TEAMS)
+    it 'sets empty teams when none provided' do
+      expect(generator.selected_teams).to eq([])
     end
 
     it 'uses custom teams when provided' do

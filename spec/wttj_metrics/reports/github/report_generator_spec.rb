@@ -4,18 +4,8 @@ require 'spec_helper'
 
 RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
   let(:csv_path) { 'spec/fixtures/github_metrics.csv' }
-  let(:generator) { described_class.new(csv_path) }
-  let(:today) { Date.today.to_s }
-  let(:yesterday) { (Date.today - 1).to_s }
-
-  before do
-    allow(Date).to receive(:today).and_return(Date.parse('2025-12-09'))
-
-    # Mock CsvParser
-    parser = instance_double(WttjMetrics::Data::CsvParser)
-    allow(WttjMetrics::Data::CsvParser).to receive(:new).with(csv_path).and_return(parser)
-
-    metrics_data = [
+  let(:metrics_data) do
+    [
       { date: yesterday, metric: 'avg_time_to_merge_days', value: 2.5 },
       { date: today, metric: 'avg_time_to_merge_days', value: 2.0 },
       { date: yesterday, metric: 'total_merged_prs', value: 10 },
@@ -30,6 +20,17 @@ RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
       { date: today, metric: 'avg_commits_per_pr', value: 2 },
       { date: today, metric: 'avg_time_to_first_review_days', value: 0.5 }
     ]
+  end
+  let(:generator) { described_class.new(csv_path) }
+  let(:today) { Date.today.to_s }
+  let(:yesterday) { (Date.today - 1).to_s }
+  let(:parser) { instance_double(WttjMetrics::Data::CsvParser) }
+
+  before do
+    allow(Date).to receive(:today).and_return(Date.parse('2025-12-09'))
+
+    # Mock CsvParser
+    allow(WttjMetrics::Data::CsvParser).to receive(:new).with(csv_path).and_return(parser)
 
     allow(parser).to receive_messages(data: [], metrics_by_category: { 'github' => metrics_data })
   end
@@ -56,6 +57,69 @@ RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
                                         hotfix_rate: 0,
                                         time_to_green: 0
                                       })
+    end
+
+    context 'with daily deploy frequency fallback' do
+      let(:metrics_data) do
+        [
+          { date: today, metric: 'deploy_frequency_weekly', value: 14.0 }
+        ]
+      end
+
+      it 'calculates daily deploy frequency from weekly' do
+        # 14 / 7 = 2.0
+        expect(generator.metrics[:deploy_frequency_daily]).to eq(2.0)
+      end
+    end
+
+    context 'with explicit daily deploy frequency' do
+      let(:metrics_data) do
+        [
+          { date: today, metric: 'deploy_frequency_daily', value: 3.5 }
+        ]
+      end
+
+      it 'returns the explicit value' do
+        expect(generator.metrics[:deploy_frequency_daily]).to eq(3.5)
+      end
+    end
+  end
+
+  describe '#top_repositories' do
+    let(:metrics_data) do
+      [
+        { date: today, metric: 'repo-a', value: 10 },
+        { date: today, metric: 'repo-b', value: 5 },
+        { date: today, metric: 'repo-c', value: 20 }
+      ]
+    end
+
+    before do
+      allow(parser).to receive_messages(metrics_by_category: { 'github_repo_activity' => metrics_data })
+    end
+
+    it 'returns top 10 repositories sorted by value' do
+      top = generator.send(:top_repositories)
+      expect(top.size).to eq(3)
+      expect(top.first[:metric]).to eq('repo-c')
+      expect(top.last[:metric]).to eq('repo-b')
+    end
+  end
+
+  describe '#top_contributors' do
+    let(:metrics_data) do
+      [
+        { date: today, metric: 'user-a', value: 100 }
+      ]
+    end
+
+    before do
+      allow(parser).to receive_messages(metrics_by_category: { 'github_contributor_activity' => metrics_data })
+    end
+
+    it 'returns top contributors' do
+      top = generator.send(:top_contributors)
+      expect(top.first[:metric]).to eq('user-a')
     end
   end
 
@@ -121,6 +185,101 @@ RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
       expect(breakdown[:datasets][:merged]).to eq([10, 8])
       expect(breakdown[:datasets][:open]).to eq([12, 15])
       expect(breakdown[:datasets][:avg_time_to_merge]).to eq([15.0, 5.0])
+    end
+  end
+
+  describe '#team_metrics' do
+    let(:team_data) do
+      [
+        { date: '2025-01-01', metric: 'total_merged_prs', value: 10 },
+        { date: '2025-01-02', metric: 'total_merged_prs', value: 5 }
+      ]
+    end
+    let(:team_daily_data) do
+      [
+        { date: '2025-01-01', metric: 'merged', value: 2 },
+        { date: '2025-01-02', metric: 'merged', value: 3 }
+      ]
+    end
+
+    before do
+      parser = instance_double(WttjMetrics::Data::CsvParser)
+      allow(WttjMetrics::Data::CsvParser).to receive(:new).with(csv_path).and_return(parser)
+      allow(parser).to receive_messages(
+        data: [],
+        metrics_by_category: {
+          'github' => [],
+          'github_daily' => [],
+          'github:TeamA' => team_data,
+          'github:TeamA_daily' => team_daily_data
+        }
+      )
+
+      team_service = instance_double(WttjMetrics::Reports::Github::TeamService)
+      allow(WttjMetrics::Reports::Github::TeamService).to receive(:new).and_return(team_service)
+      allow(team_service).to receive(:resolve_teams).and_return(['TeamA'])
+    end
+
+    it 'calculates metrics for teams' do
+      metrics = generator.team_metrics
+
+      expect(metrics['TeamA']).not_to be_nil
+      expect(metrics['TeamA'][:metrics][:total_merged]).to eq(5) # Latest value
+      expect(metrics['TeamA'][:history][:total_merged].size).to eq(2)
+      expect(metrics['TeamA'][:daily_breakdown][:datasets][:merged]).to include(2, 3)
+    end
+  end
+
+  describe '#generate_excel' do
+    let(:repo_activity) do
+      [
+        { date: '2025-01-01', metric: 'repo1', value: 10 },
+        { date: '2025-01-02', metric: 'repo1', value: 5 },
+        { date: '2025-01-01', metric: 'repo2', value: 20 },
+        { date: '2024-01-01', metric: 'repo1', value: 100 } # Should be excluded
+      ]
+    end
+    let(:contributor_activity) do
+      [
+        { date: '2025-01-01', metric: 'user1', value: 5 },
+        { date: '2025-01-02', metric: 'user1', value: 5 },
+        { date: '2025-01-01', metric: 'user2', value: 2 }
+      ]
+    end
+
+    before do
+      allow(Date).to receive(:today).and_return(Date.parse('2025-01-10'))
+      parser = instance_double(WttjMetrics::Data::CsvParser)
+      allow(WttjMetrics::Data::CsvParser).to receive(:new).with(csv_path).and_return(parser)
+      allow(parser).to receive_messages(
+        data: [],
+        metrics_by_category: {
+          'github' => [],
+          'github_daily' => [],
+          'github_repo_activity' => repo_activity,
+          'github_contributor_activity' => contributor_activity
+        }
+      )
+      allow(WttjMetrics::Reports::Github::ExcelReportBuilder)
+        .to receive(:new).and_return(
+          instance_double(WttjMetrics::Reports::Github::ExcelReportBuilder, build: nil)
+        )
+    end
+
+    it 'passes top repositories and contributors to Excel builder' do
+      generator.generate_excel('output.xlsx')
+
+      expect(WttjMetrics::Reports::Github::ExcelReportBuilder).to have_received(:new) do |data|
+        expect(data[:top_repositories]).to include(
+          { metric: 'repo1', value: 15, date: '2025-01-10' },
+          { metric: 'repo2', value: 20, date: '2025-01-10' }
+        )
+
+        expect(data[:top_contributors]).to include(
+          { metric: 'user1', value: 10, date: '2025-01-10' },
+          { metric: 'user2', value: 2, date: '2025-01-10' }
+        )
+      end
     end
   end
 end

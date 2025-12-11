@@ -45,15 +45,24 @@ module WttjMetrics
                          Reports::Github::ReportGenerator.new(
                            csv_file,
                            days: options.days,
-                           teams: options.teams
+                           teams: options.teams,
+                           teams_config: teams_config
                          )
                        else
                          Reports::Linear::ReportGenerator.new(
                            csv_file,
                            days: options.days,
-                           teams: options.teams
+                           teams: options.teams,
+                           teams_config: teams_config
                          )
                        end
+      end
+
+      def teams_config
+        return nil if options.teams == :all
+        return nil unless options.teams_config && File.exist?(options.teams_config)
+
+        Values::TeamConfiguration.new(options.teams_config)
       end
     end
   end

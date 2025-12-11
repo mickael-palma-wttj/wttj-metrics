@@ -4,11 +4,14 @@ module WttjMetrics
   module Reports
     module Linear
       class WeeklyFlowBuilder
-        def initialize(parser, teams, cutoff_date)
+        def initialize(parser, teams, cutoff_date, teams_config: nil, available_teams: [])
           @parser = parser
           @teams = teams
           @cutoff_date = cutoff_date
+          @teams_config = teams_config
+          @available_teams = available_teams
           @aggregator = WeeklyDataAggregator.new(cutoff_date)
+          @matcher = Services::TeamMatcher.new(available_teams) if teams_config
         end
 
         def build_flow_data
@@ -41,11 +44,22 @@ module WttjMetrics
         def sum_metrics_by_date(metric_prefix)
           by_date = Hash.new(0)
           @teams.each do |team|
-            @parser.timeseries_for("#{metric_prefix}_#{team}", since: @cutoff_date).each do |m|
-              by_date[m[:date]] += m[:value].to_i
+            resolve_source_teams(team).each do |source_team|
+              @parser.timeseries_for("#{metric_prefix}_#{source_team}", since: @cutoff_date).each do |m|
+                by_date[m[:date]] += m[:value].to_i
+              end
             end
           end
           by_date.map { |date, value| { date: date, value: value } }
+        end
+
+        def resolve_source_teams(team)
+          return [team] unless @teams_config
+
+          patterns = @teams_config.patterns_for(team, :linear)
+          return [team] if patterns.empty?
+
+          @matcher.match(patterns)
         end
 
         def build_team_bug_data(team, base_labels)

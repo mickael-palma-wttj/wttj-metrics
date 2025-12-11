@@ -235,7 +235,7 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
         allow(WttjMetrics::Metrics::Github::Calculator).to receive(:new).and_return(github_calculator)
         allow(ENV).to receive(:[]).and_call_original
         allow(ENV).to receive(:[]).with('GITHUB_TOKEN').and_return('token')
-        allow(ENV).to receive(:[]).with('GITHUB_REPO').and_return('repo')
+        allow(ENV).to receive(:fetch).with('GITHUB_ORG', nil).and_return('org')
       end
 
       it 'fetches and calculates GitHub metrics' do
@@ -250,6 +250,78 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
         collector.call
 
         expect(data_fetcher).not_to have_received(:call)
+      end
+    end
+
+    context 'with GitHub source but missing configuration' do
+      let(:options) do
+        double(
+          'Options',
+          cache_enabled: true,
+          clear_cache: false,
+          output: 'tmp/metrics.csv',
+          sources: ['github'],
+          days: 90
+        )
+      end
+
+      before do
+        allow(WttjMetrics::Services::Github::DataFetcher).to receive(:new)
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with('GITHUB_TOKEN').and_return('token')
+        allow(ENV).to receive(:fetch).with('GITHUB_ORG', nil).and_return(nil)
+        allow(logger).to receive(:warn)
+      end
+
+      it 'logs warning and skips GitHub fetching' do
+        collector.call
+        expect(logger).to have_received(:warn).with('⚠️  Skipping GitHub: GITHUB_TOKEN or GITHUB_ORG not set')
+        expect(WttjMetrics::Services::Github::DataFetcher).not_to have_received(:new)
+      end
+    end
+
+    context 'with GitHub source but missing token' do
+      let(:options) do
+        double(
+          'Options',
+          cache_enabled: true,
+          clear_cache: false,
+          output: 'tmp/metrics.csv',
+          sources: ['github'],
+          days: 90
+        )
+      end
+
+      before do
+        allow(WttjMetrics::Services::Github::DataFetcher).to receive(:new)
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with('GITHUB_TOKEN').and_return(nil)
+        allow(ENV).to receive(:fetch).with('GITHUB_ORG', nil).and_return('org')
+        allow(logger).to receive(:warn)
+      end
+
+      it 'logs warning and skips GitHub fetching' do
+        collector.call
+        expect(logger).to have_received(:warn).with('⚠️  Skipping GitHub: GITHUB_TOKEN or GITHUB_ORG not set')
+        expect(WttjMetrics::Services::Github::DataFetcher).not_to have_received(:new)
+      end
+    end
+
+    context 'with empty data' do
+      let(:fetched_data) { {} }
+
+      it 'returns early without writing results' do
+        collector.call
+        expect(csv_writer).not_to have_received(:write_rows)
+      end
+    end
+
+    context 'with data but missing specific keys' do
+      let(:fetched_data) { { other: 'data' } }
+
+      it 'does not calculate linear metrics if issues missing' do
+        collector.call
+        expect(calculator).not_to have_received(:calculate_all)
       end
     end
   end

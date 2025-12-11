@@ -42,15 +42,8 @@ module WttjMetrics
         def fetch_prs(from_date)
           if ENV['GITHUB_ORG']
             fetch_org_prs(ENV['GITHUB_ORG'], from_date)
-          elsif ENV['GITHUB_REPO']
-            @logger.info "   Fetching for repository: #{ENV['GITHUB_REPO']}"
-            prs = client.fetch_pull_requests(ENV['GITHUB_REPO'], from_date)
-            prs = deep_stringify_keys(prs)
-            repo_name = ENV['GITHUB_REPO'].split('/').last
-            prs.each { |pr| pr['repository'] ||= { 'name' => repo_name } }
-            prs
           else
-            @logger.error '❌ GITHUB_ORG or GITHUB_REPO environment variable is not set'
+            @logger.error '❌ GITHUB_ORG environment variable is not set'
             []
           end
         end
@@ -102,25 +95,19 @@ module WttjMetrics
         end
 
         def fetch_releases_data(prs, from_date)
-          if ENV['GITHUB_ORG']
-            cache_key = "github_releases_#{ENV['GITHUB_ORG']}"
-            fresh_releases = cache.read(cache_key, max_age_hours: 24)
-            if fresh_releases
-              @logger.info '   ✨ Releases cache is fresh (< 24h). Skipping update.'
-              return fresh_releases
-            end
+          cache_key = "github_releases_#{ENV.fetch('GITHUB_ORG', nil)}"
+          fresh_releases = cache.read(cache_key, max_age_hours: 24)
+          if fresh_releases
+            @logger.info '   ✨ Releases cache is fresh (< 24h). Skipping update.'
+            return fresh_releases
           end
 
           repos = Set.new
 
-          if ENV['GITHUB_REPO']
-            repos.add(ENV['GITHUB_REPO'])
-          elsif ENV['GITHUB_ORG']
-            prs.each do |pr|
-              # Handle both symbol and string keys since filter_prs might have symbolized them
-              repo_name = pr.dig(:repository, :name) || pr.dig('repository', 'name')
-              repos.add("#{ENV.fetch('GITHUB_ORG', nil)}/#{repo_name}") if repo_name
-            end
+          prs.each do |pr|
+            # Handle both symbol and string keys since filter_prs might have symbolized them
+            repo_name = pr.dig(:repository, :name) || pr.dig('repository', 'name')
+            repos.add("#{ENV.fetch('GITHUB_ORG', nil)}/#{repo_name}") if repo_name
           end
 
           return [] if repos.empty?
@@ -146,17 +133,12 @@ module WttjMetrics
           end
           progress_bar.finish
 
-          if ENV['GITHUB_ORG']
-            cache_key = "github_releases_#{ENV['GITHUB_ORG']}"
-            cache.write(cache_key, all_releases)
-          end
+          cache.write(cache_key, all_releases)
 
           all_releases
         end
 
         def fetch_teams_data
-          return {} unless ENV['GITHUB_ORG']
-
           @logger.info "   Fetching teams for organization: #{ENV.fetch('GITHUB_ORG', nil)}"
           client.fetch_teams(ENV.fetch('GITHUB_ORG', nil))
         rescue StandardError => e

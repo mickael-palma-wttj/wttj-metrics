@@ -4,7 +4,7 @@ module WttjMetrics
   module Values
     # Value object for report command options
     class ReportOptions
-      attr_reader :output, :days, :teams, :excel_enabled, :excel_path
+      attr_reader :output, :days, :teams, :excel_enabled, :excel_path, :teams_config
 
       def initialize(options_hash)
         @output = options_hash[:output]
@@ -12,6 +12,7 @@ module WttjMetrics
         @teams = determine_teams(options_hash)
         @excel_enabled = options_hash[:excel]
         @excel_path = options_hash[:excel_path]
+        @teams_config = options_hash[:teams_config]
       end
 
       private

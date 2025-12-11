@@ -50,19 +50,22 @@ module WttjMetrics
 
         attr_reader :data, :days_to_show, :today
 
-        def initialize(csv_path, days: 90, teams: nil)
+        def initialize(csv_path, days: 90, teams: nil, teams_config: nil)
           @csv_path = csv_path
           @days_to_show = days
           @teams = teams # Unused but kept for interface consistency
+          @teams_config = teams_config
           @today = Date.today.to_s
           @parser = Data::CsvParser.new(csv_path)
           @data = @parser.data
         end
 
         def generate_html(output_path)
-          html = build_html
-          File.write(output_path, html)
-          puts "✅ HTML report generated: #{output_path}"
+          HtmlReportBuilder.new(self).build(output_path)
+        end
+
+        def template_binding
+          binding
         end
 
         def generate_excel(output_path)
@@ -72,12 +75,18 @@ module WttjMetrics
         end
 
         def metrics
-          @metrics ||= METRIC_MAPPING.transform_values { |name| latest_metric(name) }
-                                     .merge(deploy_frequency_daily: calculate_daily_deploy_frequency)
+          @metrics ||= begin
+            calculator = MetricsCalculator.new(metrics_data('github'))
+            METRIC_MAPPING.transform_values { |name| calculator.latest(name) }
+                          .merge(deploy_frequency_daily: calculate_daily_deploy_frequency)
+          end
         end
 
         def history
-          @history ||= METRIC_MAPPING.transform_values { |name| history_for(name) }
+          @history ||= begin
+            calculator = MetricsCalculator.new(metrics_data('github'))
+            METRIC_MAPPING.transform_values { |name| calculator.history(name) }
+          end
         end
 
         def daily_breakdown
@@ -99,15 +108,15 @@ module WttjMetrics
 
         def team_metrics
           @team_metrics ||= begin
-            teams = @parser.metrics_by_category.keys.select do |k|
-              k.start_with?('github:') &&
-                !k.end_with?('_daily', '_repo_activity', '_contributor_activity')
-            end
-            teams.each_with_object({}) do |category, hash|
-              team_name = category.split(':').last
+            teams = TeamService.new(@parser, @teams_config).resolve_teams
+
+            teams.each_with_object({}) do |team_name, hash|
+              category = "github:#{team_name}"
+              calculator = MetricsCalculator.new(metrics_data(category))
+
               hash[team_name] = {
-                metrics: METRIC_MAPPING.transform_values { |name| latest_metric(name, category: category) },
-                history: METRIC_MAPPING.transform_values { |name| history_for(name, category: category) },
+                metrics: METRIC_MAPPING.transform_values { |name| calculator.latest(name) },
+                history: METRIC_MAPPING.transform_values { |name| calculator.history(name) },
                 daily_breakdown: daily_breakdown_for(team_name)
               }
             end
@@ -182,20 +191,6 @@ module WttjMetrics
           metrics&.find { |m| m[:metric] == name }&.dig(:value) || 0
         end
 
-        def latest_metric(name, category: 'github')
-          metrics_data(category)
-            .select { |m| m[:metric] == name }
-            .max_by { |m| m[:date] }
-            &.dig(:value) || 0
-        end
-
-        def history_for(name, category: 'github')
-          metrics_data(category)
-            .select { |m| m[:metric] == name }
-            .sort_by { |m| m[:date] }
-            .map { |m| { date: m[:date], value: m[:value] } }
-        end
-
         def metrics_data(category = 'github')
           @parser.metrics_by_category[category] || []
         end
@@ -204,36 +199,12 @@ module WttjMetrics
           @cutoff_date ||= (Date.today - @days_to_show).to_s
         end
 
-        def build_html
-          template_path = File.join(WttjMetrics.root, 'lib', 'wttj_metrics', 'templates', 'github_report.html.erb')
-
-          if File.exist?(template_path)
-            template = ERB.new(File.read(template_path))
-            template.result(binding)
-          else
-            build_html_fallback
-          end
-        end
-
-        def build_html_fallback
-          <<~HTML
-            <!DOCTYPE html>
-            <html>
-            <head><title>GitHub Metrics - #{@today}</title></head>
-            <body>
-              <h1>GitHub Metrics Dashboard</h1>
-              <p>Generated: #{@today}</p>
-              <p>Please run with the proper template file.</p>
-            </body>
-            </html>
-          HTML
-        end
-
         def calculate_daily_deploy_frequency
-          daily = latest_metric('deploy_frequency_daily')
+          calculator = MetricsCalculator.new(metrics_data('github'))
+          daily = calculator.latest('deploy_frequency_daily')
           return daily if daily.nonzero?
 
-          (latest_metric('deploy_frequency_weekly') / 7.0).round(2)
+          (calculator.latest('deploy_frequency_weekly') / 7.0).round(2)
         end
       end
     end

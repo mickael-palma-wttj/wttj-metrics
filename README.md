@@ -241,7 +241,6 @@ Create HTML dashboard from collected metrics:
 | `LINEAR_API_KEY` | Yes (for Linear) | - | Your Linear API key (starts with `lin_api_`) |
 | `GITHUB_TOKEN` | Yes (for GitHub) | - | Your GitHub Personal Access Token |
 | `GITHUB_ORG` | Yes (for GitHub) | - | GitHub Organization name to fetch PRs from |
-| `GITHUB_REPO` | No | - | Specific repository (format: `owner/repo`) |
 | `CSV_OUTPUT_PATH` | No | `tmp/metrics.csv` | Default CSV output path |
 
 ### Team Filtering

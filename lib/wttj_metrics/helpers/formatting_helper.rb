@@ -13,11 +13,12 @@ module WttjMetrics
       end
 
       def format_metric_value(val)
-        return '0' if val.nil? || (val.respond_to?(:nan?) && val.nan?)
+        return '0' if val.nil? || (val.is_a?(Float) && val.nan?)
 
-        val % 1 == 0 ? val.to_i : val.round(1)
+        (val % 1).zero? ? val.to_i : val.round(1)
       end
 
+      # :reek:BooleanParameter
       def metric_color_class(val, global, inverse: false)
         return '' if val.nil? || global.nil?
 

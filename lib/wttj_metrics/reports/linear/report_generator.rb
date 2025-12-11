@@ -33,8 +33,8 @@ module WttjMetrics
           'Done' => %w[Done Released Canceled Duplicate Auto-closed]
         }.freeze
 
-        def initialize(csv_path, days: 90, teams: nil)
-          @data_provider = DataProvider.new(csv_path, days: days, teams: teams)
+        def initialize(csv_path, days: 90, teams: nil, teams_config: nil)
+          @data_provider = DataProvider.new(csv_path, days: days, teams: teams, teams_config: teams_config)
         end
 
         def generate_html(output_path)
@@ -51,7 +51,7 @@ module WttjMetrics
 
         # Delegations to DataProvider
         def_delegators :@data_provider, :data, :metrics_by_category, :days_to_show, :today,
-                       :selected_teams, :all_teams_mode, :parser, :cutoff_date
+                       :selected_teams, :all_teams_mode, :parser, :cutoff_date, :team_mapping_display
 
         # Raw metrics accessors (delegated to DataProvider)
         def_delegator :@data_provider, :metrics_for
@@ -154,12 +154,22 @@ module WttjMetrics
 
         def cycles_parsed
           filtered_cycles = metrics_by_category['cycle']&.select { |m| m[:date] >= cutoff_date } || []
-          @cycles_parsed ||= Metrics::Linear::CycleParser.new(filtered_cycles, teams: selected_teams).parse
+          @cycles_parsed ||= Metrics::Linear::CycleParser.new(
+            filtered_cycles,
+            teams: selected_teams,
+            teams_config: nil,
+            available_teams: @data_provider.available_teams
+          ).parse
         end
 
         def cycles_by_team
           filtered_cycles = metrics_by_category['cycle']&.select { |m| m[:date] >= cutoff_date } || []
-          @cycles_by_team ||= Metrics::Linear::CycleParser.new(filtered_cycles, teams: selected_teams).by_team
+          @cycles_by_team ||= Metrics::Linear::CycleParser.new(
+            filtered_cycles,
+            teams: selected_teams,
+            teams_config: nil,
+            available_teams: @data_provider.available_teams
+          ).by_team
         end
 
         def cycles_by_team_presented
@@ -180,7 +190,13 @@ module WttjMetrics
         end
 
         def weekly_flow_builder
-          @weekly_flow_builder ||= WeeklyFlowBuilder.new(parser, selected_teams, cutoff_date)
+          @weekly_flow_builder ||= WeeklyFlowBuilder.new(
+            parser,
+            selected_teams,
+            cutoff_date,
+            teams_config: nil,
+            available_teams: @data_provider.available_teams
+          )
         end
 
         def build_bugs_by_team

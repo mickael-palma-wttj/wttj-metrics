@@ -10,13 +10,16 @@ module WttjMetrics
       class CycleParser
         include CycleParserConfig
 
-        def initialize(cycle_metrics, teams: nil)
+        def initialize(cycle_metrics, teams: nil, teams_config: nil, available_teams: [])
           @cycle_metrics = cycle_metrics
           @selected_teams = teams || DEFAULT_TEAMS
+          @teams_config = teams_config
+          @available_teams = available_teams
+          @matcher = Services::TeamMatcher.new(available_teams) if teams_config
         end
 
         def parse
-          @parse ||= build_cycles_hash
+          @parse ||= @teams_config ? build_aggregated_cycles_hash : build_cycles_hash
         end
 
         def by_team
@@ -26,11 +29,96 @@ module WttjMetrics
         private
 
         def build_team_grouped_cycles
-          filtered_cycles
-            .group_by { |cycle| cycle[:team] }
-            .transform_values { |cycles| sort_cycles(cycles) }
-            .sort_by { |team, cycles| team_sort_key(team, cycles) }
-            .to_h
+          # If aggregated, the cycles are already filtered and keyed by UnifiedName
+          # If not, we need to filter by selected_teams
+
+          cycles_to_group = if @teams_config
+                              parse.values
+                            else
+                              filtered_cycles
+                            end
+
+          grouped = cycles_to_group
+                    .group_by { |cycle| cycle[:team] }
+                    .transform_values { |cycles| sort_cycles(cycles) }
+                    .sort_by { |team, cycles| team_sort_key(team, cycles) }
+                    .to_h
+
+          if @teams_config
+            @teams_config.defined_teams.each do |team|
+              grouped[team] ||= []
+            end
+          elsif @selected_teams
+            @selected_teams.each do |team|
+              grouped[team] ||= []
+            end
+          end
+
+          grouped
+        end
+
+        def build_aggregated_cycles_hash
+          raw_cycles = build_cycles_hash
+          aggregated = {}
+
+          @teams_config.defined_teams.each do |unified_name|
+            patterns = @teams_config.patterns_for(unified_name, :linear)
+            source_teams = @matcher.match(patterns)
+
+            # Find all cycles for these source teams
+            cycles_by_name = Hash.new { |h, k| h[k] = [] }
+            source_teams.each do |team|
+              # Find cycles for this team in raw_cycles
+              # raw_cycles keys are "Team:CycleName"
+              # We can iterate raw_cycles or optimize
+              # Optimization: iterate raw_cycles once? No, let's just iterate.
+              raw_cycles.each_value do |cycle|
+                cycles_by_name[cycle[:name]] << cycle if cycle[:team] == team
+              end
+            end
+
+            # Aggregate
+            cycles_by_name.each do |cycle_name, cycles|
+              next if cycles.empty?
+
+              aggregated["#{unified_name}:#{cycle_name}"] = aggregate_cycles(unified_name, cycle_name, cycles)
+            end
+          end
+
+          aggregated
+        end
+
+        def aggregate_cycles(unified_name, _cycle_name, cycles)
+          base = cycles.first.dup
+          base[:team] = unified_name
+
+          # Sum metrics
+          %w[total_issues completed_issues bug_count velocity planned_points carryover initial_scope final_scope
+             assignee_count].each do |metric|
+            base[metric.to_sym] = cycles.sum { |c| c[metric.to_sym].to_i }
+          end
+
+          # Recalculate derived metrics
+          base[:completion_rate] = calculate_rate(base[:completed_issues], base[:total_issues])
+          base[:progress] = calculate_rate(base[:completed_issues], base[:total_issues])
+          base[:scope_change] = calculate_change(base[:final_scope], base[:initial_scope])
+
+          # Average duration? Or just take first? Assuming same cycle duration.
+          # base[:duration_days] = cycles.map { |c| c[:duration_days].to_i }.max # Max duration?
+
+          base
+        end
+
+        def calculate_rate(numerator, denominator)
+          return 0 if denominator.to_i.zero?
+
+          ((numerator.to_f / denominator) * 100).round
+        end
+
+        def calculate_change(final, initial)
+          return 0 if initial.to_i.zero?
+
+          ((final.to_f - initial) / initial * 100).round
         end
 
         def filtered_cycles

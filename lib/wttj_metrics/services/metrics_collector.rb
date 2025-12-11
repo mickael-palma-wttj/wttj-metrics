@@ -38,10 +38,10 @@ module WttjMetrics
         data.merge!(Linear::DataFetcher.new(cache_strategy, logger).call) if options.sources.include?('linear')
 
         if options.sources.include?('github')
-          if ENV['GITHUB_TOKEN'] && (ENV['GITHUB_REPO'] || ENV.fetch('GITHUB_ORG', nil))
+          if ENV['GITHUB_TOKEN'] && ENV.fetch('GITHUB_ORG', nil)
             data.merge!(Github::DataFetcher.new(logger, options.days).call)
           else
-            logger.warn '⚠️  Skipping GitHub: GITHUB_TOKEN or (GITHUB_REPO/GITHUB_ORG) not set'
+            logger.warn '⚠️  Skipping GitHub: GITHUB_TOKEN or GITHUB_ORG not set'
           end
         end
 

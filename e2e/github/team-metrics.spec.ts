@@ -50,7 +50,7 @@ test.describe('GitHub Team Metrics', () => {
         await searchInput.fill(firstTeamName!);
 
         // Should show at least one row
-        await expect(rows.filter({ hasText: firstTeamName! })).toBeVisible();
+        await expect(rows.filter({ hasText: firstTeamName! }).first()).toBeVisible();
 
         // Filter by non-existent team
         await searchInput.fill('NonExistentTeamXYZ');

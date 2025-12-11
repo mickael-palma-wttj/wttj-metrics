@@ -213,8 +213,8 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleParser do
     context 'with empty metrics' do
       let(:cycle_metrics) { [] }
 
-      it 'returns empty hash' do
-        expect(result).to eq({})
+      it 'returns empty arrays for selected teams' do
+        expect(result).to eq({ 'Platform' => [], 'ATS' => [] })
       end
     end
   end
