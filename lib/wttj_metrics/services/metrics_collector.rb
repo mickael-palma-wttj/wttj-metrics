@@ -69,7 +69,11 @@ module WttjMetrics
         end
 
         if options.sources.include?('github') && data[:pull_requests]
-          github_rows = Metrics::Github::Calculator.new(data[:pull_requests], data[:releases]).calculate_all
+          github_rows = Metrics::Github::Calculator.new(
+            data[:pull_requests],
+            data[:releases],
+            data[:teams]
+          ).calculate_all
           rows.concat(github_rows)
         end
 

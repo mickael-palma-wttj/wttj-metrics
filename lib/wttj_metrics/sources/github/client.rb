@@ -101,6 +101,27 @@ module WttjMetrics
           }
         GRAPHQL
 
+        TEAMS_QUERY = <<~GRAPHQL
+          query($org: String!, $cursor: String) {
+            organization(login: $org) {
+              teams(first: 50, after: $cursor) {
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+                nodes {
+                  name
+                  members(first: 100) {
+                    nodes {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+          }
+        GRAPHQL
+
         def initialize(logger: nil)
           @client = Octokit::Client.new(access_token: ENV.fetch('GITHUB_TOKEN', nil))
           @logger = logger
@@ -227,6 +248,29 @@ module WttjMetrics
                   .map(&:to_h)
         rescue Octokit::NotFound
           []
+        end
+
+        def fetch_teams(org)
+          teams = {}
+          cursor = nil
+          loop do
+            variables = { org: org, cursor: cursor }
+            response = with_retries do
+              @client.post '/graphql', { query: TEAMS_QUERY, variables: variables }.to_json
+            end
+            handle_graphql_errors(response)
+
+            data = response.data.organization.teams
+
+            data.nodes.each do |team|
+              teams[team.name] = team.members.nodes.map(&:login)
+            end
+
+            break unless data.pageInfo.hasNextPage
+
+            cursor = data.pageInfo.endCursor
+          end
+          teams
         end
 
         private

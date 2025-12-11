@@ -18,9 +18,10 @@ module WttjMetrics
           end
         end
 
-        def to_rows
+        def to_rows(category = nil)
+          cat = category ? "#{category}_contributor_activity" : METRIC_NAME
           calculate.map do |(date, author), count|
-            [date, METRIC_NAME, author, count]
+            [date, cat, author, count]
           end
         end
 

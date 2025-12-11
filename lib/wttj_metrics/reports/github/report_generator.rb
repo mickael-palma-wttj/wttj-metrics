@@ -3,12 +3,13 @@
 require 'erb'
 require 'date'
 require 'json'
-require_relative 'weekly_aggregator'
 
 module WttjMetrics
   module Reports
     module Github
       class ReportGenerator
+        include Helpers::FormattingHelper
+
         METRIC_MAPPING = {
           avg_time_to_merge: 'avg_time_to_merge_days',
           total_merged: 'total_merged_prs',
@@ -96,6 +97,23 @@ module WttjMetrics
           end
         end
 
+        def team_metrics
+          @team_metrics ||= begin
+            teams = @parser.metrics_by_category.keys.select do |k|
+              k.start_with?('github:') &&
+                !k.end_with?('_daily', '_repo_activity', '_contributor_activity')
+            end
+            teams.each_with_object({}) do |category, hash|
+              team_name = category.split(':').last
+              hash[team_name] = {
+                metrics: METRIC_MAPPING.transform_values { |name| latest_metric(name, category: category) },
+                history: METRIC_MAPPING.transform_values { |name| history_for(name, category: category) },
+                daily_breakdown: daily_breakdown_for(team_name)
+              }
+            end
+          end
+        end
+
         private
 
         def excel_report_data
@@ -119,6 +137,15 @@ module WttjMetrics
 
         def group_daily_data
           (@parser.metrics_by_category['github_daily'] || []).group_by { |m| m[:date] }
+        end
+
+        def daily_breakdown_for(team_name)
+          category = "github:#{team_name}_daily"
+          grouped_data = (@parser.metrics_by_category[category] || []).group_by { |m| m[:date] }
+          sorted_dates = grouped_data.keys.sort
+          datasets = build_datasets(grouped_data, sorted_dates)
+
+          { labels: sorted_dates, datasets: datasets }
         end
 
         def build_datasets(grouped_data, dates)
@@ -155,22 +182,22 @@ module WttjMetrics
           metrics&.find { |m| m[:metric] == name }&.dig(:value) || 0
         end
 
-        def latest_metric(name)
-          metrics_data
+        def latest_metric(name, category: 'github')
+          metrics_data(category)
             .select { |m| m[:metric] == name }
             .max_by { |m| m[:date] }
             &.dig(:value) || 0
         end
 
-        def history_for(name)
-          metrics_data
+        def history_for(name, category: 'github')
+          metrics_data(category)
             .select { |m| m[:metric] == name }
             .sort_by { |m| m[:date] }
             .map { |m| { date: m[:date], value: m[:value] } }
         end
 
-        def metrics_data
-          @parser.metrics_by_category['github'] || []
+        def metrics_data(category = 'github')
+          @parser.metrics_by_category[category] || []
         end
 
         def cutoff_date

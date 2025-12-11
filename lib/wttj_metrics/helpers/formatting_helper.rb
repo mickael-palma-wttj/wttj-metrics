@@ -12,6 +12,29 @@ module WttjMetrics
         ((value.to_f / total) * PERCENTAGE_MULTIPLIER).round
       end
 
+      def format_metric_value(val)
+        return '0' if val.nil? || (val.respond_to?(:nan?) && val.nan?)
+
+        val % 1 == 0 ? val.to_i : val.round(1)
+      end
+
+      def metric_color_class(val, global, inverse: false)
+        return '' if val.nil? || global.nil?
+
+        diff = val - global
+        if inverse
+          if diff.negative?
+            'class="text-green"'
+          else
+            (diff.positive? ? 'class="text-red"' : '')
+          end
+        elsif diff.positive?
+          'class="text-green"'
+        else
+          (diff.negative? ? 'class="text-red"' : '')
+        end
+      end
+
       def format_with_unit(value, unit)
         "#{value}#{unit}"
       end

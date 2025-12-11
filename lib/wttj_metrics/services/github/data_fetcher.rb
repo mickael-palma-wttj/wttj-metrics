@@ -25,7 +25,10 @@ module WttjMetrics
           releases = fetch_releases_data(filtered_prs, from_date)
           @logger.info "   Found #{releases.size} releases"
 
-          { pull_requests: filtered_prs, releases: releases }
+          teams = fetch_teams_data
+          @logger.info "   Found #{teams.size} teams" unless teams.empty?
+
+          { pull_requests: filtered_prs, releases: releases, teams: teams }
         rescue Octokit::Unauthorized
           # Already logged in client
           {}
@@ -149,6 +152,16 @@ module WttjMetrics
           end
 
           all_releases
+        end
+
+        def fetch_teams_data
+          return {} unless ENV['GITHUB_ORG']
+
+          @logger.info "   Fetching teams for organization: #{ENV.fetch('GITHUB_ORG', nil)}"
+          client.fetch_teams(ENV.fetch('GITHUB_ORG', nil))
+        rescue StandardError => e
+          @logger.warn "⚠️  Error fetching teams: #{e.message}"
+          {}
         end
 
         def client
