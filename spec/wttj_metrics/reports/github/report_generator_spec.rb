@@ -282,4 +282,10 @@ RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
       end
     end
   end
+
+  describe '#template_binding' do
+    it 'returns a binding' do
+      expect(generator.template_binding).to be_a(Binding)
+    end
+  end
 end

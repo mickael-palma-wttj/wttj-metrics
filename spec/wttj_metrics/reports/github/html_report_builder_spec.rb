@@ -41,6 +41,7 @@ RSpec.describe WttjMetrics::Reports::Github::HtmlReportBuilder do
       it 'renders fallback HTML' do
         builder.build(output_path)
         expect(File).to have_received(:write).with(output_path, include('GitHub Metrics Dashboard'))
+        expect(File).to have_received(:write).with(output_path, include(Date.today.to_s))
       end
     end
   end

@@ -35,6 +35,12 @@ RSpec.describe WttjMetrics::Reports::Github::TeamService do
       it 'filters teams based on config' do
         expect(service.resolve_teams).to contain_exactly('TeamA')
       end
+
+      it 'uses TeamMatcher to find matching teams' do
+        service.resolve_teams
+        expect(WttjMetrics::Services::TeamMatcher).to have_received(:new).with(%w[TeamA TeamB])
+        expect(matcher).to have_received(:match).with(['TeamA'])
+      end
     end
   end
 end

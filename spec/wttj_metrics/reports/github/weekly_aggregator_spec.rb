@@ -51,6 +51,15 @@ RSpec.describe WttjMetrics::Reports::Github::WeeklyAggregator do
       expect(result[:datasets][:avg_time_to_merge]).to eq([13.75, 0])
     end
 
+    context 'with empty data' do
+      let(:daily_data) { [] }
+
+      it 'returns empty structure' do
+        expect(result[:labels]).to be_empty
+        expect(result[:datasets][:merged]).to be_empty
+      end
+    end
+
     context 'with missing or zero data' do
       let(:daily_data) do
         [
