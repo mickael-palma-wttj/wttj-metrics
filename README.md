@@ -76,6 +76,7 @@ The generated HTML dashboard includes the following sections:
 | **Ticket Flow** | Created vs completed tickets over time, state transitions |
 | **Distributions** | Status, priority, type (7 categories), and assignee breakdowns |
 | **Cycles** | Sprint metrics, velocity, commitment accuracy, team performance |
+| **Commit Activity** | Heatmap of commit frequency by day and hour (GitHub only) |
 
 ---
 

@@ -102,6 +102,40 @@
       border-radius: 8px;
       overflow: hidden;
     }
+
+    /* Heatmap Styles */
+    .heatmap-container {
+      overflow-x: auto;
+      padding: 1rem;
+    }
+    .heatmap-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 2px;
+    }
+    .heatmap-table th {
+      font-size: 0.8rem;
+      color: #585858;
+      padding: 0.5rem;
+    }
+    .heatmap-table td {
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      transition: transform 0.1s;
+    }
+    .heatmap-table td:hover {
+      transform: scale(1.1);
+      cursor: pointer;
+    }
+    .heatmap-table .day-label {
+      font-weight: bold;
+      text-align: right;
+      padding-right: 1rem;
+      background: none !important;
+      color: #151515 !important;
+    }
     .metrics-table thead tr {
       background: #f5f5f5;
       text-align: left;
@@ -624,6 +658,63 @@
           </div>
         </div>
       </div>
+      </div>
+    </section>
+
+    <!-- Commit Activity Heatmap -->
+    <section>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2 class="section-title"><span class="chevron">▼</span> &#128197; Commit Activity Heatmap</h2>
+        <label class="toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="section-content">
+        <div class="chart-card full-width">
+          <h3 class="chart-title">
+            Commits by Day and Hour
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Heatmap showing commit frequency. Darker colors indicate higher activity.</span>
+            </span>
+          </h3>
+          <div class="heatmap-container">
+            <table class="heatmap-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <% (0..23).each do |hour| %>
+                    <th><%= hour %></th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody>
+                <% 
+                   days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                   max_val = commit_activity.flatten.max.to_f
+                   max_val = 1.0 if max_val == 0
+                %>
+                <% commit_activity.each_with_index do |row, day_idx| %>
+                  <tr>
+                    <td class="day-label"><%= days[day_idx] %></td>
+                    <% row.each do |count| %>
+                      <% 
+                         intensity = count / max_val 
+                         # Green scale: rgba(40, 167, 69, alpha)
+                         alpha = 0.1 + (intensity * 0.9)
+                         bg_color = count > 0 ? "rgba(40, 167, 69, #{alpha})" : "#f8f9fa"
+                         text_color = intensity > 0.5 ? "#fff" : "#333"
+                      %>
+                      <td style="background-color: <%= bg_color %>; color: <%= text_color %>" title="<%= count %> commits">
+                        <%= count > 0 ? count : '' %>
+                      </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 

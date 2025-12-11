@@ -37,7 +37,8 @@ module WttjMetrics
             PrSizeCalculator.new(prs).to_rows(category),
             RepositoryActivityCalculator.new(prs).to_rows(category),
             ContributorActivityCalculator.new(prs).to_rows(category),
-            QualityCalculator.new(prs, releases).to_rows(category)
+            QualityCalculator.new(prs, releases).to_rows(category),
+            CommitActivityCalculator.new(prs).to_rows(category)
           ].flatten(1)
         end
       end

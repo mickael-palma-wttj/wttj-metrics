@@ -123,6 +123,25 @@ module WttjMetrics
           end
         end
 
+        def commit_activity
+          @commit_activity ||= begin
+            data = @parser.metrics_by_category['github_commit_activity'] || []
+            grid = Array.new(7) { Array.new(24, 0) }
+
+            data.each do |row|
+              # row[:metric] is "wday_hour" (e.g. "1_14")
+              wday, hour = row[:metric].split('_').map(&:to_i)
+
+              # wday: 0=Sunday, 1=Monday...
+              # We want Monday=0 for display, so (wday - 1) % 7
+              display_wday = (wday - 1) % 7
+              hour = hour.to_i
+              grid[display_wday][hour] += row[:value].to_i
+            end
+            grid
+          end
+        end
+
         private
 
         def excel_report_data

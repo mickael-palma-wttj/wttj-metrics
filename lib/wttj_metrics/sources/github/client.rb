@@ -28,8 +28,13 @@ module WttjMetrics
                   additions
                   deletions
                   changedFiles
-                  commits(first: 1) {
+                  commits(first: 100) {
                     totalCount
+                    nodes {
+                      commit {
+                        committedDate
+                      }
+                    }
                   }
                   latestReviews(first: 10) {
                     nodes {

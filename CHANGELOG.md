@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Sortable and filterable table for team metrics
   - Zebra striping and visual indicators for better readability
   - Metrics include: Merge Rate, Time to Merge, Review Velocity, and more
+- **Commit Activity Heatmap**: Visual heatmap showing commit frequency by day of week and hour
+  - Helps identify peak coding hours and team work patterns
 
 ### Refactored
 
