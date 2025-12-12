@@ -148,6 +148,26 @@ module WttjMetrics
           end
         end
 
+        def ticket_activity
+          @ticket_activity ||= begin
+            data = metrics_for('linear_ticket_activity')
+
+            # Initialize 7x24 grid with zeros
+            activity = Array.new(7) { Array.new(24, 0) }
+
+            data.each do |row|
+              # metric is "wday_hour" (e.g. "1_14")
+              wday, hour = row[:metric].split('_').map(&:to_i)
+              # Adjust wday to match JS array (0=Mon, 6=Sun)
+              # Ruby wday: 0=Sun, 1=Mon...
+              display_wday = (wday - 1) % 7
+              activity[display_wday][hour] = row[:value].to_i
+            end
+
+            activity
+          end
+        end
+
         def assignee_chart_data
           assignee_dist.map { |m| { label: m[:metric], value: m[:value].to_i } }
         end

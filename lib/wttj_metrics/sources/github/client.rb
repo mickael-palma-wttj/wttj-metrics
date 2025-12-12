@@ -33,6 +33,12 @@ module WttjMetrics
                     nodes {
                       commit {
                         committedDate
+                        author {
+                          name
+                          user {
+                            login
+                          }
+                        }
                       }
                     }
                   }

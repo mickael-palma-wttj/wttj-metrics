@@ -21,7 +21,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Key Metrics</h2>
+        <h2 class="section-title" id="key-metrics"><span class="chevron">▼</span> &#128200; Key Metrics</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -56,7 +56,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128027; Bug Tracking</h2>
+        <h2 class="section-title" id="bug-tracking"><span class="chevron">▼</span> &#128027; Bug Tracking</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -66,7 +66,7 @@
       <div class="charts-grid">
         <div class="chart-card full-width">
           <h3 class="chart-title">Bug Overview</h3>
-          <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="metrics-grid">
 <% bug_metrics_presented.each do |presenter| %>
             <div class="metric-card">
               <span class="tooltip"><%= presenter.tooltip %></span>
@@ -100,7 +100,7 @@
         </div>
         <div class="chart-card">
           <h3 class="chart-title">
-            Bug Flow (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
+            Bug Flow (Last <%= days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
             <span class="tooltip-icon">?
               <span class="tooltip-text">Weekly comparison of new bugs created vs bugs closed. Helps track if the backlog is growing or shrinking.</span>
             </span>
@@ -111,7 +111,7 @@
         </div>
         <div class="chart-card">
           <h3 class="chart-title">
-            Bugs Created by Team (Last <%= @days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
+            Bugs Created by Team (Last <%= days_to_show %> Days)<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
             <span class="tooltip-icon">?
               <span class="tooltip-text">Weekly distribution of new bugs created, broken down by team.</span>
             </span>
@@ -127,6 +127,7 @@
               <span class="tooltip-text">Comprehensive statistics for each team including total bugs, resolution time (MTTR), and resolution rate.</span>
             </span>
           </h3>
+          <div class="table-wrapper">
           <table class="data-table" id="bugStatsTable">
             <thead>
               <tr>
@@ -156,6 +157,7 @@
 <% end %>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
       </div>
@@ -163,7 +165,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128640; Ticket Flow (Last <%= @days_to_show %> Days)</h2>
+        <h2 class="section-title" id="ticket-flow"><span class="chevron">▼</span> &#128640; Ticket Flow (Last <%= days_to_show %> Days)</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -193,13 +195,22 @@
             <canvas id="transitionChart"></canvas>
           </div>
         </div>
+        <div class="chart-card full-width">
+          <h3 class="chart-title">
+            Ticket Completion Heatmap
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Heatmap showing when tickets are completed (UTC). Darker cells indicate higher activity.</span>
+            </span>
+          </h3>
+          <div id="heatmap-container" class="heatmap-container"></div>
+        </div>
       </div>
       </div>
     </section>
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Current Distribution</h2>
+        <h2 class="section-title" id="current-distribution"><span class="chevron">▼</span> &#128200; Current Distribution</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -257,7 +268,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128101; Team Comparison<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %></h2>
+        <h2 class="section-title" id="team-comparison"><span class="chevron">▼</span> &#128101; Team Comparison<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %></h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -265,6 +276,7 @@
       </div>
       <div class="section-content">
       <div class="chart-card">
+        <div class="table-wrapper">
         <table class="data-table">
           <thead>
             <tr>
@@ -298,13 +310,14 @@
 <% end %>
           </tbody>
         </table>
+        </div>
       </div>
       </div>
     </section>
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128197; Cycles by Team<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %></h2>
+        <h2 class="section-title" id="cycles-by-team"><span class="chevron">▼</span> &#128197; Cycles by Team<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %></h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -314,6 +327,7 @@
 <% cycles_by_team_presented.each do |team, cycles| %>
       <div class="chart-card" style="margin-bottom: 1.5rem;">
         <h3 class="chart-title"><%= team %></h3>
+        <div class="table-wrapper">
         <table class="data-table">
           <thead>
             <tr>
@@ -349,11 +363,28 @@
 <% end %>
           </tbody>
         </table>
+        </div>
       </div>
 <% end %>
       </div>
     </section>
     
+    <!-- Sticky Table of Contents -->
+    <button class="toc-fab" onclick="toggleToc()" title="Table of Contents">
+      &#9776;
+    </button>
+    <div class="toc-menu" id="tocMenu">
+      <h3>Table of Contents</h3>
+      <ul>
+        <li><a href="#key-metrics" onclick="toggleToc()">Key Metrics</a></li>
+        <li><a href="#bug-tracking" onclick="toggleToc()">Bug Tracking</a></li>
+        <li><a href="#ticket-flow" onclick="toggleToc()">Ticket Flow</a></li>
+        <li><a href="#current-distribution" onclick="toggleToc()">Current Distribution</a></li>
+        <li><a href="#team-comparison" onclick="toggleToc()">Team Comparison</a></li>
+        <li><a href="#cycles-by-team" onclick="toggleToc()">Cycles by Team</a></li>
+      </ul>
+    </div>
+
     <footer>
       <p>Data sourced from Linear API • Report generated by WTTJ Metrics Collector</p>
     </footer>
@@ -593,6 +624,28 @@
     
     // Create charts on load
     createCharts();
+
+    // Ticket Activity Heatmap
+    const ticketActivity = <%= ticket_activity.to_json %>;
+    renderHeatmap('heatmap-container', ticketActivity);
+    
+    window.addEventListener('resize', () => {
+      renderHeatmap('heatmap-container', ticketActivity);
+    });
+
+    function toggleToc() {
+      const menu = document.getElementById('tocMenu');
+      menu.classList.toggle('visible');
+    }
+    
+    // Close TOC when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('tocMenu');
+      const fab = document.querySelector('.toc-fab');
+      if (menu && menu.classList.contains('visible') && !menu.contains(e.target) && !fab.contains(e.target)) {
+        menu.classList.remove('visible');
+      }
+    });
   </script>
 </body>
 </html>

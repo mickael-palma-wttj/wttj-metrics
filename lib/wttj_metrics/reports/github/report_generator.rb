@@ -126,7 +126,7 @@ module WttjMetrics
         def commit_activity
           @commit_activity ||= begin
             data = @parser.metrics_by_category['github_commit_activity'] || []
-            grid = Array.new(7) { Array.new(24, 0) }
+            grid = Array.new(7) { Array.new(24) { { count: 0, authors: {} } } }
 
             data.each do |row|
               # row[:metric] is "wday_hour" (e.g. "1_14")
@@ -136,7 +136,30 @@ module WttjMetrics
               # We want Monday=0 for display, so (wday - 1) % 7
               display_wday = (wday - 1) % 7
               hour = hour.to_i
-              grid[display_wday][hour] += row[:value].to_i
+
+              # Parse JSON value if it's a string, otherwise handle legacy integer
+              begin
+                parsed_value = if row[:value].is_a?(String)
+                                 JSON.parse(row[:value])
+                               else
+                                 { 'count' => row[:value].to_i,
+                                   'authors' => {} }
+                               end
+              rescue JSON::ParserError
+                parsed_value = { 'count' => row[:value].to_i, 'authors' => {} }
+              end
+
+              # Ensure we have a hash structure
+              parsed_value = { 'count' => parsed_value.to_i, 'authors' => {} } if parsed_value.is_a?(Numeric)
+
+              grid[display_wday][hour][:count] += parsed_value['count'].to_i
+
+              next unless parsed_value['authors']
+
+              parsed_value['authors'].each do |author, count|
+                grid[display_wday][hour][:authors][author] ||= 0
+                grid[display_wday][hour][:authors][author] += count
+              end
             end
             grid
           end

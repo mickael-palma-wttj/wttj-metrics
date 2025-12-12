@@ -6,7 +6,8 @@ module WttjMetrics
   module Services
     module Github
       class DataFetcher
-        def initialize(logger, days = 90)
+        def initialize(cache, logger, days = 90)
+          @cache = cache
           @logger = logger
           @days = days
         end
@@ -53,13 +54,16 @@ module WttjMetrics
           cache_key = "github_prs_#{org}"
 
           # Try fresh cache first (1 day TTL)
-          fresh_prs = cache.read(cache_key, max_age_hours: 24)
-          if fresh_prs
-            @logger.info '   ✨ Cache is fresh (< 24h). Skipping update.'
-            return fresh_prs
+          if cache
+            fresh_prs = cache.read(cache_key, max_age_hours: 24)
+            if fresh_prs
+              @logger.info '   ✨ Cache is fresh (< 24h). Skipping update.'
+              return fresh_prs
+            end
+            cached_prs = cache.read(cache_key, max_age_hours: 87_600) || []
+          else
+            cached_prs = []
           end
-
-          cached_prs = cache.read(cache_key, max_age_hours: 87_600) || []
 
           prs = if cached_prs.any?
                   merge_with_cache(org, cached_prs, from_date)
@@ -69,7 +73,7 @@ module WttjMetrics
                   deep_stringify_keys(prs)
                 end
 
-          cache.write(cache_key, prs)
+          cache&.write(cache_key, prs)
           prs
         end
 
@@ -96,10 +100,12 @@ module WttjMetrics
 
         def fetch_releases_data(prs, from_date)
           cache_key = "github_releases_#{ENV.fetch('GITHUB_ORG', nil)}"
-          fresh_releases = cache.read(cache_key, max_age_hours: 24)
-          if fresh_releases
-            @logger.info '   ✨ Releases cache is fresh (< 24h). Skipping update.'
-            return fresh_releases
+          if cache
+            fresh_releases = cache.read(cache_key, max_age_hours: 24)
+            if fresh_releases
+              @logger.info '   ✨ Releases cache is fresh (< 24h). Skipping update.'
+              return fresh_releases
+            end
           end
 
           repos = Set.new
@@ -133,7 +139,7 @@ module WttjMetrics
           end
           progress_bar.finish
 
-          cache.write(cache_key, all_releases)
+          cache&.write(cache_key, all_releases)
 
           all_releases
         end
@@ -150,9 +156,7 @@ module WttjMetrics
           @client ||= Sources::Github::Client.new(logger: @logger)
         end
 
-        def cache
-          @cache ||= Data::FileCache.new
-        end
+        attr_reader :cache
 
         def deep_stringify_keys(obj)
           case obj

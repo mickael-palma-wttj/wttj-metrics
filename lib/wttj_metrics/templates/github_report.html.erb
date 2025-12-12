@@ -21,7 +21,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128200; Key Metrics</h2>
+        <h2 class="section-title" id="key-metrics"><span class="chevron">▼</span> &#128200; Key Metrics</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -95,7 +95,7 @@
     
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128640; Efficiency Trends</h2>
+        <h2 class="section-title" id="efficiency-trends"><span class="chevron">▼</span> &#128640; Efficiency Trends</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -153,7 +153,7 @@
 
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#129658; Quality & Health Trends</h2>
+        <h2 class="section-title" id="quality-health-trends"><span class="chevron">▼</span> &#129658; Quality & Health Trends</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -244,7 +244,7 @@
 
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#129309; Collaboration Trends</h2>
+        <h2 class="section-title" id="collaboration-trends"><span class="chevron">▼</span> &#129309; Collaboration Trends</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -314,7 +314,7 @@
     <!-- Commit Activity Heatmap -->
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128197; Commit Activity Heatmap</h2>
+        <h2 class="section-title" id="commit-activity-heatmap"><span class="chevron">▼</span> &#128197; Commit Activity Heatmap</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -323,47 +323,23 @@
       <div class="section-content">
         <div class="charts-grid">
           <div class="chart-card full-width">
-          <h3 class="chart-title">
-            Commits by Day and Hour
-            <span class="tooltip-icon">?
-              <span class="tooltip-text">Heatmap showing commit frequency. Darker colors indicate higher activity.</span>
-            </span>
-          </h3>
-          <div class="heatmap-container">
-            <table class="heatmap-table">
-              <thead>
-                <tr>
-                  <th></th>
-                  <% (0..23).each do |hour| %>
-                    <th><%= hour %></th>
-                  <% end %>
-                </tr>
-              </thead>
-              <tbody>
-                <% 
-                   days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-                   max_val = commit_activity.flatten.max.to_f
-                   max_val = 1.0 if max_val == 0
-                %>
-                <% commit_activity.each_with_index do |row, day_idx| %>
-                  <tr>
-                    <td class="day-label"><%= days[day_idx] %></td>
-                    <% row.each do |count| %>
-                      <% 
-                         intensity = count / max_val 
-                         # Green scale: rgba(40, 167, 69, alpha)
-                         alpha = 0.1 + (intensity * 0.9)
-                         bg_color = count > 0 ? "rgba(40, 167, 69, #{alpha})" : "#f8f9fa"
-                         text_color = intensity > 0.5 ? "#fff" : "#333"
-                      %>
-                      <td style="background-color: <%= bg_color %>; color: <%= text_color %>" title="<%= count %> commits">
-                        <%= count > 0 ? count : '' %>
-                      </td>
-                    <% end %>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
+          <div class="chart-header-controls">
+            <h3 class="chart-title">
+              Commits by Day and Hour
+              <span class="tooltip-icon">?
+                <span class="tooltip-text">Heatmap showing commit frequency. Darker colors indicate higher activity.</span>
+              </span>
+            </h3>
+            <div class="toggle-wrapper">
+              <span class="toggle-label">Exclude Bots</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="excludeBotsToggle" onchange="toggleBotExclusion(this)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="heatmap-container" id="heatmap-container">
+            <!-- Heatmap rendered by JS -->
           </div>
         </div>
           </div>
@@ -373,7 +349,7 @@
     <!-- Team Metrics Table -->
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title"><span class="chevron">▼</span> &#128101; Team Metrics</h2>
+        <h2 class="section-title" id="team-metrics"><span class="chevron">▼</span> &#128101; Team Metrics</h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>
@@ -385,7 +361,7 @@
             <div class="search-container">
               <input type="text" id="teamSearch" placeholder="Search teams..." oninput="filterTable('teamSearch', 'teamMetricsTable')" class="search-input">
             </div>
-            <div class="table-container">
+            <div class="table-wrapper">
               <table id="teamMetricsTable" class="data-table">
             <thead>
               <tr>
@@ -436,6 +412,22 @@
         </div>
       </div>
     </section>
+
+    <!-- Sticky Table of Contents -->
+    <button class="toc-fab" onclick="toggleToc()" title="Table of Contents">
+      &#9776;
+    </button>
+    <div class="toc-menu" id="tocMenu">
+      <h3>Table of Contents</h3>
+      <ul>
+        <li><a href="#key-metrics" onclick="toggleToc()">Key Metrics</a></li>
+        <li><a href="#efficiency-trends" onclick="toggleToc()">Efficiency Trends</a></li>
+        <li><a href="#quality-health-trends" onclick="toggleToc()">Quality & Health Trends</a></li>
+        <li><a href="#collaboration-trends" onclick="toggleToc()">Collaboration Trends</a></li>
+        <li><a href="#commit-activity-heatmap" onclick="toggleToc()">Commit Activity Heatmap</a></li>
+        <li><a href="#team-metrics" onclick="toggleToc()">Team Metrics</a></li>
+      </ul>
+    </div>
 
     <footer>
       <p>Data sourced from GitHub API • Report generated by WTTJ Metrics Collector</p>
@@ -716,6 +708,35 @@
     // Removed as we switched to a table view
     }
     
+    // Heatmap Logic
+    const commitActivity = <%= commit_activity.to_json %>;
+
+    // Initial render
+    const excludeBotsCheckbox = document.getElementById('excludeBotsToggle');
+    renderHeatmap('heatmap-container', commitActivity, excludeBotsCheckbox ? excludeBotsCheckbox.checked : false);
+
+    // Re-render on resize
+    let resizeTimeoutHeatmap;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeoutHeatmap);
+      const excludeBots = excludeBotsCheckbox ? excludeBotsCheckbox.checked : false;
+      resizeTimeoutHeatmap = setTimeout(() => renderHeatmap('heatmap-container', commitActivity, excludeBots), 250);
+    });
+
+    function toggleToc() {
+      const menu = document.getElementById('tocMenu');
+      menu.classList.toggle('visible');
+    }
+    
+    // Close TOC when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('tocMenu');
+      const fab = document.querySelector('.toc-fab');
+      if (menu && menu.classList.contains('visible') && !menu.contains(e.target) && !fab.contains(e.target)) {
+        menu.classList.remove('visible');
+      }
+    });
+
     // Create charts on load
     createCharts();
   </script>

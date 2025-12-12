@@ -33,6 +33,7 @@ module WttjMetrics
             *distribution_calculator.to_rows,
             *team_calculator.to_rows,
             *bug_calculator.to_rows,
+            *ticket_activity_calculator.to_rows,
             *timeseries_collector.to_rows
           ]
         end
@@ -47,6 +48,10 @@ module WttjMetrics
 
         def bug_calculator
           @bug_calculator ||= BugCalculator.new(issues, today: today)
+        end
+
+        def ticket_activity_calculator
+          @ticket_activity_calculator ||= TicketActivityCalculator.new(issues)
         end
 
         def team_calculator

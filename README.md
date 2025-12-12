@@ -55,7 +55,9 @@ A Ruby CLI tool to collect metrics from [Linear](https://linear.app) and generat
 ## Features
 
 - 📊 **Collect Metrics** - Fetch issues, cycles, and team data from Linear GraphQL API
+- � **GitHub Integration** - Fetch PRs, commits, and release data from GitHub GraphQL API
 - 📈 **HTML Dashboard** - Interactive charts with Chart.js (flow, bugs, cycles, distributions)
+- 🔥 **Activity Heatmaps** - Visualize commit and ticket completion activity by hour/day
 - 📑 **Excel Export** - Detailed spreadsheets for further analysis
 - 🐛 **Bug Tracking** - Track bug creation/resolution by team over time
 - ⚡ **Caching** - Smart API response caching for faster subsequent runs
@@ -346,6 +348,16 @@ SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourci
 | **Avg Time to Merge** | Average time from PR creation to merge |
 | **Time to First Review** | Average time from PR creation to first review comment |
 | **Reviews per PR** | Average number of reviews per pull request |
+| **Comments per PR** | Average number of comments per pull request |
+| **Repository Activity** | Top 10 most active repositories by PR count |
+| **Daily Breakdown** | Daily stats for Created, Merged, Closed, and Open PRs |
+
+### Activity Metrics (Heatmaps)
+
+| Metric | Description |
+|--------|-------------|
+| **Commit Activity** | Heatmap of commit frequency by day of week and hour of day |
+| **Ticket Activity** | Heatmap of ticket completion frequency by day of week and hour of day |
 | **Comments per PR** | Average number of comments per pull request |
 | **Repository Activity** | Top 10 most active repositories by PR count |
 | **Daily Breakdown** | Daily stats for Created, Merged, Closed, and Open PRs |

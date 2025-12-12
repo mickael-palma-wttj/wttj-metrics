@@ -12,7 +12,7 @@ module WttjMetrics
         end
 
         def calculate
-          activity = Hash.new(0)
+          activity = Hash.new { |h, k| h[k] = { count: 0, authors: Hash.new(0) } }
 
           @prs.each do |pr|
             next unless pr[:commits] && pr[:commits][:nodes]
@@ -25,16 +25,20 @@ module WttjMetrics
               # wday: 0=Sunday, 1=Monday, ..., 6=Saturday
               # hour: 0-23
               key = "#{date.wday}-#{date.hour}"
-              activity[key] += 1
+
+              author = node.dig(:commit, :author, :name) || node.dig(:commit, :author, :user, :login) || 'Unknown'
+
+              activity[key][:count] += 1
+              activity[key][:authors][author] += 1
             end
           end
 
-          activity.map do |key, count|
+          activity.map do |key, data|
             wday, hour = key.split('-').map(&:to_i)
             {
               metric: 'commit_activity',
               date: Date.today.to_s, # Placeholder date as this is aggregated
-              value: count,
+              value: { count: data[:count], authors: data[:authors] }.to_json,
               wday: wday,
               hour: hour
             }

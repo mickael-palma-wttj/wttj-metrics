@@ -49,39 +49,28 @@ Generates comprehensive daily time-series data for PR lifecycle events, code qua
 - **CI Performance**: Success Rate and Time to Green.
 - **Release Activity**: Release counts and Hotfix rates.
 
-See [Timeseries Metrics](timeseries/README.md) for detailed component documentation.
-
 ### CollaborationCalculator
-Analyzes how teams collaborate through code reviews.
+Analyzes collaboration patterns and review efficiency.
 
 **Metrics:**
-- **Cross-Team Reviews**: Identifies reviews where the reviewer and author belong to different teams.
-- **Review Distribution**: Shows the distribution of review workload among team members.
+- **Avg Reviews per PR**: Average number of reviews received per PR.
+- **Avg Comments per PR**: Average number of comments per PR.
+- **Avg Rework Cycles**: Average number of "changes requested" reviews per PR.
+- **Unreviewed PR Rate**: Percentage of PRs merged without any review.
+
+### CommitActivityCalculator
+Calculates commit activity patterns for heatmap visualization.
+
+**Metrics:**
+- **Commit Activity**: Aggregated commit counts by day of week and hour of day.
 
 ### ContributorActivityCalculator
-Tracks individual contributions to the codebase.
+Tracks individual contributor activity over time.
 
 **Metrics:**
-- **PRs Created**: Number of PRs opened by each contributor.
-- **PRs Merged**: Number of PRs merged for each contributor.
-- **Reviews Given**: Number of reviews submitted by each contributor.
-- **Comments Made**: Number of comments posted by each contributor.
+- **Contributor Activity**: Daily count of PRs created by each contributor.
 
-### PrSizeCalculator
-Analyzes the size of Pull Requests to encourage smaller, more manageable changes.
-
-**Metrics:**
-- **Lines Changed**: Total additions and deletions.
-- **Files Changed**: Number of files modified in the PR.
-- **Size Distribution**: Categorizes PRs into buckets (e.g., Small, Medium, Large) based on lines changed.
-
-### QualityCalculator
-Measures indicators of code quality and process health.
-
-**Metrics:**
-- **Pass Rate**: Percentage of PRs that pass CI/CD checks.
-- **Revert Rate**: Percentage of PRs that are reverts of previous commits.
-- **Review Depth**: Average number of comments per review, indicating the thoroughness of reviews.
+See [Timeseries Metrics](timeseries/README.md) for detailed component documentation.
 
 ## Usage
 

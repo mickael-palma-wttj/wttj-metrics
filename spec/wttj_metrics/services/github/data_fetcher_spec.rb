@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 RSpec.describe WttjMetrics::Services::Github::DataFetcher do
-  subject(:fetcher) { described_class.new(logger) }
+  subject(:fetcher) { described_class.new(cache, logger) }
 
   let(:logger) { instance_double(Logger, info: nil, error: nil, warn: nil) }
   let(:client) { instance_double(WttjMetrics::Sources::Github::Client) }
@@ -180,7 +180,7 @@ RSpec.describe WttjMetrics::Services::Github::DataFetcher do
     end
 
     context 'with custom days' do
-      subject(:fetcher) { described_class.new(logger, 30) }
+      subject(:fetcher) { described_class.new(cache, logger, 30) }
 
       it 'fetches pull requests from 30 days ago' do
         fetcher.call

@@ -39,7 +39,7 @@ module WttjMetrics
 
         if options.sources.include?('github')
           if ENV['GITHUB_TOKEN'] && ENV.fetch('GITHUB_ORG', nil)
-            data.merge!(Github::DataFetcher.new(logger, options.days).call)
+            data.merge!(Github::DataFetcher.new(cache_strategy, logger, options.days).call)
           else
             logger.warn '⚠️  Skipping GitHub: GITHUB_TOKEN or GITHUB_ORG not set'
           end
