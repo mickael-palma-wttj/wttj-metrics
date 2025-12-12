@@ -50,6 +50,16 @@ module WttjMetrics
         end
       end
 
+      def resolution_rate_progress_class
+        if resolution_rate >= EXCELLENT_RESOLUTION_RATE
+          'completion-high'
+        elsif resolution_rate >= GOOD_RESOLUTION_RATE
+          'completion-medium'
+        else
+          'completion-low'
+        end
+      end
+
       def mttr
         @stats[:mttr] || 0
       end

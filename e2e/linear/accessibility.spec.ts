@@ -64,7 +64,7 @@ test.describe('Accessibility', () => {
     });
 
     test('tables have proper header structure', async ({ page }) => {
-        const tables = page.locator('.cycles-table');
+        const tables = page.locator('.data-table');
         const count = await tables.count();
 
         for (let i = 0; i < count; i++) {

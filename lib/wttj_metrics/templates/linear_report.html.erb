@@ -6,490 +6,7 @@
   <title>Linear Metrics Dashboard - <%= today %></title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #EAE4DE;
-      color: #151515;
-      min-height: 100vh;
-      padding: 2rem;
-    }
-    .container { max-width: 1400px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 2rem; }
-    h1 {
-      font-size: 2.5rem;
-      color: #151515;
-      margin-bottom: 0.5rem;
-    }
-    .subtitle { color: #585858; font-size: 1rem; }
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .metric-card {
-      background: #FFFFFF;
-      border: 1px solid #DEDEDE;
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s;
-      position: relative;
-      cursor: help;
-    }
-    .metric-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-      z-index: 10;
-    }
-    .metric-card .tooltip {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #151515;
-      color: #FFFFFF;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      line-height: 1.4;
-      width: 220px;
-      text-align: left;
-      z-index: 9999;
-      transition: opacity 0.2s, visibility 0.2s;
-      border: 1px solid #151515;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      margin-top: 8px;
-    }
-    .metric-card .tooltip::after {
-      content: '';
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 6px solid transparent;
-      border-bottom-color: #151515;
-    }
-    .metric-card:hover .tooltip { visibility: visible; opacity: 1; }
-
-    /* Chart Tooltips */
-    .tooltip-icon {
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      background: #EAE4DE;
-      color: #585858;
-      border-radius: 50%;
-      text-align: center;
-      line-height: 18px;
-      font-size: 12px;
-      margin-left: 8px;
-      cursor: help;
-      position: relative;
-      vertical-align: middle;
-      border: 1px solid #DEDEDE;
-    }
-    .tooltip-icon:hover {
-      background: #585858;
-      color: #FFFFFF;
-      border-color: #585858;
-    }
-    .tooltip-icon .tooltip-text {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 50%;
-      left: 100%;
-      transform: translateY(-50%);
-      background: #151515;
-      color: #FFFFFF;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      line-height: 1.4;
-      width: 250px;
-      text-align: left;
-      z-index: 9999;
-      transition: opacity 0.2s, visibility 0.2s;
-      border: 1px solid #151515;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      margin-left: 10px;
-      font-weight: normal;
-      pointer-events: none;
-    }
-    .tooltip-icon .tooltip-text::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      right: 100%;
-      transform: translateY(-50%);
-      border: 6px solid transparent;
-      border-right-color: #151515;
-    }
-    .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
-
-    .metric-value {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #151515;
-    }
-    .metric-label { color: #585858; font-size: 0.9rem; margin-top: 0.5rem; }
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
-    .chart-card {
-      background: #FFFFFF;
-      border: 1px solid #DEDEDE;
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
-    .chart-card.full-width { grid-column: 1 / -1; }
-    .chart-title { font-size: 1.2rem; margin-bottom: 1rem; color: #151515; }
-    .chart-subtitle { font-size: 0.8rem; color: #585858; margin-top: -0.5rem; margin-bottom: 1rem; }
-    .filter-badge {
-      display: inline-block;
-      background: #FFCD00;
-      color: #151515;
-      font-size: 0.7rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      margin-left: 0.5rem;
-      font-weight: 500;
-      position: relative;
-      cursor: help;
-    }
-    .filter-badge .tooltip-text {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #151515;
-      color: #FFFFFF;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      line-height: 1.4;
-      width: 300px;
-      text-align: center;
-      z-index: 9999;
-      transition: opacity 0.2s, visibility 0.2s;
-      border: 1px solid #151515;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      margin-top: 8px;
-      white-space: normal;
-      font-weight: normal;
-    }
-    .filter-badge .tooltip-text::after {
-      content: '';
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 6px solid transparent;
-      border-bottom-color: #151515;
-    }
-    .filter-badge:hover .tooltip-text { visibility: visible; opacity: 1; }
-    .chart-container { position: relative; height: 300px; }
-    .chart-container.tall { height: 400px; }
-    section { margin-bottom: 1rem; position: relative; }
-    .section-title {
-      font-size: 1.5rem;
-      margin: 2rem 0 1rem;
-      color: #151515;
-      border-bottom: 2px solid #FFCD00;
-      padding-bottom: 0.5rem;
-    }
-    footer { text-align: center; margin-top: 3rem; color: #585858; font-size: 0.9rem; }
-    .cycles-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; overflow: visible; }
-    .cycles-table th, .cycles-table td {
-      padding: 0.75rem 1rem;
-      text-align: left;
-      border-bottom: 1px solid #DEDEDE;
-    }
-    .cycles-table th {
-      background: #FFCD00;
-      font-weight: 600;
-      position: relative;
-      overflow: visible;
-      color: #151515;
-      position: relative;
-    }
-    .cycles-table th.has-tooltip { cursor: help; }
-    .cycles-table th .th-tooltip {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #151515;
-      color: #FFFFFF;
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 400;
-      line-height: 1.3;
-      width: 230px;
-      text-align: left;
-      z-index: 9999;
-      transition: opacity 0.2s, visibility 0.2s;
-      border: 1px solid #151515;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      margin-top: 6px;
-      white-space: normal;
-    }
-    .cycles-table th .th-tooltip::after {
-      content: '';
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 5px solid transparent;
-      border-bottom-color: #151515;
-    }
-    .cycles-table th:hover .th-tooltip { visibility: visible; opacity: 1; }
-    .cycles-table td.has-tooltip { cursor: help; position: relative; }
-    .cycles-table td .cell-tooltip {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 50%;
-      right: 100%;
-      left: auto;
-      bottom: auto;
-      transform: translateY(-50%);
-      background: #151515;
-      color: #FFFFFF;
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 400;
-      line-height: 1.3;
-      width: 230px;
-      text-align: center;
-      z-index: 9999;
-      transition: opacity 0.2s, visibility 0.2s;
-      border: 1px solid #151515;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      margin-right: 8px;
-      white-space: normal;
-    }
-    .cycles-table td .cell-tooltip::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 100%;
-      transform: translateY(-50%);
-      border: 5px solid transparent;
-      border-left-color: #151515;
-    }
-    .cycles-table td:hover .cell-tooltip { visibility: visible; opacity: 1; }
-    .cycles-table tr:hover { background: rgba(255, 205, 0, 0.1); }
-    .status-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .status-active { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
-    .status-upcoming { background: rgba(255, 205, 0, 0.3); color: #151515; }
-    .status-completed { background: rgba(88, 88, 88, 0.15); color: #585858; }
-    .status-past { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
-    .scope-increased { color: #dc2626; font-weight: 600; }
-    .scope-decreased { color: #16a34a; font-weight: 600; }
-    .scope-neutral { color: #585858; }
-    .completion-high { color: #16a34a; font-weight: 600; }
-    .completion-medium { color: #585858; font-weight: 600; }
-    .completion-low { color: #dc2626; font-weight: 600; }
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: #DEDEDE;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      background: #FFCD00;
-      border-radius: 4px;
-      transition: width 0.3s;
-    }
-    .progress-fill.completion-high { background: #16a34a; }
-    .progress-fill.completion-medium { background: #FFCD00; }
-    .progress-fill.completion-low { background: #dc2626; }
-    @media (max-width: 768px) {
-      body { padding: 1rem; }
-      h1 { font-size: 1.8rem; }
-      .subtitle { font-size: 0.9rem; }
-      .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-      .metric-card { padding: 1rem; }
-      .metric-value { font-size: 1.8rem; }
-      .metric-label { font-size: 0.75rem; }
-      .section-title { font-size: 1.2rem; }
-      .chart-card { padding: 1rem; }
-      .chart-title { font-size: 1rem; }
-      .chart-container { height: 250px; }
-      .chart-container.tall { height: 300px; }
-      .cycles-table { font-size: 0.75rem; }
-      .cycles-table th, .cycles-table td { padding: 0.5rem; }
-      .status-badge { padding: 0.2rem 0.5rem; font-size: 0.65rem; }
-      .cycles-table th:nth-child(7), .cycles-table td:nth-child(7),
-      .cycles-table th:nth-child(8), .cycles-table td:nth-child(8) { display: none; }
-      .metric-card .tooltip { width: 180px; font-size: 0.7rem; padding: 0.5rem; }
-      .cycles-table th .th-tooltip { width: 140px; font-size: 0.65rem; }
-      .chart-card .metrics-grid[style*="grid-template-columns"] { grid-template-columns: 1fr 1fr !important; }
-    }
-    @media (max-width: 480px) {
-      body { padding: 0.75rem; }
-      h1 { font-size: 1.5rem; }
-      .metrics-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-      .metric-card { padding: 0.75rem; }
-      .metric-value { font-size: 1.4rem; }
-      .metric-label { font-size: 0.65rem; }
-      .chart-container { height: 200px; }
-      .cycles-table { font-size: 0.65rem; }
-      .cycles-table th, .cycles-table td { padding: 0.35rem 0.25rem; }
-      .cycles-table th:nth-child(5), .cycles-table td:nth-child(5),
-      .cycles-table th:nth-child(6), .cycles-table td:nth-child(6),
-      .cycles-table th:nth-child(9), .cycles-table td:nth-child(9) { display: none; }
-      .chart-card .metrics-grid[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
-    }
-    @media (max-width: 768px) {
-      .chart-card:has(.cycles-table) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      .cycles-table { min-width: 500px; }
-    }
-    /* Collapsible sections */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      user-select: none;
-      padding-top: 1rem;
-    }
-    .section-header .section-title {
-      margin: 0;
-      flex: 1;
-    }
-    /* iOS-style toggle switch */
-    .toggle-switch {
-      position: relative;
-      width: 44px;
-      height: 24px;
-      margin-left: 1rem;
-      flex-shrink: 0;
-    }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #DEDEDE;
-      transition: 0.3s;
-      border-radius: 24px;
-    }
-    .toggle-slider:before {
-      position: absolute;
-      content: '';
-      height: 20px;
-      width: 20px;
-      left: 2px;
-      bottom: 2px;
-      background-color: white;
-      transition: 0.3s;
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    .toggle-switch input:checked + .toggle-slider {
-      background-color: #FFCD00;
-    }
-    .toggle-switch input:checked + .toggle-slider:before {
-      transform: translateX(20px);
-    }
-    .toggle-switch input:focus + .toggle-slider {
-      box-shadow: 0 0 0 2px rgba(255, 205, 0, 0.3);
-    }
-    .section-content {
-      max-height: 200000px;
-      overflow-x: visible;
-      overflow-y: hidden;
-      transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
-      opacity: 1;
-      padding-top: 1rem;
-      padding-bottom: 3rem;
-    }
-    .section-content.collapsed {
-      max-height: 0;
-      opacity: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-    }
-    .collapse-all-btn {
-      background: #FFCD00;
-      border: 1px solid #151515;
-      color: #151515;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-      margin-top: 1rem;
-    }
-    .collapse-all-btn:hover {
-      background: #e6b800;
-      transform: translateY(-1px);
-    }
-    .chevron {
-      display: inline-block;
-      transition: transform 0.3s;
-      margin-right: 0.5rem;
-    }
-    .chevron.collapsed {
-      transform: rotate(-90deg);
-    }
-    /* Sortable table headers */
-    .sortable {
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      padding-right: 1.5rem !important;
-    }
-    .sortable:hover {
-      background: rgba(255, 205, 0, 0.1);
-    }
-    .sortable::after {
-      content: '⇅';
-      position: absolute;
-      right: 0.5rem;
-      opacity: 0.3;
-      font-size: 0.8rem;
-    }
-    .sortable.asc::after {
-      content: '▲';
-      opacity: 1;
-    }
-    .sortable.desc::after {
-      content: '▼';
-      opacity: 1;
-    }
+    <%= File.read(File.join(WttjMetrics.root, 'lib/wttj_metrics/templates/assets/styles.css')) %>
   </style>
 </head>
 <body>
@@ -610,15 +127,15 @@
               <span class="tooltip-text">Comprehensive statistics for each team including total bugs, resolution time (MTTR), and resolution rate.</span>
             </span>
           </h3>
-          <table class="cycles-table" id="bugStatsTable">
+          <table class="data-table" id="bugStatsTable">
             <thead>
               <tr>
-                <th class="sortable" onclick="sortBugStatsTable(0, 'string')">Team</th>
-                <th class="sortable has-tooltip" onclick="sortBugStatsTable(1, 'number')">Total Created<span class="th-tooltip">Total bugs ever created for this team</span></th>
-                <th class="sortable has-tooltip" onclick="sortBugStatsTable(2, 'number')">Closed<span class="th-tooltip">Bugs that have been resolved</span></th>
-                <th class="sortable has-tooltip" onclick="sortBugStatsTable(3, 'number')">Open<span class="th-tooltip">Bugs currently open</span></th>
-                <th class="sortable has-tooltip" onclick="sortBugStatsTable(4, 'number')">MTTR<span class="th-tooltip">Mean Time To Resolve (avg days to fix bugs)</span></th>
-                <th class="sortable has-tooltip" onclick="sortBugStatsTable(5, 'number')">Resolution Rate<span class="th-tooltip">Percentage of bugs closed</span></th>
+                <th class="sortable" onclick="sortTable('bugStatsTable', 0)">Team</th>
+                <th class="sortable has-tooltip" onclick="sortTable('bugStatsTable', 1)">Total Created<span class="th-tooltip">Total bugs ever created for this team</span></th>
+                <th class="sortable has-tooltip" onclick="sortTable('bugStatsTable', 2)">Closed<span class="th-tooltip">Bugs that have been resolved</span></th>
+                <th class="sortable has-tooltip" onclick="sortTable('bugStatsTable', 3)">Open<span class="th-tooltip">Bugs currently open</span></th>
+                <th class="sortable has-tooltip" onclick="sortTable('bugStatsTable', 4)">MTTR<span class="th-tooltip">Mean Time To Resolve (avg days to fix bugs)</span></th>
+                <th class="sortable has-tooltip" onclick="sortTable('bugStatsTable', 5)">Resolution Rate<span class="th-tooltip">Percentage of bugs closed</span></th>
               </tr>
             </thead>
             <tbody>
@@ -629,7 +146,12 @@
                 <td><%= presenter.closed %></td>
                 <td><%= presenter.open %></td>
                 <td><%= presenter.mttr_display %></td>
-                <td><span class="status-badge <%= presenter.resolution_rate_class %>"><%= presenter.resolution_rate_display %></span></td>
+                <td>
+                  <div class="progress-bar">
+                    <div class="progress-fill <%= presenter.resolution_rate_progress_class %>" style="width: <%= presenter.resolution_rate %>%"></div>
+                  </div>
+                  <small><%= presenter.resolution_rate_display %></small>
+                </td>
               </tr>
 <% end %>
             </tbody>
@@ -743,7 +265,7 @@
       </div>
       <div class="section-content">
       <div class="chart-card">
-        <table class="cycles-table">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Team</th>
@@ -792,7 +314,7 @@
 <% cycles_by_team_presented.each do |team, cycles| %>
       <div class="chart-card" style="margin-bottom: 1.5rem;">
         <h3 class="chart-title"><%= team %></h3>
-        <table class="cycles-table">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Cycle</th>
@@ -838,155 +360,15 @@
   </div>
   
   <script>
-    // Collapse/Expand functions
-    function toggleSection(header) {
-      const content = header.nextElementSibling;
-      const chevron = header.querySelector('.chevron');
-      const checkbox = header.querySelector('.toggle-switch input');
-      content.classList.toggle('collapsed');
-      chevron.classList.toggle('collapsed');
-      if (checkbox) checkbox.checked = !content.classList.contains('collapsed');
-      updateToggleAllButton();
-    }
-    
-    function toggleSectionByCheckbox(checkbox) {
-      const header = checkbox.closest('.section-header');
-      const content = header.nextElementSibling;
-      const chevron = header.querySelector('.chevron');
-      if (checkbox.checked) {
-        content.classList.remove('collapsed');
-        chevron.classList.remove('collapsed');
-      } else {
-        content.classList.add('collapsed');
-        chevron.classList.add('collapsed');
-      }
-      updateToggleAllButton();
-    }
-    
-    function toggleAllSections() {
-      const contents = document.querySelectorAll('.section-content');
-      const chevrons = document.querySelectorAll('.chevron');
-      const checkboxes = document.querySelectorAll('.toggle-switch input');
-      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
-      
-      contents.forEach(content => {
-        if (allCollapsed) {
-          content.classList.remove('collapsed');
-        } else {
-          content.classList.add('collapsed');
-        }
-      });
-      
-      chevrons.forEach(chevron => {
-        if (allCollapsed) {
-          chevron.classList.remove('collapsed');
-        } else {
-          chevron.classList.add('collapsed');
-        }
-      });
-      
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = allCollapsed;
-      });
-      
-      updateToggleAllButton();
-    }
-    
-    function updateToggleAllButton() {
-      const contents = document.querySelectorAll('.section-content');
-      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
-      document.getElementById('toggleAllIcon').textContent = allCollapsed ? '▶' : '▼';
-      document.getElementById('toggleAllText').textContent = allCollapsed ? 'Expand All' : 'Collapse All';
-    }
-    
-    // Table sorting function for Bug Stats
-    let bugStatsCurrentSort = { column: -1, direction: 'asc' }; // Initialize with no column selected
-    
-    function sortBugStatsTable(columnIndex, type) {
-      const table = document.getElementById('bugStatsTable');
-      const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      const headers = table.querySelectorAll('th');
-      
-      // Determine sort direction
-      let direction = 'asc';
-      if (bugStatsCurrentSort.column === columnIndex) {
-        direction = bugStatsCurrentSort.direction === 'asc' ? 'desc' : 'asc';
-      }
-      
-      // Sort rows
-      rows.sort((a, b) => {
-        let aVal = a.cells[columnIndex].textContent.trim();
-        let bVal = b.cells[columnIndex].textContent.trim();
-        
-        if (type === 'number') {
-          // Extract numeric value (handle N/A, percentages, badges, etc.)
-          aVal = aVal === 'N/A' ? -1 : parseFloat(aVal.replace(/[^0-9.-]/g, '')) || 0;
-          bVal = bVal === 'N/A' ? -1 : parseFloat(bVal.replace(/[^0-9.-]/g, '')) || 0;
-          return direction === 'asc' ? aVal - bVal : bVal - aVal;
-        } else {
-          // String comparison
-          return direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-        }
-      });
-      
-      // Re-append sorted rows
-      rows.forEach(row => tbody.appendChild(row));
-      
-      // Update header indicators
-      headers.forEach(h => h.classList.remove('asc', 'desc'));
-      headers[columnIndex].classList.add(direction);
-      
-      // Store current sort state
-      bugStatsCurrentSort = { column: columnIndex, direction };
-    }
+    <%= File.read(File.join(WttjMetrics.root, 'lib/wttj_metrics/templates/assets/scripts.js')) %>
     
     // Initialize default sort on page load
     window.addEventListener('DOMContentLoaded', () => {
       if (document.getElementById('bugStatsTable')) {
-        sortBugStatsTable(5, 'number'); // Sort by Resolution Rate (column 5)
-        sortBugStatsTable(5, 'number'); // Toggle to descending
+        sortTable('bugStatsTable', 5); // Sort by Resolution Rate (column 5)
+        sortTable('bugStatsTable', 5); // Toggle to descending
       }
     });
-    
-    const colors = {
-      purple: 'rgba(88, 88, 88, 0.8)',
-      blue: 'rgba(59, 130, 246, 0.8)',
-      pink: 'rgba(236, 72, 153, 0.8)',
-      green: 'rgba(34, 197, 94, 0.8)',
-      orange: 'rgba(249, 115, 22, 0.8)',
-      yellow: 'rgba(255, 205, 0, 0.9)',
-      red: 'rgba(220, 38, 38, 0.8)',
-      cyan: 'rgba(6, 182, 212, 0.8)',
-      black: 'rgba(21, 21, 21, 0.8)',
-      teal: 'rgba(20, 184, 166, 0.8)',
-      indigo: 'rgba(99, 102, 241, 0.8)',
-      lime: 'rgba(132, 204, 22, 0.8)',
-      amber: 'rgba(245, 158, 11, 0.8)',
-      brown: 'rgba(120, 53, 15, 0.8)',
-      grey: 'rgba(107, 114, 128, 0.8)',
-      deepOrange: 'rgba(234, 88, 12, 0.8)',
-      lightBlue: 'rgba(14, 165, 233, 0.8)',
-      lightGreen: 'rgba(101, 163, 13, 0.8)',
-      deepPurple: 'rgba(126, 34, 206, 0.8)',
-      rose: 'rgba(244, 63, 94, 0.8)',
-      violet: 'rgba(139, 92, 246, 0.8)',
-      emerald: 'rgba(16, 185, 129, 0.8)',
-      fuchsia: 'rgba(217, 70, 239, 0.8)',
-      slate: 'rgba(100, 116, 139, 0.8)'
-    };
-    
-    const colorPalette = [
-      colors.yellow, colors.black, colors.blue, colors.green,
-      colors.orange, colors.pink, colors.red, colors.cyan,
-      colors.purple, colors.teal, colors.indigo, colors.lime,
-      colors.amber, colors.brown, colors.grey, colors.deepOrange,
-      colors.lightBlue, colors.lightGreen, colors.deepPurple, colors.rose,
-      colors.violet, colors.emerald, colors.fuchsia, colors.slate
-    ];
-    
-    Chart.defaults.color = '#585858';
-    Chart.defaults.borderColor = '#DEDEDE';
     
     // Store chart instances for resize handling
     const chartInstances = {};
@@ -1000,44 +382,23 @@
       
 <% flow = weekly_flow_data %>
     // Flow Chart
-    const flowCtx = document.getElementById('flowChart').getContext('2d');
     const createdRaw = <%= flow[:created_raw].to_json %>;
     const completedRaw = <%= flow[:completed_raw].to_json %>;
     
-    chartInstances.flow = new Chart(flowCtx, {
-      type: 'bar',
-      data: {
-        labels: <%= flow[:labels].to_json %>,
-        datasets: [
-          { label: 'Created', data: <%= flow[:created_pct].to_json %>, backgroundColor: colors.black, rawData: createdRaw },
-          { label: 'Completed', data: <%= flow[:completed_pct].to_json %>, backgroundColor: colors.yellow, rawData: completedRaw }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { intersect: false, mode: 'index' },
-        scales: {
-          x: { stacked: true },
-          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
-        },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: {
-            callbacks: {
-              label: ctx => {
-                const raw = ctx.dataset.rawData[ctx.dataIndex];
-                return `${ctx.dataset.label}: ${raw} tickets (${ctx.parsed.y.toFixed(1)}%)`;
-              }
-            }
-          }
-        }
+    chartInstances.flow = createStackedBarChart(
+      'flowChart',
+      <%= flow[:labels].to_json %>,
+      [
+        { label: 'Created', data: <%= flow[:created_pct].to_json %>, backgroundColor: colors.black, raw: createdRaw },
+        { label: 'Completed', data: <%= flow[:completed_pct].to_json %>, backgroundColor: colors.yellow, raw: completedRaw }
+      ],
+      {
+        interaction: { intersect: false, mode: 'index' }
       }
-    });
+    );
     
 <% trans = transition_weekly_data %>
     // Transition Chart
-    const transitionCtx = document.getElementById('transitionChart').getContext('2d');
     const transitionColors = {
       'Backlog': 'rgba(148, 163, 184, 0.8)',
       'Todo': 'rgba(59, 130, 246, 0.8)',
@@ -1048,37 +409,18 @@
       'Canceled': 'rgba(220, 38, 38, 0.8)',
     };
     
-    chartInstances.transition = new Chart(transitionCtx, {
-      type: 'bar',
-      data: {
-        labels: <%= trans[:labels].to_json %>,
-        datasets: [
+    chartInstances.transition = createStackedBarChart(
+      'transitionChart',
+      <%= trans[:labels].to_json %>,
+      [
 <% STATE_CATEGORIES.keys.each_with_index do |state, i| %>
-          { label: '<%= state %>', data: <%= trans[:datasets][state][:percentages].to_json %>, backgroundColor: transitionColors['<%= state %>'], rawData: <%= trans[:datasets][state][:raw].to_json %> }<%= i < STATE_CATEGORIES.keys.size - 1 ? ',' : '' %>
+          { label: '<%= state %>', data: <%= trans[:datasets][state][:percentages].to_json %>, backgroundColor: transitionColors['<%= state %>'], raw: <%= trans[:datasets][state][:raw].to_json %> }<%= i < STATE_CATEGORIES.keys.size - 1 ? ',' : '' %>
 <% end %>
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { intersect: false, mode: 'index' },
-        scales: {
-          x: { stacked: true },
-          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
-        },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: {
-            callbacks: {
-              label: ctx => {
-                const raw = ctx.dataset.rawData[ctx.dataIndex];
-                return `${ctx.dataset.label}: ${raw} (${ctx.parsed.y.toFixed(1)}%)`;
-              }
-            }
-          }
-        }
+      ],
+      {
+        interaction: { intersect: false, mode: 'index' }
       }
-    });
+    );
 
 <% sorted_bugs = bugs_by_priority.sort_by { |m| %w[Urgent High Medium Low].index(m[:metric]) || 99 } %>
 <% 
@@ -1086,57 +428,35 @@
   closed_bugs_count = bug_metrics.find { |m| m[:metric] == 'closed_bugs' }&.dig(:value).to_i
 %>
     // Bug Status (Open vs Closed)
-    chartInstances.bugStatus = new Chart(document.getElementById('bugStatusChart').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Open', 'Closed'],
-        datasets: [{ data: [<%= open_bugs_count %>, <%= closed_bugs_count %>], backgroundColor: [colors.red, colors.green], borderWidth: 0 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
-    });
+    chartInstances.bugStatus = createDoughnutChart(
+      'bugStatusChart',
+      ['Open', 'Closed'],
+      [{ data: [<%= open_bugs_count %>, <%= closed_bugs_count %>], backgroundColor: [colors.red, colors.green], borderWidth: 0 }],
+      { plugins: { legend: { labels: { boxWidth: 12, padding: 8 } } } }
+    );
 
     // Bugs by Priority
     const bugsPriorityColors = { 'Urgent': colors.red, 'High': colors.orange, 'Medium': colors.yellow, 'Low': colors.green, 'No priority': 'rgba(148, 163, 184, 0.8)' };
     const bugsPriorityLabels = <%= sorted_bugs.map { |m| m[:metric] }.to_json %>;
     const bugsPriorityData = <%= sorted_bugs.map { |m| m[:value].to_i }.to_json %>;
     
-    chartInstances.bugsPriority = new Chart(document.getElementById('bugsPriorityChart').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: bugsPriorityLabels,
-        datasets: [{ data: bugsPriorityData, backgroundColor: bugsPriorityLabels.map(l => bugsPriorityColors[l] || colors.cyan), borderWidth: 0 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
-    });
+    chartInstances.bugsPriority = createDoughnutChart(
+      'bugsPriorityChart',
+      bugsPriorityLabels,
+      [{ data: bugsPriorityData, backgroundColor: bugsPriorityLabels.map(l => bugsPriorityColors[l] || colors.cyan), borderWidth: 0 }],
+      { plugins: { legend: { labels: { boxWidth: 12, padding: 8 } } } }
+    );
 
     // Bug Flow Chart
 <% bug_flow = weekly_bug_flow_data %>
-    chartInstances.bugFlow = new Chart(document.getElementById('bugFlowChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: <%= bug_flow[:labels].to_json %>,
-        datasets: [
-          { label: 'Bugs Created', data: <%= bug_flow[:created_pct].to_json %>, backgroundColor: 'rgba(220, 38, 38, 0.8)', borderRadius: 0, raw: <%= bug_flow[:created].to_json %> },
-          { label: 'Bugs Closed', data: <%= bug_flow[:closed_pct].to_json %>, backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 0, raw: <%= bug_flow[:closed].to_json %> }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { stacked: true, grid: { display: false } },
-          y: { stacked: true, max: 100, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { callback: v => v + '%' } }
-        },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: {
-            callbacks: {
-              label: ctx => `${ctx.dataset.label}: ${ctx.dataset.raw[ctx.dataIndex]} bugs (${ctx.parsed.y.toFixed(1)}%)`
-            }
-          }
-        }
-      }
-    });
+    chartInstances.bugFlow = createStackedBarChart(
+      'bugFlowChart',
+      <%= bug_flow[:labels].to_json %>,
+      [
+        { label: 'Bugs Created', data: <%= bug_flow[:created_pct].to_json %>, backgroundColor: 'rgba(220, 38, 38, 0.8)', borderRadius: 0, raw: <%= bug_flow[:created].to_json %> },
+        { label: 'Bugs Closed', data: <%= bug_flow[:closed_pct].to_json %>, backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 0, raw: <%= bug_flow[:closed].to_json %> }
+      ]
+    );
 
     // Bugs by Team Stacked Bar Chart (100%)
 <% bug_flow_by_team = weekly_bug_flow_by_team_data %>
@@ -1177,52 +497,30 @@
       );
     });
 
-    chartInstances.bugsByTeam = new Chart(document.getElementById('bugsByTeamChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: teamLabels,
-        datasets: Object.keys(teamRawData).map(team => ({
-          label: team,
-          data: teamPctData[team],
-          backgroundColor: teamColors[team] || 'rgba(148, 163, 184, 0.8)',
-          borderRadius: 0,
-          raw: teamRawData[team]
-        }))
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { stacked: true, grid: { display: false } },
-          y: { stacked: true, max: 100, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { callback: v => v + '%' } }
-        },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: {
-            callbacks: {
-              label: ctx => `${ctx.dataset.label}: ${ctx.dataset.raw[ctx.dataIndex]} bugs (${ctx.parsed.y}%)`
-            }
-          }
-        }
-      }
-    });
+    chartInstances.bugsByTeam = createStackedBarChart(
+      'bugsByTeamChart',
+      teamLabels,
+      Object.keys(teamRawData).map(team => ({
+        label: team,
+        data: teamPctData[team],
+        backgroundColor: teamColors[team] || 'rgba(148, 163, 184, 0.8)',
+        borderRadius: 0,
+        raw: teamRawData[team]
+      }))
+    );
 
     // Status Chart
     const statusColors = { 'Backlog': 'rgba(148, 163, 184, 0.8)', 'To Do': 'rgba(59, 130, 246, 0.8)', 'In Progress': 'rgba(255, 205, 0, 0.9)', 'In Review': 'rgba(88, 88, 88, 0.8)', 'Done': 'rgba(34, 197, 94, 0.8)' };
     const statusLabels = <%= status_chart_data.map { |d| d[:label] }.to_json %>;
     const statusBreakdown = <%= status_chart_data.map { |d| d[:breakdown] }.to_json %>;
     
-    chartInstances.status = new Chart(document.getElementById('statusChart').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: statusLabels,
-        datasets: [{ data: <%= status_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: statusLabels.map(l => statusColors[l] || colors.purple), borderWidth: 0 }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
+    chartInstances.status = createDoughnutChart(
+      'statusChart',
+      statusLabels,
+      [{ data: <%= status_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: statusLabels.map(l => statusColors[l] || colors.purple), borderWidth: 0 }],
+      {
         plugins: {
-          legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } },
+          legend: { labels: { boxWidth: 12, padding: 8 } },
           tooltip: {
             callbacks: {
               label: ctx => {
@@ -1238,35 +536,29 @@
           }
         }
       }
-    });
+    );
     
     // Priority Chart
-    chartInstances.priority = new Chart(document.getElementById('priorityChart').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: <%= priority_chart_data.map { |d| d[:label] }.to_json %>,
-        datasets: [{ data: <%= priority_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: ['rgba(148, 163, 184, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(255, 205, 0, 0.9)', 'rgba(249, 115, 22, 0.8)', 'rgba(220, 38, 38, 0.8)'], borderWidth: 0 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } } } }
-    });
+    chartInstances.priority = createDoughnutChart(
+      'priorityChart',
+      <%= priority_chart_data.map { |d| d[:label] }.to_json %>,
+      [{ data: <%= priority_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: ['rgba(148, 163, 184, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(255, 205, 0, 0.9)', 'rgba(249, 115, 22, 0.8)', 'rgba(220, 38, 38, 0.8)'], borderWidth: 0 }],
+      { plugins: { legend: { labels: { boxWidth: 12, padding: 8 } } } }
+    );
     
     // Type Chart
-    chartInstances.type = new Chart(document.getElementById('typeChart').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: <%= type_chart_data.map { |d| d[:label] }.to_json %>,
-        datasets: [{
-          data: <%= type_chart_data.map { |d| d[:value] }.to_json %>,
-          backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'],
-          borderWidth: 0,
-          breakdown: <%= type_chart_data.map { |d| d[:breakdown] }.to_json %>
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
+    chartInstances.type = createDoughnutChart(
+      'typeChart',
+      <%= type_chart_data.map { |d| d[:label] }.to_json %>,
+      [{
+        data: <%= type_chart_data.map { |d| d[:value] }.to_json %>,
+        backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(156, 163, 175, 0.8)'],
+        borderWidth: 0,
+        breakdown: <%= type_chart_data.map { |d| d[:breakdown] }.to_json %>
+      }],
+      {
         plugins: {
-          legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } },
+          legend: { labels: { boxWidth: 12, padding: 8 } },
           tooltip: {
             callbacks: {
               afterLabel: function(context) {
@@ -1284,23 +576,19 @@
           }
         }
       }
-    });
+    );
     
     // Assignee Chart
-    chartInstances.assignee = new Chart(document.getElementById('assigneeChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: <%= assignee_chart_data.map { |d| d[:label] }.to_json %>,
-        datasets: [{ label: 'Active Issues', data: <%= assignee_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: 'rgba(255, 205, 0, 0.9)', borderRadius: 4 }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
+    chartInstances.assignee = createBarChart(
+      'assigneeChart',
+      <%= assignee_chart_data.map { |d| d[:label] }.to_json %>,
+      [{ label: 'Active Issues', data: <%= assignee_chart_data.map { |d| d[:value] }.to_json %>, backgroundColor: 'rgba(255, 205, 0, 0.9)', borderRadius: 4 }],
+      {
         indexAxis: 'y',
         plugins: { legend: { display: false } },
         scales: { x: { beginAtZero: true } }
       }
-    });
+    );
     }
     
     // Create charts on load

@@ -8,14 +8,14 @@ test.describe('Cycles Section', () => {
 
     test('displays team comparison table', async ({ page }) => {
         const teamSection = page.locator('section', { has: page.locator('.section-title', { hasText: 'Team Comparison' }) });
-        const table = teamSection.locator('.cycles-table');
+        const table = teamSection.locator('.data-table');
 
         await expect(table).toBeVisible();
     });
 
     test('team comparison table has correct headers', async ({ page }) => {
         const teamSection = page.locator('section', { has: page.locator('.section-title', { hasText: 'Team Comparison' }) });
-        const headersRow = teamSection.locator('.cycles-table thead tr');
+        const headersRow = teamSection.locator('.data-table thead tr');
 
         // Verify key headers exist in the table
         await expect(headersRow).toContainText('Team');
@@ -42,7 +42,7 @@ test.describe('Cycles Section', () => {
 
     test('cycles table has correct headers', async ({ page }) => {
         const cyclesSection = page.locator('section', { has: page.locator('.section-title', { hasText: 'Cycles by Team' }) });
-        const firstTable = cyclesSection.locator('.cycles-table').first();
+        const firstTable = cyclesSection.locator('.data-table').first();
         const headersRow = firstTable.locator('thead tr');
 
         // Verify key headers exist in the table

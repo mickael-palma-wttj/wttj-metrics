@@ -25,7 +25,7 @@ module WttjMetrics
         def fetch_available_teams
           keys = @parser.metrics_by_category.keys.select do |k|
             k.start_with?('github:') &&
-              !k.end_with?('_daily', '_repo_activity', '_contributor_activity')
+              !k.end_with?('_daily', '_repo_activity', '_contributor_activity', '_commit_activity')
           end
 
           keys.map { |k| k.split(':').last }

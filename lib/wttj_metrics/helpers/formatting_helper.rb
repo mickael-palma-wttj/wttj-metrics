@@ -19,21 +19,26 @@ module WttjMetrics
       end
 
       # :reek:BooleanParameter
-      def metric_color_class(val, global, inverse: false)
+      def metric_color_class(val, global, inverse: false, return_class_only: false)
         return '' if val.nil? || global.nil?
 
         diff = val - global
-        if inverse
-          if diff.negative?
-            'class="text-green"'
-          else
-            (diff.positive? ? 'class="text-red"' : '')
-          end
-        elsif diff.positive?
-          'class="text-green"'
-        else
-          (diff.negative? ? 'class="text-red"' : '')
-        end
+        color_class = if inverse
+                        if diff.negative?
+                          'text-green'
+                        else
+                          (diff.positive? ? 'text-red' : '')
+                        end
+                      elsif diff.positive?
+                        'text-green'
+                      else
+                        (diff.negative? ? 'text-red' : '')
+                      end
+
+        return color_class if return_class_only
+        return '' if color_class.empty?
+
+        "class=\"#{color_class}\""
       end
 
       def format_with_unit(value, unit)

@@ -103,11 +103,18 @@ test.describe('GitHub Team Metrics', () => {
         // We look for style attribute containing 'color:'
         const coloredCells = rows.locator('td[style*="color:"]');
 
+        // Check for progress bars with colored fills
+        const coloredProgress = rows.locator('.progress-fill.text-green, .progress-fill.text-red');
+
         // We can't guarantee there are colored cells if all metrics match the average exactly, 
         // but in a real report it's likely.
         // We can check if the logic exists by looking at the page source or just skipping if none found.
         if (await coloredCells.count() > 0) {
             await expect(coloredCells.first()).toBeVisible();
+        }
+
+        if (await coloredProgress.count() > 0) {
+            await expect(coloredProgress.first()).toBeVisible();
         }
     });
 
@@ -120,6 +127,6 @@ test.describe('GitHub Team Metrics', () => {
         if (await rows.count() < 2) test.skip('Not enough rows to test alternate coloring');
 
         const secondRow = rows.nth(1);
-        await expect(secondRow).toHaveCSS('background-color', 'rgb(249, 249, 249)');
+        await expect(secondRow).toHaveCSS('background-color', 'rgba(0, 0, 0, 0.02)');
     });
 });

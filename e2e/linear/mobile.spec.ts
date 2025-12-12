@@ -28,11 +28,11 @@ test.describe('Mobile Responsiveness', () => {
     });
 
     test('tables are present in scrollable containers', async ({ page }) => {
-        const tableContainer = page.locator('.chart-card:has(.cycles-table)').first();
+        const tableContainer = page.locator('.chart-card:has(.data-table)').first();
         await expect(tableContainer).toBeVisible();
 
         // Verify table is inside the container
-        const table = tableContainer.locator('.cycles-table');
+        const table = tableContainer.locator('.data-table');
         await expect(table).toBeVisible();
     });
 

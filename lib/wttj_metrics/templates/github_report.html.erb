@@ -6,357 +6,7 @@
   <title>GitHub Metrics Dashboard - <%= @today %></title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #EAE4DE;
-      color: #151515;
-      min-height: 100vh;
-      padding: 2rem;
-    }
-    .container { max-width: 1400px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 2rem; }
-    h1 {
-      font-size: 2.5rem;
-      color: #151515;
-      margin-bottom: 0.5rem;
-    }
-    .subtitle { color: #585858; font-size: 1rem; }
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .metric-card {
-      background: #FFFFFF;
-      border: 1px solid #DEDEDE;
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s;
-      position: relative;
-      cursor: help;
-    }
-    .metric-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-      z-index: 10;
-    }
-    .metric-card .tooltip {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #151515;
-      color: #FFFFFF;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      line-height: 1.4;
-      width: 220px;
-      text-align: left;
-      z-index: 9999;
-      transition: opacity 0.2s, visibility 0.2s;
-      border: 1px solid #151515;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      margin-top: 8px;
-    }
-    .metric-card .tooltip::after {
-      content: '';
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 6px solid transparent;
-      border-bottom-color: #151515;
-    }
-    .metric-card:hover .tooltip { visibility: visible; opacity: 1; }
-    
-    .team-row:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    /* Table Styles */
-    .search-container {
-      margin-bottom: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .search-input {
-      padding: 0.5rem;
-      border: 1px solid #DEDEDE;
-      border-radius: 4px;
-      width: 300px;
-    }
-    .table-container {
-      overflow-x: auto;
-    }
-    .metrics-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    /* Heatmap Styles */
-    .heatmap-container {
-      overflow-x: auto;
-      padding: 1rem;
-    }
-    .heatmap-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 2px;
-    }
-    .heatmap-table th {
-      font-size: 0.8rem;
-      color: #585858;
-      padding: 0.5rem;
-    }
-    .heatmap-table td {
-      text-align: center;
-      padding: 0.5rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      transition: transform 0.1s;
-    }
-    .heatmap-table td:hover {
-      transform: scale(1.1);
-      cursor: pointer;
-    }
-    .heatmap-table .day-label {
-      font-weight: bold;
-      text-align: right;
-      padding-right: 1rem;
-      background: none !important;
-      color: #151515 !important;
-    }
-    .metrics-table thead tr {
-      background: #f5f5f5;
-      text-align: left;
-    }
-    .metrics-table th {
-      padding: 1rem;
-      cursor: pointer;
-      text-align: right;
-    }
-    .metrics-table th:first-child {
-      text-align: left;
-    }
-    .metrics-table th span {
-      font-size: 0.8em;
-      color: #666;
-      font-weight: normal;
-    }
-    .metrics-table td {
-      padding: 1rem;
-      border-bottom: 1px solid #eee;
-      text-align: right;
-    }
-    .metrics-table td:first-child {
-      text-align: left;
-      font-weight: 500;
-    }
-    .text-green {
-      color: #16a34a;
-      font-weight: bold;
-    }
-    .text-red {
-      color: #dc2626;
-      font-weight: bold;
-    }
-
-    /* Chart Tooltips */
-    .tooltip-icon {
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      background: #EAE4DE;
-      color: #585858;
-      border-radius: 50%;
-      text-align: center;
-      line-height: 18px;
-      font-size: 12px;
-      margin-left: 8px;
-      cursor: help;
-      position: relative;
-      vertical-align: middle;
-      border: 1px solid #DEDEDE;
-    }
-    .tooltip-icon:hover {
-      background: #585858;
-      color: #FFFFFF;
-      border-color: #585858;
-    }
-    .tooltip-icon .tooltip-text {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 50%;
-      left: 100%;
-      transform: translateY(-50%);
-      background: #151515;
-      color: #FFFFFF;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      line-height: 1.4;
-      width: 250px;
-      text-align: left;
-      z-index: 9999;
-      transition: opacity 0.2s, visibility 0.2s;
-      border: 1px solid #151515;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      margin-left: 10px;
-      font-weight: normal;
-      pointer-events: none;
-    }
-    .tooltip-icon .tooltip-text::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      right: 100%;
-      transform: translateY(-50%);
-      border: 6px solid transparent;
-      border-right-color: #151515;
-    }
-    .tooltip-icon:hover .tooltip-text { visibility: visible; opacity: 1; }
-
-    .metric-value {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #151515;
-    }
-    .metric-label { color: #585858; font-size: 0.9rem; margin-top: 0.5rem; }
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
-    .chart-card {
-      background: #FFFFFF;
-      border: 1px solid #DEDEDE;
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
-    .chart-card.full-width { grid-column: 1 / -1; }
-    .chart-title { font-size: 1.2rem; margin-bottom: 1rem; color: #151515; }
-    .chart-subtitle { font-size: 0.8rem; color: #585858; margin-top: -0.5rem; margin-bottom: 1rem; }
-    .chart-container { position: relative; height: 300px; }
-    .chart-container.tall { height: 400px; }
-    section { margin-bottom: 1rem; position: relative; }
-    .section-title {
-      font-size: 1.5rem;
-      margin: 2rem 0 1rem;
-      color: #151515;
-      border-bottom: 2px solid #FFCD00;
-      padding-bottom: 0.5rem;
-    }
-    footer { text-align: center; margin-top: 3rem; color: #585858; font-size: 0.9rem; }
-    
-    /* Collapsible sections */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      user-select: none;
-      padding-top: 1rem;
-    }
-    .section-header .section-title {
-      margin: 0;
-      flex: 1;
-    }
-    /* iOS-style toggle switch */
-    .toggle-switch {
-      position: relative;
-      width: 44px;
-      height: 24px;
-      margin-left: 1rem;
-      flex-shrink: 0;
-    }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #DEDEDE;
-      transition: 0.3s;
-      border-radius: 24px;
-    }
-    .toggle-slider:before {
-      position: absolute;
-      content: '';
-      height: 20px;
-      width: 20px;
-      left: 2px;
-      bottom: 2px;
-      background-color: white;
-      transition: 0.3s;
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    .toggle-switch input:checked + .toggle-slider {
-      background-color: #FFCD00;
-    }
-    .toggle-switch input:checked + .toggle-slider:before {
-      transform: translateX(20px);
-    }
-    .toggle-switch input:focus + .toggle-slider {
-      box-shadow: 0 0 0 2px rgba(255, 205, 0, 0.3);
-    }
-    .section-content {
-      max-height: 5000px;
-      overflow-x: visible;
-      overflow-y: hidden;
-      transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
-      opacity: 1;
-      padding-top: 1rem;
-      padding-bottom: 3rem;
-    }
-    .section-content.collapsed {
-      max-height: 0;
-      opacity: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-    }
-    .collapse-all-btn {
-      background: #FFCD00;
-      border: 1px solid #151515;
-      color: #151515;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-      margin-top: 1rem;
-    }
-    .collapse-all-btn:hover {
-      background: #e6b800;
-      transform: translateY(-1px);
-    }
-    .chevron {
-      display: inline-block;
-      transition: transform 0.3s;
-      margin-right: 0.5rem;
-    }
-    .chevron.collapsed {
-      transform: rotate(-90deg);
-    }
+    <%= File.read(File.join(WttjMetrics.root, 'lib/wttj_metrics/templates/assets/styles.css')) %>
   </style>
 </head>
 <body>
@@ -671,7 +321,8 @@
         </label>
       </div>
       <div class="section-content">
-        <div class="chart-card full-width">
+        <div class="charts-grid">
+          <div class="chart-card full-width">
           <h3 class="chart-title">
             Commits by Day and Hour
             <span class="tooltip-icon">?
@@ -715,6 +366,7 @@
             </table>
           </div>
         </div>
+          </div>
       </div>
     </section>
 
@@ -728,20 +380,22 @@
         </label>
       </div>
       <div class="section-content">
-        <div class="search-container">
-          <input type="text" id="teamSearch" placeholder="Search teams..." oninput="filterTable()" class="search-input">
-        </div>
-        <div class="table-container">
-          <table id="teamMetricsTable" class="metrics-table">
+        <div class="charts-grid">
+          <div class="chart-card full-width">
+            <div class="search-container">
+              <input type="text" id="teamSearch" placeholder="Search teams..." oninput="filterTable('teamSearch', 'teamMetricsTable')" class="search-input">
+            </div>
+            <div class="table-container">
+              <table id="teamMetricsTable" class="data-table">
             <thead>
               <tr>
-                <th onclick="sortTable(0)">Team &#8597;</th>
-                <th onclick="sortTable(1)">Merged PRs &#8597;<br><span>Total: <%= metrics[:total_merged].to_i %></span></th>
-                <th onclick="sortTable(2)">Avg Time to Merge (d) &#8597;<br><span>Avg: <%= format_metric_value(metrics[:avg_time_to_merge]) %></span></th>
-                <th onclick="sortTable(3)">Avg Reviews &#8597;<br><span>Avg: <%= format_metric_value(metrics[:avg_reviews]) %></span></th>
-                <th onclick="sortTable(4)">Unreviewed Rate (%) &#8597;<br><span>Avg: <%= format_metric_value(metrics[:unreviewed_pr_rate]) %></span></th>
-                <th onclick="sortTable(5)">Merge Rate (%) &#8597;<br><span>Avg: <%= format_metric_value(metrics[:merge_rate]) %></span></th>
-                <th onclick="sortTable(6)">CI Success (%) &#8597;<br><span>Avg: <%= format_metric_value(metrics[:ci_success_rate]) %></span></th>
+                <th onclick="sortTable('teamMetricsTable', 0)" class="sortable">Team</th>
+                <th onclick="sortTable('teamMetricsTable', 1)" class="sortable">Merged PRs<br><span>Total: <%= metrics[:total_merged].to_i %></span></th>
+                <th onclick="sortTable('teamMetricsTable', 2)" class="sortable">Avg Time to Merge (d)<br><span>Avg: <%= format_metric_value(metrics[:avg_time_to_merge]) %></span></th>
+                <th onclick="sortTable('teamMetricsTable', 3)" class="sortable">Avg Reviews<br><span>Avg: <%= format_metric_value(metrics[:avg_reviews]) %></span></th>
+                <th onclick="sortTable('teamMetricsTable', 4)" class="sortable">Unreviewed Rate (%)<br><span>Avg: <%= format_metric_value(metrics[:unreviewed_pr_rate]) %></span></th>
+                <th onclick="sortTable('teamMetricsTable', 5)" class="sortable">Merge Rate (%)<br><span>Avg: <%= format_metric_value(metrics[:merge_rate]) %></span></th>
+                <th onclick="sortTable('teamMetricsTable', 6)" class="sortable">CI Success (%)<br><span>Avg: <%= format_metric_value(metrics[:ci_success_rate]) %></span></th>
               </tr>
             </thead>
             <tbody>
@@ -755,19 +409,30 @@
                   <td <%= metric_color_class(data[:metrics][:avg_reviews], metrics[:avg_reviews]) %>>
                     <%= format_metric_value(data[:metrics][:avg_reviews]) %>
                   </td>
-                  <td <%= metric_color_class(data[:metrics][:unreviewed_pr_rate], metrics[:unreviewed_pr_rate], inverse: true) %>>
-                    <%= format_metric_value(data[:metrics][:unreviewed_pr_rate]) %>
+                  <td>
+                    <div class="progress-bar">
+                      <div class="progress-fill <%= metric_color_class(data[:metrics][:unreviewed_pr_rate], metrics[:unreviewed_pr_rate], inverse: true, return_class_only: true) %>" style="width: <%= data[:metrics][:unreviewed_pr_rate] %>%"></div>
+                    </div>
+                    <small><%= format_metric_value(data[:metrics][:unreviewed_pr_rate]) %>%</small>
                   </td>
-                  <td <%= metric_color_class(data[:metrics][:merge_rate], metrics[:merge_rate]) %>>
-                    <%= format_metric_value(data[:metrics][:merge_rate]) %>
+                  <td>
+                    <div class="progress-bar">
+                      <div class="progress-fill <%= metric_color_class(data[:metrics][:merge_rate], metrics[:merge_rate], return_class_only: true) %>" style="width: <%= data[:metrics][:merge_rate] %>%"></div>
+                    </div>
+                    <small><%= format_metric_value(data[:metrics][:merge_rate]) %>%</small>
                   </td>
-                  <td <%= metric_color_class(data[:metrics][:ci_success_rate], metrics[:ci_success_rate]) %>>
-                    <%= format_metric_value(data[:metrics][:ci_success_rate]) %>
+                  <td>
+                    <div class="progress-bar">
+                      <div class="progress-fill <%= metric_color_class(data[:metrics][:ci_success_rate], metrics[:ci_success_rate], return_class_only: true) %>" style="width: <%= data[:metrics][:ci_success_rate] %>%"></div>
+                    </div>
+                    <small><%= format_metric_value(data[:metrics][:ci_success_rate]) %>%</small>
                   </td>
                 </tr>
               <% end %>
             </tbody>
           </table>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -778,98 +443,12 @@
   </div>
   
   <script>
-    // Collapse/Expand functions
-    function toggleSection(header) {
-      const content = header.nextElementSibling;
-      const chevron = header.querySelector('.chevron');
-      const checkbox = header.querySelector('.toggle-switch input');
-      content.classList.toggle('collapsed');
-      chevron.classList.toggle('collapsed');
-      if (checkbox) checkbox.checked = !content.classList.contains('collapsed');
-      updateToggleAllButton();
-    }
+    <%= File.read(File.join(WttjMetrics.root, 'lib/wttj_metrics/templates/assets/scripts.js')) %>
     
-    function toggleSectionByCheckbox(checkbox) {
-      const header = checkbox.closest('.section-header');
-      const content = header.nextElementSibling;
-      const chevron = header.querySelector('.chevron');
-      if (checkbox.checked) {
-        content.classList.remove('collapsed');
-        chevron.classList.remove('collapsed');
-      } else {
-        content.classList.add('collapsed');
-        chevron.classList.add('collapsed');
-      }
-      updateToggleAllButton();
-    }
-    
-    function toggleAllSections() {
-      const contents = document.querySelectorAll('.section-content');
-      const chevrons = document.querySelectorAll('.chevron');
-      const checkboxes = document.querySelectorAll('.toggle-switch input');
-      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
-      
-      contents.forEach(content => {
-        if (allCollapsed) {
-          content.classList.remove('collapsed');
-        } else {
-          content.classList.add('collapsed');
-        }
-      });
-      
-      chevrons.forEach(chevron => {
-        if (allCollapsed) {
-          chevron.classList.remove('collapsed');
-        } else {
-          chevron.classList.add('collapsed');
-        }
-      });
-      
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = allCollapsed;
-      });
-      
-      updateToggleAllButton();
-    }
-    
-    function updateToggleAllButton() {
-      const contents = document.querySelectorAll('.section-content');
-      const allCollapsed = Array.from(contents).every(c => c.classList.contains('collapsed'));
-      document.getElementById('toggleAllIcon').textContent = allCollapsed ? '▶' : '▼';
-      document.getElementById('toggleAllText').textContent = allCollapsed ? 'Expand All' : 'Collapse All';
-    }
-    
-    const colors = {
-      purple: 'rgba(88, 88, 88, 0.8)',
-      blue: 'rgba(59, 130, 246, 0.8)',
-      pink: 'rgba(236, 72, 153, 0.8)',
-      green: 'rgba(34, 197, 94, 0.8)',
-      orange: 'rgba(249, 115, 22, 0.8)',
-      yellow: 'rgba(255, 205, 0, 0.9)',
-      red: 'rgba(220, 38, 38, 0.8)',
-      cyan: 'rgba(6, 182, 212, 0.8)',
-      black: 'rgba(21, 21, 21, 0.8)',
-    };
-    
-    Chart.defaults.color = '#585858';
-    Chart.defaults.borderColor = '#DEDEDE';
     
     <% breakdown = weekly_breakdown %>
     const breakdownLabels = <%= breakdown[:labels].to_json %>;
     const globalMetrics = <%= metrics.to_json %>;
-
-    function createBaselineDataset(value, label, color) {
-      return {
-        type: 'line',
-        label: `${label} (Avg: ${Number(value).toFixed(2)})`,
-        data: new Array(breakdownLabels.length).fill(value),
-        borderColor: color,
-        borderDash: [5, 5],
-        pointRadius: 0,
-        borderWidth: 2,
-        fill: false
-      };
-    }
 
     // Store chart instances for resize handling
     const chartInstances = {};
@@ -885,154 +464,70 @@
     const avgTimeMergeHours = <%= breakdown[:datasets][:avg_time_to_merge].to_json %>;
     const avgTimeMergeDays = avgTimeMergeHours.map(h => (h / 24).toFixed(2));
 
-    chartInstances.timeToMerge = new Chart(document.getElementById('timeToMergeChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Avg Time to Merge (Days)',
-            data: avgTimeMergeDays,
-            borderColor: colors.blue,
-            backgroundColor: colors.blue,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.avg_time_to_merge, 'Period Avg', colors.blue)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    chartInstances.timeToMerge = createMetricLineChart(
+      'timeToMergeChart',
+      breakdownLabels,
+      avgTimeMergeDays,
+      'Avg Time to Merge (Days)',
+      colors.blue,
+      globalMetrics.avg_time_to_merge
+    );
 
     // Time to First Review Chart
     const avgTimeFirstReviewRaw = <%= breakdown[:datasets][:avg_time_to_first_review].to_json %>;
     // Data is already in days
     const avgTimeFirstReviewDays = avgTimeFirstReviewRaw.map(d => Number(d).toFixed(2));
 
-    chartInstances.timeToFirstReview = new Chart(document.getElementById('timeToFirstReviewChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Avg Time to First Review (Days)',
-            data: avgTimeFirstReviewDays,
-            borderColor: colors.cyan,
-            backgroundColor: colors.cyan,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.avg_time_to_first_review, 'Period Avg', colors.cyan)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    chartInstances.timeToFirstReview = createMetricLineChart(
+      'timeToFirstReviewChart',
+      breakdownLabels,
+      avgTimeFirstReviewDays,
+      'Avg Time to First Review (Days)',
+      colors.cyan,
+      globalMetrics.avg_time_to_first_review
+    );
 
     // Time to Approval Chart
-    chartInstances.timeToApproval = new Chart(document.getElementById('timeToApprovalChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Avg Time to Approval (Days)',
-            data: <%= breakdown[:datasets][:avg_time_to_approval].to_json %>,
-            borderColor: colors.green,
-            backgroundColor: colors.green,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.avg_time_to_approval, 'Period Avg', colors.green)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    chartInstances.timeToApproval = createMetricLineChart(
+      'timeToApprovalChart',
+      breakdownLabels,
+      <%= breakdown[:datasets][:avg_time_to_approval].to_json %>,
+      'Avg Time to Approval (Days)',
+      colors.green,
+      globalMetrics.avg_time_to_approval
+    );
 
     // Reviews & Comments Charts
     const avgReviews = <%= breakdown[:datasets][:avg_reviews].to_json %>;
     const avgComments = <%= breakdown[:datasets][:avg_comments].to_json %>;
     const avgRework = <%= breakdown[:datasets][:avg_rework_cycles].to_json %>;
 
-    chartInstances.reviews = new Chart(document.getElementById('reviewsChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Avg Reviews',
-            data: avgReviews,
-            borderColor: colors.purple,
-            backgroundColor: colors.purple,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.avg_reviews, 'Period Avg', colors.purple)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    chartInstances.reviews = createMetricLineChart(
+      'reviewsChart',
+      breakdownLabels,
+      avgReviews,
+      'Avg Reviews',
+      colors.purple,
+      globalMetrics.avg_reviews
+    );
 
-    chartInstances.comments = new Chart(document.getElementById('commentsChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Avg Comments',
-            data: avgComments,
-            borderColor: colors.orange,
-            backgroundColor: colors.orange,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.avg_comments, 'Period Avg', colors.orange)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    chartInstances.comments = createMetricLineChart(
+      'commentsChart',
+      breakdownLabels,
+      avgComments,
+      'Avg Comments',
+      colors.orange,
+      globalMetrics.avg_comments
+    );
 
-    chartInstances.reworkCycles = new Chart(document.getElementById('reworkCyclesChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Avg Rework Cycles',
-            data: avgRework,
-            borderColor: colors.red,
-            backgroundColor: colors.red,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.avg_rework_cycles, 'Period Avg', colors.red)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    chartInstances.reworkCycles = createMetricLineChart(
+      'reworkCyclesChart',
+      breakdownLabels,
+      avgRework,
+      'Avg Rework Cycles',
+      colors.red,
+      globalMetrics.avg_rework_cycles
+    );
 
     // PR Size Chart
     const avgAdditionsRaw = <%= breakdown[:datasets][:avg_additions].to_json %>;
@@ -1042,45 +537,24 @@
     const additionsPct = avgAdditionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
     const deletionsPct = avgDeletionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
 
-    chartInstances.prSize = new Chart(document.getElementById('prSizeChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Avg Additions',
-            data: additionsPct,
-            backgroundColor: colors.green,
-            raw: avgAdditionsRaw
-          },
-          {
-            label: 'Avg Deletions',
-            data: deletionsPct,
-            backgroundColor: colors.red,
-            raw: avgDeletionsRaw
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { stacked: true },
-          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
+    chartInstances.prSize = createStackedBarChart(
+      'prSizeChart',
+      breakdownLabels,
+      [
+        {
+          label: 'Avg Additions',
+          data: additionsPct,
+          backgroundColor: colors.green,
+          raw: avgAdditionsRaw
         },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: {
-            callbacks: {
-              label: ctx => {
-                const raw = ctx.dataset.raw[ctx.dataIndex];
-                return `${ctx.dataset.label}: ${Number(raw).toFixed(1)} (${ctx.parsed.y.toFixed(1)}%)`;
-              }
-            }
-          }
+        {
+          label: 'Avg Deletions',
+          data: deletionsPct,
+          backgroundColor: colors.red,
+          raw: avgDeletionsRaw
         }
-      }
-    });
+      ]
+    );
 
     // Daily Breakdown Chart (100% Stacked)
     // Calculate percentages
@@ -1094,182 +568,91 @@
     const closedPct = closedRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
     const openPct = openRaw.map((val, i) => dailyTotals[i] > 0 ? (val / dailyTotals[i] * 100) : 0);
 
-    chartInstances.dailyBreakdown = new Chart(document.getElementById('dailyBreakdownChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          { label: 'Merged', data: mergedPct, backgroundColor: colors.green, raw: mergedRaw },
-          { label: 'Closed', data: closedPct, backgroundColor: colors.red, raw: closedRaw },
-          { label: 'Open', data: openPct, backgroundColor: colors.blue, raw: openRaw }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { stacked: true },
-          y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v + '%' } }
-        },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: {
-            callbacks: {
-              label: ctx => {
-                const raw = ctx.dataset.raw[ctx.dataIndex];
-                return `${ctx.dataset.label}: ${raw} (${ctx.parsed.y.toFixed(1)}%)`;
-              }
-            }
-          }
-        }
-      }
-    });
+    chartInstances.dailyBreakdown = createStackedBarChart(
+      'dailyBreakdownChart',
+      breakdownLabels,
+      [
+        { label: 'Merged', data: mergedPct, backgroundColor: colors.green, raw: mergedRaw },
+        { label: 'Closed', data: closedPct, backgroundColor: colors.red, raw: closedRaw },
+        { label: 'Open', data: openPct, backgroundColor: colors.blue, raw: openRaw }
+      ]
+    );
 
     // Quality & Health Charts
     const ciSuccessRate = <%= breakdown[:datasets][:ci_success_rate].to_json %>;
     const mergeRate = <%= breakdown[:datasets][:merge_rate].to_json %>;
     const unreviewedRate = <%= breakdown[:datasets][:unreviewed_pr_rate].to_json %>;
 
-    chartInstances.ciSuccessRate = new Chart(document.getElementById('ciSuccessRateChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'CI Success Rate (%)',
-            data: ciSuccessRate,
-            borderColor: colors.green,
-            backgroundColor: colors.green,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.ci_success_rate, 'Period Avg', colors.green)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true, max: 100 } }
-      }
-    });
+    chartInstances.ciSuccessRate = createMetricLineChart(
+      'ciSuccessRateChart',
+      breakdownLabels,
+      ciSuccessRate,
+      'CI Success Rate (%)',
+      colors.green,
+      globalMetrics.ci_success_rate,
+      'Period Avg',
+      { scales: { y: { beginAtZero: true, max: 100 } } }
+    );
 
-    chartInstances.mergeRate = new Chart(document.getElementById('mergeRateChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Acceptance Rate (%)',
-            data: mergeRate,
-            borderColor: colors.blue,
-            backgroundColor: colors.blue,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.merge_rate, 'Period Avg', colors.blue)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true, max: 100 } }
-      }
-    });
+    chartInstances.mergeRate = createMetricLineChart(
+      'mergeRateChart',
+      breakdownLabels,
+      mergeRate,
+      'Acceptance Rate (%)',
+      colors.blue,
+      globalMetrics.merge_rate,
+      'Period Avg',
+      { scales: { y: { beginAtZero: true, max: 100 } } }
+    );
 
-    chartInstances.unreviewedPRRate = new Chart(document.getElementById('unreviewedPRRateChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Unreviewed PR Rate (%)',
-            data: unreviewedRate,
-            borderColor: colors.red,
-            backgroundColor: colors.red,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.unreviewed_pr_rate, 'Period Avg', colors.red)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true, max: 100 } }
-      }
-    });
+    chartInstances.unreviewedPRRate = createMetricLineChart(
+      'unreviewedPRRateChart',
+      breakdownLabels,
+      unreviewedRate,
+      'Unreviewed PR Rate (%)',
+      colors.red,
+      globalMetrics.unreviewed_pr_rate,
+      'Period Avg',
+      { scales: { y: { beginAtZero: true, max: 100 } } }
+    );
 
     // Hotfix Rate Chart
-    chartInstances.hotfixRate = new Chart(document.getElementById('hotfixRateChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Hotfix Rate (%)',
-            data: <%= breakdown[:datasets][:hotfix_rate].to_json %>,
-            borderColor: colors.red,
-            backgroundColor: colors.red,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.hotfix_rate, 'Period Avg', colors.red)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true, max: 100 } }
-      }
-    });
+    chartInstances.hotfixRate = createMetricLineChart(
+      'hotfixRateChart',
+      breakdownLabels,
+      <%= breakdown[:datasets][:hotfix_rate].to_json %>,
+      'Hotfix Rate (%)',
+      colors.red,
+      globalMetrics.hotfix_rate,
+      'Period Avg',
+      { scales: { y: { beginAtZero: true, max: 100 } } }
+    );
 
     // Time to Green Chart
-    chartInstances.timeToGreen = new Chart(document.getElementById('timeToGreenChart').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Time to Green (Hours)',
-            data: <%= breakdown[:datasets][:time_to_green].to_json %>,
-            borderColor: colors.green,
-            backgroundColor: colors.green,
-            tension: 0.4
-          },
-          createBaselineDataset(globalMetrics.time_to_green, 'Period Avg', colors.green)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    chartInstances.timeToGreen = createMetricLineChart(
+      'timeToGreenChart',
+      breakdownLabels,
+      <%= breakdown[:datasets][:time_to_green].to_json %>,
+      'Time to Green (Hours)',
+      colors.green,
+      globalMetrics.time_to_green
+    );
 
     // Deployment Frequency Chart
     const deployFrequency = <%= breakdown[:datasets][:deploy_frequency].to_json %>;
 
-    chartInstances.deployFrequency = new Chart(document.getElementById('deployFrequencyChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: breakdownLabels,
-        datasets: [
-          {
-            label: 'Weekly Deploys',
-            data: deployFrequency,
-            backgroundColor: colors.yellow
-          },
-          createBaselineDataset(globalMetrics.deploy_frequency, 'Period Avg', colors.yellow)
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    chartInstances.deployFrequency = createBarChart(
+      'deployFrequencyChart',
+      breakdownLabels,
+      [
+        {
+          label: 'Weekly Deploys',
+          data: deployFrequency,
+          backgroundColor: colors.yellow
+        },
+        createBaselineDataset(globalMetrics.deploy_frequency, 'Period Avg', colors.yellow, breakdownLabels.length)
+      ]
+    );
 
     // Top Repositories Chart
     <% top_repos = top_repositories %>
@@ -1277,22 +660,18 @@
     const topRepoData = <%= top_repos.map { |r| r[:value] }.to_json %>;
 
     if (topRepoLabels.length > 0) {
-      chartInstances.topRepos = new Chart(document.getElementById('topReposChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: topRepoLabels,
-          datasets: [{
-            label: 'Pull Requests',
-            data: topRepoData,
-            backgroundColor: colors.yellow,
-            borderColor: colors.yellow,
-            borderWidth: 1
-          }]
-        },
-        options: {
+      chartInstances.topRepos = createBarChart(
+        'topReposChart',
+        topRepoLabels,
+        [{
+          label: 'Pull Requests',
+          data: topRepoData,
+          backgroundColor: colors.yellow,
+          borderColor: colors.yellow,
+          borderWidth: 1
+        }],
+        {
           indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
             title: { display: false }
@@ -1301,7 +680,7 @@
             x: { beginAtZero: true, ticks: { precision: 0 } }
           }
         }
-      });
+      );
     }
 
     // Top Contributors Chart
@@ -1310,22 +689,18 @@
     const topContributorData = <%= contributors_data.map { |r| r[:value] }.to_json %>;
 
     if (topContributorLabels.length > 0) {
-      chartInstances.topContributors = new Chart(document.getElementById('topContributorsChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: topContributorLabels,
-          datasets: [{
-            label: 'Pull Requests',
-            data: topContributorData,
-            backgroundColor: colors.blue,
-            borderColor: colors.blue,
-            borderWidth: 1
-          }]
-        },
-        options: {
+      chartInstances.topContributors = createBarChart(
+        'topContributorsChart',
+        topContributorLabels,
+        [{
+          label: 'Pull Requests',
+          data: topContributorData,
+          backgroundColor: colors.blue,
+          borderColor: colors.blue,
+          borderWidth: 1
+        }],
+        {
           indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
             title: { display: false }
@@ -1334,7 +709,7 @@
             x: { beginAtZero: true, ticks: { precision: 0 } }
           }
         }
-      });
+      );
     }
 
     // Team Charts
@@ -1352,73 +727,6 @@
         createCharts();
       }, 250);
     });
-
-    function filterTable() {
-      const input = document.getElementById("teamSearch");
-      const filter = input.value.toUpperCase();
-      const table = document.getElementById("teamMetricsTable");
-      const tr = table.getElementsByTagName("tr");
-
-      for (let i = 1; i < tr.length; i++) {
-        const td = tr[i].getElementsByTagName("td")[0];
-        if (td) {
-          const txtValue = td.textContent || td.innerText;
-          if (txtValue.toUpperCase().indexOf(filter) > -1) {
-            tr[i].style.display = "";
-          } else {
-            tr[i].style.display = "none";
-          }
-        }
-      }
-    }
-
-    function sortTable(n) {
-      const table = document.getElementById("teamMetricsTable");
-      let rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-      switching = true;
-      dir = "asc";
-
-      while (switching) {
-        switching = false;
-        rows = table.rows;
-
-        for (i = 1; i < (rows.length - 1); i++) {
-          shouldSwitch = false;
-          x = rows[i].getElementsByTagName("TD")[n];
-          y = rows[i + 1].getElementsByTagName("TD")[n];
-
-          let xVal = x.innerHTML.toLowerCase();
-          let yVal = y.innerHTML.toLowerCase();
-
-          if (!isNaN(parseFloat(xVal)) && isFinite(xVal)) {
-             xVal = parseFloat(xVal);
-             yVal = parseFloat(yVal);
-          }
-
-          if (dir == "asc") {
-            if (xVal > yVal) {
-              shouldSwitch = true;
-              break;
-            }
-          } else if (dir == "desc") {
-            if (xVal < yVal) {
-              shouldSwitch = true;
-              break;
-            }
-          }
-        }
-        if (shouldSwitch) {
-          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-          switching = true;
-          switchcount ++;
-        } else {
-          if (switchcount == 0 && dir == "asc") {
-            dir = "desc";
-            switching = true;
-          }
-        }
-      }
-    }
   </script>
 </body>
 </html>
