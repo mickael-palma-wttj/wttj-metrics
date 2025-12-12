@@ -593,15 +593,6 @@
     
     // Create charts on load
     createCharts();
-    
-    // Debounced resize handler to recreate charts
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        createCharts();
-      }, 250);
-    });
   </script>
 </body>
 </html>
