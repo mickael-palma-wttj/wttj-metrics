@@ -29,6 +29,8 @@ RSpec.describe WttjMetrics::Reports::Linear::ReportGenerator do
       csv << [today, 'bugs_by_team', 'ATS:created', '3']
       csv << [today, 'bugs_by_team', 'ATS:closed', '2']
       csv << [today, 'cycle_metrics', 'cycle_1:total_issues', '10']
+      csv << [today, 'linear_ticket_activity', '1_10', { count: 5, authors: { 'Alice' => 5 } }.to_json]
+      csv << [today, 'linear_ticket_activity', '2_14', '3'] # Legacy format test
     end
   end
 
@@ -296,6 +298,28 @@ RSpec.describe WttjMetrics::Reports::Linear::ReportGenerator do
       data[:teams].each_key do |team|
         expect(generator.selected_teams).to include(team)
       end
+    end
+  end
+
+  describe '#ticket_activity' do
+    it 'returns a 7x24 grid' do
+      grid = generator.ticket_activity
+      expect(grid.size).to eq(7)
+      expect(grid.first.size).to eq(24)
+    end
+
+    it 'parses JSON values correctly' do
+      grid = generator.ticket_activity
+      # wday 1 is Monday. In grid, 0=Mon, 6=Sun. So wday 1 -> index 0.
+      # hour 10.
+      expect(grid[0][10]).to eq({ 'count' => 5, 'authors' => { 'Alice' => 5 } })
+    end
+
+    it 'handles legacy integer values' do
+      grid = generator.ticket_activity
+      # wday 2 is Tuesday. In grid, 1=Tue.
+      # hour 14.
+      expect(grid[1][14]).to eq(3)
     end
   end
 

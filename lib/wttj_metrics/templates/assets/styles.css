@@ -830,18 +830,29 @@ footer {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     white-space: pre-wrap;
     pointer-events: none;
-    transform: translate(-50%, -100%);
-    margin-top: -8px;
+    transform: translateX(-50%);
+    margin-top: 8px;
 }
 
 .heatmap-tooltip::after {
     content: '';
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
-    border-top-color: #151515;
+    border-bottom-color: #151515;
+}
+
+.heatmap-tooltip.multi-column {
+    max-width: none;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.tooltip-column {
+    white-space: pre;
+    text-align: left;
 }
 
 .heatmap-tooltip.visible {

@@ -161,7 +161,12 @@ module WttjMetrics
               # Adjust wday to match JS array (0=Mon, 6=Sun)
               # Ruby wday: 0=Sun, 1=Mon...
               display_wday = (wday - 1) % 7
-              activity[display_wday][hour] = row[:value].to_i
+
+              begin
+                activity[display_wday][hour] = JSON.parse(row[:value])
+              rescue JSON::ParserError
+                activity[display_wday][hour] = row[:value].to_i
+              end
             end
 
             activity

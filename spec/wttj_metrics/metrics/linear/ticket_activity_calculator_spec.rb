@@ -7,9 +7,9 @@ RSpec.describe WttjMetrics::Metrics::Linear::TicketActivityCalculator do
 
   let(:issues) do
     [
-      { 'completedAt' => '2023-01-02T10:00:00Z' }, # Monday 10am
-      { 'completedAt' => '2023-01-02T10:30:00Z' }, # Monday 10am
-      { 'completedAt' => '2023-01-03T14:00:00Z' }, # Tuesday 2pm
+      { 'completedAt' => '2023-01-02T10:00:00Z', 'assignee' => { 'name' => 'Alice' } }, # Monday 10am
+      { 'completedAt' => '2023-01-02T10:30:00Z', 'assignee' => { 'name' => 'Bob' } }, # Monday 10am
+      { 'completedAt' => '2023-01-03T14:00:00Z', 'assignee' => { 'name' => 'Alice' } }, # Tuesday 2pm
       { 'completedAt' => nil } # Should be ignored
     ]
   end
@@ -19,8 +19,8 @@ RSpec.describe WttjMetrics::Metrics::Linear::TicketActivityCalculator do
       result = calculator.calculate
 
       expect(result).to include(
-        hash_including(wday: 1, hour: 10, value: 2),
-        hash_including(wday: 2, hour: 14, value: 1)
+        hash_including(wday: 1, hour: 10, value: { count: 2, authors: { 'Alice' => 1, 'Bob' => 1 } }.to_json),
+        hash_including(wday: 2, hour: 14, value: { count: 1, authors: { 'Alice' => 1 } }.to_json)
       )
     end
   end
@@ -30,8 +30,9 @@ RSpec.describe WttjMetrics::Metrics::Linear::TicketActivityCalculator do
       rows = calculator.to_rows
 
       expect(rows).to include(
-        [Date.today.to_s, 'linear_ticket_activity', '1_10', 2],
-        [Date.today.to_s, 'linear_ticket_activity', '2_14', 1]
+        [Date.today.to_s, 'linear_ticket_activity', '1_10',
+         { count: 2, authors: { 'Alice' => 1, 'Bob' => 1 } }.to_json],
+        [Date.today.to_s, 'linear_ticket_activity', '2_14', { count: 1, authors: { 'Alice' => 1 } }.to_json]
       )
     end
   end

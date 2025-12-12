@@ -12,7 +12,7 @@ module WttjMetrics
         end
 
         def calculate
-          activity = Hash.new(0)
+          activity = Hash.new { |h, k| h[k] = { count: 0, authors: Hash.new(0) } }
 
           @issues.each do |issue|
             next unless issue['completedAt']
@@ -22,15 +22,18 @@ module WttjMetrics
             # wday: 0=Sunday, 1=Monday, ..., 6=Saturday
             # hour: 0-23
             key = "#{date.wday}-#{date.hour}"
-            activity[key] += 1
+
+            activity[key][:count] += 1
+            assignee_name = issue.dig('assignee', 'name') || 'Unassigned'
+            activity[key][:authors][assignee_name] += 1
           end
 
-          activity.map do |key, count|
+          activity.map do |key, data|
             wday, hour = key.split('-').map(&:to_i)
             {
               metric: 'ticket_activity',
               date: Date.today.to_s, # Placeholder date as this is aggregated
-              value: count,
+              value: data.to_json,
               wday: wday,
               hour: hour
             }
