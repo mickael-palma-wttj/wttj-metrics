@@ -8,7 +8,7 @@ module WttjMetrics
       # :reek:TooManyConstants - Configuration module is expected to have multiple constants
       module CycleParserConfig
         # Default teams for cycle parsing
-        DEFAULT_TEAMS = Reports::Linear::DataProvider::SELECTED_TEAMS
+        DEFAULT_TEAMS = [].freeze
 
         # Expected number of parts when splitting metric keys
         METRIC_PARTS_COUNT = 3

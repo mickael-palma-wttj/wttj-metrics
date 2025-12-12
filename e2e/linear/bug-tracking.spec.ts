@@ -28,7 +28,7 @@ test.describe('Bug Tracking Section', () => {
 
     test('shows bug resolution rate', async ({ page }) => {
         // Resolution rate is shown in the bug team table, not as a card
-        const bugTeamTable = page.locator('.cycles-table').filter({ hasText: 'Resolution Rate' });
+        const bugTeamTable = page.locator('.data-table').filter({ hasText: 'Resolution Rate' });
         await expect(bugTeamTable).toBeVisible();
     });
 
@@ -54,7 +54,7 @@ test.describe('Bug Tracking Section', () => {
 
     test('bugs by team table shows team data', async ({ page }) => {
         const bugSection = page.locator('section', { has: page.locator('.section-title', { hasText: 'Bug Tracking' }) });
-        const table = bugSection.locator('.cycles-table');
+        const table = bugSection.locator('.data-table');
 
         // Table should have header row
         await expect(table.locator('thead tr')).toBeVisible();
@@ -67,7 +67,7 @@ test.describe('Bug Tracking Section', () => {
 
     test('resolution rate has correct styling', async ({ page }) => {
         const bugSection = page.locator('section', { has: page.locator('.section-title', { hasText: 'Bug Tracking' }) });
-        const resolutionRateCells = bugSection.locator('.status-badge');
+        const resolutionRateCells = bugSection.locator('.progress-bar');
 
         const count = await resolutionRateCells.count();
         expect(count).toBeGreaterThan(0);

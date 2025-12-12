@@ -28,8 +28,19 @@ module WttjMetrics
                   additions
                   deletions
                   changedFiles
-                  commits(first: 1) {
+                  commits(first: 100) {
                     totalCount
+                    nodes {
+                      commit {
+                        committedDate
+                        author {
+                          name
+                          user {
+                            login
+                          }
+                        }
+                      }
+                    }
                   }
                   latestReviews(first: 10) {
                     nodes {
@@ -97,6 +108,27 @@ module WttjMetrics
           query($query: String!) {
             search(query: $query, type: ISSUE, first: 1) {
               issueCount
+            }
+          }
+        GRAPHQL
+
+        TEAMS_QUERY = <<~GRAPHQL
+          query($org: String!, $cursor: String) {
+            organization(login: $org) {
+              teams(first: 50, after: $cursor) {
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+                nodes {
+                  name
+                  members(first: 100) {
+                    nodes {
+                      login
+                    }
+                  }
+                }
+              }
             }
           }
         GRAPHQL
@@ -227,6 +259,29 @@ module WttjMetrics
                   .map(&:to_h)
         rescue Octokit::NotFound
           []
+        end
+
+        def fetch_teams(org)
+          teams = {}
+          cursor = nil
+          loop do
+            variables = { org: org, cursor: cursor }
+            response = with_retries do
+              @client.post '/graphql', { query: TEAMS_QUERY, variables: variables }.to_json
+            end
+            handle_graphql_errors(response)
+
+            data = response.data.organization.teams
+
+            data.nodes.each do |team|
+              teams[team.name] = team.members.nodes.map(&:login)
+            end
+
+            break unless data.pageInfo.hasNextPage
+
+            cursor = data.pageInfo.endCursor
+          end
+          teams
         end
 
         private

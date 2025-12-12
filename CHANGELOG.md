@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Team Configuration System**: New configuration file support (`lib/config/teams.yml`) to map logical teams to source-specific names
+  - Supports 1-to-many mapping (e.g., one Linear team to multiple GitHub teams)
+  - Wildcard support for team matching
+  - New CLI option `--teams-config` to specify custom configuration path
+- **GitHub Team Metrics**: Detailed team-level breakdown in GitHub HTML report
+  - Sortable and filterable table for team metrics
+  - Zebra striping and visual indicators for better readability
+  - Metrics include: Merge Rate, Time to Merge, Review Velocity, and more
+- **Commit Activity Heatmap**: Visual heatmap showing commit frequency by day of week and hour
+  - Helps identify peak coding hours and team work patterns
+
+### Refactored
+
+- **GitHub Metrics Architecture**: Split monolithic calculator into specialized classes
+  - `PrVelocityCalculator`, `QualityCalculator`, `CollaborationCalculator`, etc.
+  - Improved testability and separation of concerns
+- **View Logic**: Extracted formatting logic to `FormattingHelper`
+  - Centralized number formatting and color coding logic
+- **Report Generation**: Refactored `ReportGenerator` to use `TeamService` and `MetricsCalculator`
+
 ### Refactored
 
 - **Linear Reports Architecture**: Major refactoring of the Linear reporting module

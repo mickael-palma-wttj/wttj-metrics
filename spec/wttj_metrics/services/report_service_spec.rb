@@ -12,7 +12,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
       excel_enabled: false,
       excel_path: 'tmp/report.xlsx',
       days: 90,
-      teams: %w[ATS Platform]
+      teams: %w[ATS Platform],
+      teams_config: nil
     )
   end
 
@@ -53,7 +54,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
       expect(WttjMetrics::Reports::Linear::ReportGenerator).to have_received(:new).with(
         csv_file,
         days: 90,
-        teams: %w[ATS Platform]
+        teams: %w[ATS Platform],
+        teams_config: nil
       )
     end
 
@@ -102,7 +104,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_enabled: true,
           excel_path: 'tmp/report.xlsx',
           days: 90,
-          teams: %w[ATS Platform]
+          teams: %w[ATS Platform],
+          teams_config: nil
         )
       end
 
@@ -136,7 +139,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_enabled: true,
           excel_path: 'exports/excel/report.xlsx',
           days: 90,
-          teams: []
+          teams: [],
+          teams_config: nil
         )
       end
 
@@ -167,7 +171,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_enabled: true,
           excel_path: 'tmp/report.xlsx',
           days: 90,
-          teams: []
+          teams: [],
+          teams_config: nil
         )
 
         service = described_class.new(csv_file, options_with_excel, logger)
@@ -187,7 +192,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_enabled: false,
           excel_path: 'tmp/report.xlsx',
           days: 30,
-          teams: []
+          teams: [],
+          teams_config: nil
         )
       end
 
@@ -197,7 +203,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
         expect(WttjMetrics::Reports::Linear::ReportGenerator).to have_received(:new).with(
           csv_file,
           days: 30,
-          teams: []
+          teams: [],
+          teams_config: nil
         )
       end
     end
@@ -210,7 +217,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_enabled: false,
           excel_path: 'tmp/report.xlsx',
           days: 90,
-          teams: %w[ATS Platform Sourcing]
+          teams: %w[ATS Platform Sourcing],
+          teams_config: nil
         )
       end
 
@@ -220,7 +228,8 @@ RSpec.describe WttjMetrics::Services::ReportService do
         expect(WttjMetrics::Reports::Linear::ReportGenerator).to have_received(:new).with(
           csv_file,
           days: 90,
-          teams: %w[ATS Platform Sourcing]
+          teams: %w[ATS Platform Sourcing],
+          teams_config: nil
         )
       end
     end

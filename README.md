@@ -22,6 +22,7 @@ A Ruby CLI tool to collect metrics from [Linear](https://linear.app) and generat
 - [Configuration](#configuration)
   - [Environment Variables](#environment-variables)
   - [Team Filtering](#team-filtering)
+  - [Team Configuration](#team-configuration)
   - [Customizing Default Teams](#customizing-default-teams)
 - [Metrics Reference](#metrics-reference)
   - [Flow Metrics](#flow-metrics)
@@ -54,7 +55,9 @@ A Ruby CLI tool to collect metrics from [Linear](https://linear.app) and generat
 ## Features
 
 - 📊 **Collect Metrics** - Fetch issues, cycles, and team data from Linear GraphQL API
+- � **GitHub Integration** - Fetch PRs, commits, and release data from GitHub GraphQL API
 - 📈 **HTML Dashboard** - Interactive charts with Chart.js (flow, bugs, cycles, distributions)
+- 🔥 **Activity Heatmaps** - Visualize commit and ticket completion activity by hour/day
 - 📑 **Excel Export** - Detailed spreadsheets for further analysis
 - 🐛 **Bug Tracking** - Track bug creation/resolution by team over time
 - ⚡ **Caching** - Smart API response caching for faster subsequent runs
@@ -75,6 +78,7 @@ The generated HTML dashboard includes the following sections:
 | **Ticket Flow** | Created vs completed tickets over time, state transitions |
 | **Distributions** | Status, priority, type (7 categories), and assignee breakdowns |
 | **Cycles** | Sprint metrics, velocity, commitment accuracy, team performance |
+| **Commit Activity** | Heatmap of commit frequency by day and hour (GitHub only) |
 
 ---
 
@@ -208,6 +212,7 @@ Create HTML dashboard from collected metrics:
 | `--sources` | `-s` | `linear` | Data sources to include (linear, github) |
 | `--days` | `-d` | `90` | Number of days to show in charts |
 | `--teams` | `-t` | *default list* | Teams to include in report |
+| `--teams-config` | `-c` | `lib/config/teams.yml` | Path to team configuration YAML |
 | `--all-teams` | | `false` | Include all teams (no filter) |
 | `--excel` | `-x` | `false` | Also generate Excel spreadsheet |
 | `--excel-path` | | `report/report.xlsx` | Excel output file path |
@@ -241,7 +246,6 @@ Create HTML dashboard from collected metrics:
 | `LINEAR_API_KEY` | Yes (for Linear) | - | Your Linear API key (starts with `lin_api_`) |
 | `GITHUB_TOKEN` | Yes (for GitHub) | - | Your GitHub Personal Access Token |
 | `GITHUB_ORG` | Yes (for GitHub) | - | GitHub Organization name to fetch PRs from |
-| `GITHUB_REPO` | No | - | Specific repository (format: `owner/repo`) |
 | `CSV_OUTPUT_PATH` | No | `tmp/metrics.csv` | Default CSV output path |
 
 ### Team Filtering
@@ -260,6 +264,29 @@ By default, the report filters metrics to selected teams. You can control this v
 ```
 
 > **Note:** Filtered charts display a "Filtered" badge. When using `--all-teams`, all teams from the data are included and no filter badge is shown.
+
+### Team Configuration
+
+To handle discrepancies between team names in Linear and GitHub (e.g., "Platform" vs "platform-core"), you can use a configuration file.
+
+1.  Create a `lib/config/teams.yml` file (or specify a custom path with `--teams-config`).
+2.  Define your team mappings:
+
+```yaml
+teams:
+  # Logical Name used in CLI
+  Platform:
+    linear: "Platform"
+    github: 
+      - "platform-core"
+      - "platform-infra"
+
+  Marketplace:
+    linear: "Marketplace"
+    github: "marketplace-integrations"
+```
+
+When you run `wttj-metrics report --teams Platform`, the tool will automatically filter for "Platform" in Linear data and both "platform-core" and "platform-infra" in GitHub data.
 
 ### Customizing Default Teams
 
@@ -321,6 +348,16 @@ SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourci
 | **Avg Time to Merge** | Average time from PR creation to merge |
 | **Time to First Review** | Average time from PR creation to first review comment |
 | **Reviews per PR** | Average number of reviews per pull request |
+| **Comments per PR** | Average number of comments per pull request |
+| **Repository Activity** | Top 10 most active repositories by PR count |
+| **Daily Breakdown** | Daily stats for Created, Merged, Closed, and Open PRs |
+
+### Activity Metrics (Heatmaps)
+
+| Metric | Description |
+|--------|-------------|
+| **Commit Activity** | Heatmap of commit frequency by day of week and hour of day |
+| **Ticket Activity** | Heatmap of ticket completion frequency by day of week and hour of day |
 | **Comments per PR** | Average number of comments per pull request |
 | **Repository Activity** | Top 10 most active repositories by PR count |
 | **Daily Breakdown** | Daily stats for Created, Merged, Closed, and Open PRs |

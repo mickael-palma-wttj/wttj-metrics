@@ -3,12 +3,13 @@
 require 'erb'
 require 'date'
 require 'json'
-require_relative 'weekly_aggregator'
 
 module WttjMetrics
   module Reports
     module Github
       class ReportGenerator
+        include Helpers::FormattingHelper
+
         METRIC_MAPPING = {
           avg_time_to_merge: 'avg_time_to_merge_days',
           total_merged: 'total_merged_prs',
@@ -49,19 +50,22 @@ module WttjMetrics
 
         attr_reader :data, :days_to_show, :today
 
-        def initialize(csv_path, days: 90, teams: nil)
+        def initialize(csv_path, days: 90, teams: nil, teams_config: nil)
           @csv_path = csv_path
           @days_to_show = days
           @teams = teams # Unused but kept for interface consistency
+          @teams_config = teams_config
           @today = Date.today.to_s
           @parser = Data::CsvParser.new(csv_path)
           @data = @parser.data
         end
 
         def generate_html(output_path)
-          html = build_html
-          File.write(output_path, html)
-          puts "✅ HTML report generated: #{output_path}"
+          HtmlReportBuilder.new(self).build(output_path)
+        end
+
+        def template_binding
+          binding
         end
 
         def generate_excel(output_path)
@@ -71,12 +75,18 @@ module WttjMetrics
         end
 
         def metrics
-          @metrics ||= METRIC_MAPPING.transform_values { |name| latest_metric(name) }
-                                     .merge(deploy_frequency_daily: calculate_daily_deploy_frequency)
+          @metrics ||= begin
+            calculator = MetricsCalculator.new(metrics_data('github'))
+            METRIC_MAPPING.transform_values { |name| calculator.latest(name) }
+                          .merge(deploy_frequency_daily: calculate_daily_deploy_frequency)
+          end
         end
 
         def history
-          @history ||= METRIC_MAPPING.transform_values { |name| history_for(name) }
+          @history ||= begin
+            calculator = MetricsCalculator.new(metrics_data('github'))
+            METRIC_MAPPING.transform_values { |name| calculator.history(name) }
+          end
         end
 
         def daily_breakdown
@@ -93,6 +103,65 @@ module WttjMetrics
           @weekly_breakdown ||= begin
             daily_data = @parser.metrics_by_category['github_daily'] || []
             WeeklyAggregator.new(daily_data).aggregate
+          end
+        end
+
+        def team_metrics
+          @team_metrics ||= begin
+            teams = TeamService.new(@parser, @teams_config).resolve_teams
+
+            teams.each_with_object({}) do |team_name, hash|
+              category = "github:#{team_name}"
+              calculator = MetricsCalculator.new(metrics_data(category))
+
+              hash[team_name] = {
+                metrics: METRIC_MAPPING.transform_values { |name| calculator.latest(name) },
+                history: METRIC_MAPPING.transform_values { |name| calculator.history(name) },
+                daily_breakdown: daily_breakdown_for(team_name)
+              }
+            end
+          end
+        end
+
+        def commit_activity
+          @commit_activity ||= begin
+            data = @parser.metrics_by_category['github_commit_activity'] || []
+            grid = Array.new(7) { Array.new(24) { { count: 0, authors: {} } } }
+
+            data.each do |row|
+              # row[:metric] is "wday_hour" (e.g. "1_14")
+              wday, hour = row[:metric].split('_').map(&:to_i)
+
+              # wday: 0=Sunday, 1=Monday...
+              # We want Monday=0 for display, so (wday - 1) % 7
+              display_wday = (wday - 1) % 7
+              hour = hour.to_i
+
+              # Parse JSON value if it's a string, otherwise handle legacy integer
+              begin
+                parsed_value = if row[:value].is_a?(String)
+                                 JSON.parse(row[:value])
+                               else
+                                 { 'count' => row[:value].to_i,
+                                   'authors' => {} }
+                               end
+              rescue JSON::ParserError
+                parsed_value = { 'count' => row[:value].to_i, 'authors' => {} }
+              end
+
+              # Ensure we have a hash structure
+              parsed_value = { 'count' => parsed_value.to_i, 'authors' => {} } if parsed_value.is_a?(Numeric)
+
+              grid[display_wday][hour][:count] += parsed_value['count'].to_i
+
+              next unless parsed_value['authors']
+
+              parsed_value['authors'].each do |author, count|
+                grid[display_wday][hour][:authors][author] ||= 0
+                grid[display_wday][hour][:authors][author] += count
+              end
+            end
+            grid
           end
         end
 
@@ -119,6 +188,15 @@ module WttjMetrics
 
         def group_daily_data
           (@parser.metrics_by_category['github_daily'] || []).group_by { |m| m[:date] }
+        end
+
+        def daily_breakdown_for(team_name)
+          category = "github:#{team_name}_daily"
+          grouped_data = (@parser.metrics_by_category[category] || []).group_by { |m| m[:date] }
+          sorted_dates = grouped_data.keys.sort
+          datasets = build_datasets(grouped_data, sorted_dates)
+
+          { labels: sorted_dates, datasets: datasets }
         end
 
         def build_datasets(grouped_data, dates)
@@ -155,58 +233,20 @@ module WttjMetrics
           metrics&.find { |m| m[:metric] == name }&.dig(:value) || 0
         end
 
-        def latest_metric(name)
-          metrics_data
-            .select { |m| m[:metric] == name }
-            .max_by { |m| m[:date] }
-            &.dig(:value) || 0
-        end
-
-        def history_for(name)
-          metrics_data
-            .select { |m| m[:metric] == name }
-            .sort_by { |m| m[:date] }
-            .map { |m| { date: m[:date], value: m[:value] } }
-        end
-
-        def metrics_data
-          @parser.metrics_by_category['github'] || []
+        def metrics_data(category = 'github')
+          @parser.metrics_by_category[category] || []
         end
 
         def cutoff_date
           @cutoff_date ||= (Date.today - @days_to_show).to_s
         end
 
-        def build_html
-          template_path = File.join(WttjMetrics.root, 'lib', 'wttj_metrics', 'templates', 'github_report.html.erb')
-
-          if File.exist?(template_path)
-            template = ERB.new(File.read(template_path))
-            template.result(binding)
-          else
-            build_html_fallback
-          end
-        end
-
-        def build_html_fallback
-          <<~HTML
-            <!DOCTYPE html>
-            <html>
-            <head><title>GitHub Metrics - #{@today}</title></head>
-            <body>
-              <h1>GitHub Metrics Dashboard</h1>
-              <p>Generated: #{@today}</p>
-              <p>Please run with the proper template file.</p>
-            </body>
-            </html>
-          HTML
-        end
-
         def calculate_daily_deploy_frequency
-          daily = latest_metric('deploy_frequency_daily')
+          calculator = MetricsCalculator.new(metrics_data('github'))
+          daily = calculator.latest('deploy_frequency_daily')
           return daily if daily.nonzero?
 
-          (latest_metric('deploy_frequency_weekly') / 7.0).round(2)
+          (calculator.latest('deploy_frequency_weekly') / 7.0).round(2)
         end
       end
     end

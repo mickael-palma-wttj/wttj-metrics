@@ -64,7 +64,9 @@ module WttjMetrics
     option :output, aliases: '-o', type: :string, default: 'report/report.html', desc: 'HTML output file path'
     option :days, aliases: '-d', type: :numeric, default: DEFAULT_REPORT_DAYS, desc: 'Number of days to show in charts'
     option :teams, aliases: '-t', type: :array,
-                   desc: 'Teams to include (default: ATS, Marketplace, Platform, ROI, Sourcing)'
+                   desc: 'Teams to include (default: ats, marketplace, platform, sourcing)'
+    option :teams_config, aliases: '-c', type: :string, default: 'lib/config/teams.yml',
+                          desc: 'Path to teams configuration YAML file'
     option :all_teams, type: :boolean, default: false, desc: 'Include all teams (no filter)'
     option :excel, aliases: '-x', type: :boolean, default: false, desc: 'Also generate Excel spreadsheet'
     option :excel_path, type: :string, default: 'report/report.xlsx', desc: 'Excel output file path'

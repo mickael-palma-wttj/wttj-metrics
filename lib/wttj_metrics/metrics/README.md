@@ -35,10 +35,10 @@ Linear API Data
       ↓
 [MetricsCalculator] ← orchestrates all calculators
       ↓
-┌─────┴─────┬─────────┬──────────┬─────────┬──────────┐
-↓           ↓         ↓          ↓         ↓          ↓
-Bug      Cycle    Distribution Flow     Team    TeamStats
-Calculator Calculator Calculator Calculator Calculator Calculator
+┌─────┴─────┬─────────┬──────────┬─────────┬──────────┬──────────────┐
+↓           ↓         ↓          ↓         ↓          ↓              ↓
+Bug      Cycle    Distribution Flow     Team    TeamStats  TicketActivity
+Calculator Calculator Calculator Calculator Calculator Calculator Calculator
       ↓
 Structured Metric Data
       ↓

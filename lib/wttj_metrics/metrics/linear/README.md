@@ -57,10 +57,18 @@ Calculates high-level performance metrics for teams.
 Provides detailed statistical analysis for team performance.
 
 **Metrics:**
-- **Completion Statistics**: Mean, median, and distribution of completion rates over time.
-- **Velocity Trends**: Analysis of velocity stability and trends.
-- **Quality Metrics**: Detailed breakdown of bug rates and resolution efficiency.
-- **Capacity Utilization**: How effectively the team uses its planned capacity.
+- **Avg Velocity**: Average completed points per cycle.
+- **Avg Tickets/Cycle**: Average number of completed tickets per cycle.
+- **Avg Assignees**: Average number of active assignees per cycle.
+- **Avg Completion Rate**: Average percentage of planned work completed.
+- **Avg Tickets/Day**: Average number of tickets completed per day.
+- **Avg Scope Change**: Average percentage of scope change (added points) per cycle.
+
+### TicketActivityCalculator
+Calculates ticket completion activity patterns for heatmap visualization.
+
+**Metrics:**
+- **Ticket Activity**: Aggregated ticket completion counts by day of week and hour of day.
 
 ### TimeseriesCalculator
 Calculates timeseries metrics from Linear issues, tracking daily statistics for tickets, bugs, and state transitions.

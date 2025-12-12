@@ -46,7 +46,7 @@ module WttjMetrics
       end
 
       def parse_value(row)
-        return row['value'] if %w[cycle type_breakdown].include?(row['category'])
+        return row['value'] if %w[cycle type_breakdown github_commit_activity].include?(row['category'])
 
         row['value'].to_f
       end

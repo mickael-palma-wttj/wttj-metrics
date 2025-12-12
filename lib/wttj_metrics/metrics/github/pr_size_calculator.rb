@@ -29,12 +29,12 @@ module WttjMetrics
           }
         end
 
-        def to_rows
+        def to_rows(category = CATEGORY)
           return [] if @pull_requests.empty?
 
           date = Date.today.to_s
           calculate.map do |metric_key, value|
-            [date, CATEGORY, METRICS[metric_key], value]
+            [date, category, METRICS[metric_key], value]
           end
         end
 

@@ -1,0 +1,27 @@
+teams:
+  ATS:
+    linear:
+      - "*ATS*"
+    github:
+      - "*ats*"
+  Platform:
+    linear:
+      - "Platform"
+    github:
+      - "*platform*"
+  Sourcing:
+    linear:
+      - "Sourcing"
+    github:
+      - "*sourcing*"
+  "Marketplace-B2B":
+    linear:
+      - "ROI"
+    github:
+      - "mission-customer-*"
+  "Marketplace-B2C":
+    linear:
+      - "Marketplace"
+      - "Talents"
+    github:
+      - "mission-candidate-*"

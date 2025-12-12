@@ -6,7 +6,8 @@ module WttjMetrics
   module Services
     module Github
       class DataFetcher
-        def initialize(logger, days = 90)
+        def initialize(cache, logger, days = 90)
+          @cache = cache
           @logger = logger
           @days = days
         end
@@ -25,7 +26,10 @@ module WttjMetrics
           releases = fetch_releases_data(filtered_prs, from_date)
           @logger.info "   Found #{releases.size} releases"
 
-          { pull_requests: filtered_prs, releases: releases }
+          teams = fetch_teams_data
+          @logger.info "   Found #{teams.size} teams" unless teams.empty?
+
+          { pull_requests: filtered_prs, releases: releases, teams: teams }
         rescue Octokit::Unauthorized
           # Already logged in client
           {}
@@ -39,15 +43,8 @@ module WttjMetrics
         def fetch_prs(from_date)
           if ENV['GITHUB_ORG']
             fetch_org_prs(ENV['GITHUB_ORG'], from_date)
-          elsif ENV['GITHUB_REPO']
-            @logger.info "   Fetching for repository: #{ENV['GITHUB_REPO']}"
-            prs = client.fetch_pull_requests(ENV['GITHUB_REPO'], from_date)
-            prs = deep_stringify_keys(prs)
-            repo_name = ENV['GITHUB_REPO'].split('/').last
-            prs.each { |pr| pr['repository'] ||= { 'name' => repo_name } }
-            prs
           else
-            @logger.error '❌ GITHUB_ORG or GITHUB_REPO environment variable is not set'
+            @logger.error '❌ GITHUB_ORG environment variable is not set'
             []
           end
         end
@@ -57,13 +54,16 @@ module WttjMetrics
           cache_key = "github_prs_#{org}"
 
           # Try fresh cache first (1 day TTL)
-          fresh_prs = cache.read(cache_key, max_age_hours: 24)
-          if fresh_prs
-            @logger.info '   ✨ Cache is fresh (< 24h). Skipping update.'
-            return fresh_prs
+          if cache
+            fresh_prs = cache.read(cache_key, max_age_hours: 24)
+            if fresh_prs
+              @logger.info '   ✨ Cache is fresh (< 24h). Skipping update.'
+              return fresh_prs
+            end
+            cached_prs = cache.read(cache_key, max_age_hours: 87_600) || []
+          else
+            cached_prs = []
           end
-
-          cached_prs = cache.read(cache_key, max_age_hours: 87_600) || []
 
           prs = if cached_prs.any?
                   merge_with_cache(org, cached_prs, from_date)
@@ -73,7 +73,7 @@ module WttjMetrics
                   deep_stringify_keys(prs)
                 end
 
-          cache.write(cache_key, prs)
+          cache&.write(cache_key, prs)
           prs
         end
 
@@ -99,8 +99,8 @@ module WttjMetrics
         end
 
         def fetch_releases_data(prs, from_date)
-          if ENV['GITHUB_ORG']
-            cache_key = "github_releases_#{ENV['GITHUB_ORG']}"
+          cache_key = "github_releases_#{ENV.fetch('GITHUB_ORG', nil)}"
+          if cache
             fresh_releases = cache.read(cache_key, max_age_hours: 24)
             if fresh_releases
               @logger.info '   ✨ Releases cache is fresh (< 24h). Skipping update.'
@@ -110,14 +110,10 @@ module WttjMetrics
 
           repos = Set.new
 
-          if ENV['GITHUB_REPO']
-            repos.add(ENV['GITHUB_REPO'])
-          elsif ENV['GITHUB_ORG']
-            prs.each do |pr|
-              # Handle both symbol and string keys since filter_prs might have symbolized them
-              repo_name = pr.dig(:repository, :name) || pr.dig('repository', 'name')
-              repos.add("#{ENV.fetch('GITHUB_ORG', nil)}/#{repo_name}") if repo_name
-            end
+          prs.each do |pr|
+            # Handle both symbol and string keys since filter_prs might have symbolized them
+            repo_name = pr.dig(:repository, :name) || pr.dig('repository', 'name')
+            repos.add("#{ENV.fetch('GITHUB_ORG', nil)}/#{repo_name}") if repo_name
           end
 
           return [] if repos.empty?
@@ -143,21 +139,24 @@ module WttjMetrics
           end
           progress_bar.finish
 
-          if ENV['GITHUB_ORG']
-            cache_key = "github_releases_#{ENV['GITHUB_ORG']}"
-            cache.write(cache_key, all_releases)
-          end
+          cache&.write(cache_key, all_releases)
 
           all_releases
+        end
+
+        def fetch_teams_data
+          @logger.info "   Fetching teams for organization: #{ENV.fetch('GITHUB_ORG', nil)}"
+          client.fetch_teams(ENV.fetch('GITHUB_ORG', nil))
+        rescue StandardError => e
+          @logger.warn "⚠️  Error fetching teams: #{e.message}"
+          {}
         end
 
         def client
           @client ||= Sources::Github::Client.new(logger: @logger)
         end
 
-        def cache
-          @cache ||= Data::FileCache.new
-        end
+        attr_reader :cache
 
         def deep_stringify_keys(obj)
           case obj

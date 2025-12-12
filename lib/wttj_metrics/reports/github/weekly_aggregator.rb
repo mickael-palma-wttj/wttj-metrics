@@ -98,12 +98,12 @@ module WttjMetrics
               [sum_val + (val * weight), sum_weight + weight]
             end
 
-            total_weight.positive? ? (total_val / total_weight).round(2) : 0
+            total_weight.positive? ? (total_val.to_f / total_weight).round(2) : 0
           end
 
           def simple_avg(name)
             values = @by_name[name]&.map { |m| m[:value] } || []
-            values.any? ? (values.sum / values.size).round(2) : 0
+            values.any? ? (values.sum.to_f / values.size).round(2) : 0
           end
 
           def rate(numerator_name, denominator_name)

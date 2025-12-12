@@ -23,7 +23,7 @@ test.describe('Tooltips', () => {
     });
 
     test('table header tooltips appear on hover', async ({ page }) => {
-        const headerWithTooltip = page.locator('.cycles-table th.has-tooltip').first();
+        const headerWithTooltip = page.locator('.data-table th.has-tooltip').first();
         const tooltip = headerWithTooltip.locator('.th-tooltip');
 
         // Hidden initially
@@ -35,7 +35,7 @@ test.describe('Tooltips', () => {
     });
 
     test('scope change cell tooltips show breakdown', async ({ page }) => {
-        const scopeChangeCell = page.locator('.cycles-table td.has-tooltip').first();
+        const scopeChangeCell = page.locator('.data-table td.has-tooltip').first();
 
         if (await scopeChangeCell.count() > 0) {
             const tooltip = scopeChangeCell.locator('.cell-tooltip');

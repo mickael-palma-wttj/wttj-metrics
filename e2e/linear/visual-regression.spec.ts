@@ -8,9 +8,12 @@ test.describe('Visual Regression', () => {
         await page.waitForTimeout(1000);
     });
 
-    test('full page can be captured', async ({ page }) => {
+    test('full page can be captured', async ({ page }, testInfo) => {
         // Just verify page loads and can be screenshotted
-        const screenshot = await page.screenshot({ fullPage: true });
+        // Mobile Safari has a max height limit for screenshots (32767px)
+        // The linear report is very long on mobile, so we skip fullPage on mobile-safari
+        const isMobileSafari = testInfo.project.name === 'mobile-safari';
+        const screenshot = await page.screenshot({ fullPage: !isMobileSafari });
         expect(screenshot.length).toBeGreaterThan(0);
     });
 

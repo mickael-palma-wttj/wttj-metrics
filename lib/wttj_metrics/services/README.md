@@ -43,45 +43,36 @@ service.call
 
 ### DataFetcher
 
-Fetches all required data from the Linear API with caching support.
+Fetches required data from external APIs (Linear, GitHub) with caching support.
+
+**Implementations:**
+- `WttjMetrics::Services::Linear::DataFetcher`: Fetches issues, cycles, team members, workflow states.
+- `WttjMetrics::Services::Github::DataFetcher`: Fetches pull requests, commits, releases.
 
 **Responsibilities:**
-- Initialize Linear API client with cache
-- Fetch issues, cycles, team members, workflow states
+- Initialize API client with cache
+- Fetch data from respective APIs
 - Log data counts for transparency
 - Return structured data hash
 
 **Usage:**
 ```ruby
-cache = CacheFactory.enabled
-logger = Logger.new($stdout)
-fetcher = DataFetcher.new(cache, logger)
-
+# Linear
+fetcher = WttjMetrics::Services::Linear::DataFetcher.new(cache, logger)
 data = fetcher.call
-# => {
-#   issues: [...],      # All Linear issues
-#   cycles: [...],      # All cycles/sprints
-#   team_members: [...],# Team member data
-#   workflow_states: [...]  # Workflow state definitions
-# }
-```
 
-**Logging Output:**
-```
-📊 Fetching data from Linear...
-   📦 Using cached issues_all (5.2h old)
-   📦 Using cached cycles (5.2h old)
-   🌐 Fetching team_members from API...
-   📦 Using cached workflow_states (5.2h old)
-✅ Fetched 6034 issues across 125 cycles
+# GitHub
+fetcher = WttjMetrics::Services::Github::DataFetcher.new(cache, logger, days)
+data = fetcher.call
 ```
 
 ### MetricsCollector
 
-Collects and calculates all metrics by coordinating various metric calculators.
+Collects and calculates all metrics by coordinating various metric calculators for enabled sources.
 
 **Responsibilities:**
-- Initialize all metric calculators (Bug, Cycle, Flow, Team, etc.)
+- Orchestrate data fetching from enabled sources (Linear, GitHub)
+- Initialize metric calculators
 - Execute calculations for each metric domain
 - Aggregate results into a unified structure
 - Handle date range filtering

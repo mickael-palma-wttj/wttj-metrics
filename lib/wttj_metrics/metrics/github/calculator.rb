@@ -4,53 +4,42 @@ module WttjMetrics
   module Metrics
     module Github
       class Calculator
-        def initialize(pull_requests, releases = [])
+        def initialize(pull_requests, releases = [], teams = {})
           @pull_requests = pull_requests
           @releases = releases || []
+          @teams = teams || {}
         end
 
         def calculate_all
-          [
-            pr_velocity_calculator.to_rows,
-            collaboration_calculator.to_rows,
-            timeseries_calculator.to_rows,
-            pr_size_calculator.to_rows,
-            repository_activity_calculator.to_rows,
-            contributor_activity_calculator.to_rows,
-            quality_calculator.to_rows
-          ].flatten(1)
+          global_metrics = calculate_metrics_set(@pull_requests, 'github')
+
+          team_metrics = @teams.flat_map do |team_name, members|
+            team_prs = @pull_requests.select do |pr|
+              members.include?(pr.dig(:author, :login))
+            end
+            calculate_metrics_set(team_prs, "github:#{team_name}")
+          end
+
+          global_metrics + team_metrics
         end
 
         private
 
         attr_reader :pull_requests, :releases
 
-        def quality_calculator
-          @quality_calculator ||= QualityCalculator.new(pull_requests, releases)
-        end
+        def calculate_metrics_set(prs, category)
+          ts_category = category == 'github' ? 'github_daily' : "#{category}_daily"
 
-        def contributor_activity_calculator
-          @contributor_activity_calculator ||= ContributorActivityCalculator.new(pull_requests)
-        end
-
-        def repository_activity_calculator
-          @repository_activity_calculator ||= RepositoryActivityCalculator.new(pull_requests)
-        end
-
-        def pr_velocity_calculator
-          @pr_velocity_calculator ||= PrVelocityCalculator.new(pull_requests)
-        end
-
-        def collaboration_calculator
-          @collaboration_calculator ||= CollaborationCalculator.new(pull_requests)
-        end
-
-        def timeseries_calculator
-          @timeseries_calculator ||= TimeseriesCalculator.new(pull_requests, releases)
-        end
-
-        def pr_size_calculator
-          @pr_size_calculator ||= PrSizeCalculator.new(pull_requests)
+          [
+            PrVelocityCalculator.new(prs).to_rows(category),
+            CollaborationCalculator.new(prs).to_rows(category),
+            TimeseriesCalculator.new(prs, releases).to_rows(ts_category),
+            PrSizeCalculator.new(prs).to_rows(category),
+            RepositoryActivityCalculator.new(prs).to_rows(category),
+            ContributorActivityCalculator.new(prs).to_rows(category),
+            QualityCalculator.new(prs, releases).to_rows(category),
+            CommitActivityCalculator.new(prs).to_rows(category)
+          ].flatten(1)
         end
       end
     end

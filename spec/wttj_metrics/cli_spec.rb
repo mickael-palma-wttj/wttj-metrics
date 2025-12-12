@@ -179,6 +179,19 @@ RSpec.describe WttjMetrics::CLI do
         cli.collect
       end
     end
+
+    context 'with multiple sources and default output' do
+      before do
+        allow(cli).to receive(:options).and_return({ cache: true, clear_cache: false, output: 'tmp/metrics.csv',
+                                                     sources: %w[linear github] })
+        allow(WttjMetrics::Services::MetricsCollector).to receive(:new).and_return(double(call: nil))
+      end
+
+      it 'runs collector for each source' do
+        expect(WttjMetrics::Services::MetricsCollector).to receive(:new).twice
+        cli.collect
+      end
+    end
   end
 
   describe '#report' do
@@ -359,6 +372,25 @@ RSpec.describe WttjMetrics::CLI do
       it 'does not try to create directory for current dir' do
         expect(FileUtils).not_to receive(:mkdir_p).with('.')
         cli.report(csv_file)
+      end
+    end
+
+    context 'with default csv file and multiple sources' do
+      before do
+        allow(cli).to receive(:options).and_return({
+                                                     output: 'report/report.html',
+                                                     days: 90,
+                                                     teams: nil,
+                                                     all_teams: false,
+                                                     excel: false,
+                                                     excel_path: 'report/report.xlsx',
+                                                     sources: %w[linear github]
+                                                   })
+      end
+
+      it 'runs report service for each source' do
+        expect(WttjMetrics::Services::ReportService).to receive(:new).twice.and_return(report_service)
+        cli.report('tmp/metrics.csv')
       end
     end
   end

@@ -31,10 +31,10 @@ module WttjMetrics
           }
         end
 
-        def to_rows
+        def to_rows(category = CATEGORY)
           date = Date.today.to_s
           calculate.map do |key, value|
-            [date, CATEGORY, METRICS[key], value]
+            [date, category, METRICS[key], value]
           end
         end
 

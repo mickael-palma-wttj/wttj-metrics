@@ -16,9 +16,9 @@ module WttjMetrics
           @releases = releases || []
         end
 
-        def to_rows
+        def to_rows(category = CATEGORY)
           stats_by_date.flat_map do |date, stats|
-            stats.to_rows(date, CATEGORY)
+            stats.to_rows(date, category)
           end
         end
 
