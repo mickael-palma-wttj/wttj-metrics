@@ -3,6 +3,7 @@
 require 'erb'
 require 'date'
 require 'json'
+require_relative 'percentile_data_builder'
 
 module WttjMetrics
   module Reports
@@ -104,6 +105,10 @@ module WttjMetrics
             daily_data = @parser.metrics_by_category['github_daily'] || []
             WeeklyAggregator.new(daily_data).aggregate
           end
+        end
+
+        def percentile_data
+          @percentile_data ||= PercentileDataBuilder.new(@parser, cutoff_date: cutoff_date).all_percentile_data
         end
 
         def team_metrics

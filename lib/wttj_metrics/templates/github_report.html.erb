@@ -147,6 +147,28 @@
             <canvas id="deployFrequencyChart"></canvas>
           </div>
         </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Time to First Review (P50/P75/P90/P95)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Distribution of time from PR open to first review. Target: P90 < 1 day.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="timeToReviewPercentilesChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Time to Merge (P50/P75/P90/P95)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Full PR cycle time distribution. P50 is typical, P90 shows slow PRs.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="timeToMergePercentilesChart"></canvas>
+          </div>
+        </div>
       </div>
       </div>
     </section>
@@ -238,6 +260,39 @@
             <canvas id="prSizeChart"></canvas>
           </div>
         </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            PR Size Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Lines changed per PR. Smaller PRs are easier to review. Target: P90 < 400 lines.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="prSizePercentilesChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            CI Time to Green (P50/P75/P90/P95)
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">CI pipeline duration distribution. Target: P90 < 30 min.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="timeToGreenPercentilesChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            CI Success Rate Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Distribution of CI pass rates. Target: P50 > 90%.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="ciSuccessHistogramChart"></canvas>
+          </div>
+        </div>
       </div>
       </div>
     </section>
@@ -305,6 +360,17 @@
           </h3>
           <div class="chart-container">
             <canvas id="topContributorsChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Weekly PR Throughput
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">PRs created vs merged per week with P50 baselines.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="weeklyThroughputChart"></canvas>
           </div>
         </div>
       </div>
@@ -706,6 +772,288 @@
 
     // Team Charts
     // Removed as we switched to a table view
+
+    // ==================== PERCENTILE CHARTS ====================
+<% pct = percentile_data %>
+    
+    // Time to First Review Percentiles Chart
+    const timeToReviewPct = <%= pct[:time_to_first_review].to_json %>;
+    chartInstances.timeToReviewPercentiles = new Chart(document.getElementById('timeToReviewPercentilesChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: timeToReviewPct.labels,
+        datasets: [{
+          label: 'Days',
+          data: timeToReviewPct.percentiles,
+          backgroundColor: [
+            timeToReviewPct.percentiles[0] <= 1 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(255, 205, 0, 0.9)',
+            timeToReviewPct.percentiles[1] <= 1 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(255, 205, 0, 0.9)',
+            timeToReviewPct.percentiles[2] <= 1 ? 'rgba(34, 197, 94, 0.8)' : timeToReviewPct.percentiles[2] <= 2 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)',
+            timeToReviewPct.percentiles[3] <= 2 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.label}: ${ctx.parsed.y} days`,
+              afterLabel: () => `Target: P90 < 1 day`
+            }
+          },
+          title: {
+            display: true,
+            text: `Avg: ${timeToReviewPct.stats.avg} days | ${timeToReviewPct.stats.count} data points`,
+            position: 'bottom',
+            font: { size: 11, weight: 'normal' }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Days' }
+          }
+        }
+      }
+    });
+
+    // Time to Merge Percentiles Chart
+    const timeToMergePct = <%= pct[:time_to_merge].to_json %>;
+    chartInstances.timeToMergePercentiles = new Chart(document.getElementById('timeToMergePercentilesChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: timeToMergePct.labels,
+        datasets: [{
+          label: 'Days',
+          data: timeToMergePct.percentiles,
+          backgroundColor: [
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(59, 130, 246, 0.7)',
+            'rgba(59, 130, 246, 0.6)',
+            'rgba(59, 130, 246, 0.5)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.label}: ${ctx.parsed.y} days`,
+              afterLabel: () => `Min: ${timeToMergePct.stats.min} | Max: ${timeToMergePct.stats.max}`
+            }
+          },
+          title: {
+            display: true,
+            text: `Avg: ${timeToMergePct.stats.avg} days | ${timeToMergePct.stats.count} data points`,
+            position: 'bottom',
+            font: { size: 11, weight: 'normal' }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Days' }
+          }
+        }
+      }
+    });
+
+    // PR Size Percentiles Chart
+    const prSizePct = <%= pct[:pr_size].to_json %>;
+    chartInstances.prSizePercentiles = new Chart(document.getElementById('prSizePercentilesChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: prSizePct.labels,
+        datasets: [
+          {
+            label: 'Additions',
+            data: prSizePct.additions.percentiles,
+            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+            borderRadius: 4
+          },
+          {
+            label: 'Deletions',
+            data: prSizePct.deletions.percentiles,
+            backgroundColor: 'rgba(220, 38, 38, 0.8)',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} lines`
+            }
+          },
+          title: {
+            display: true,
+            text: `Total (Add+Del) - Avg: ${prSizePct.stats.avg} | P90: ${prSizePct.percentiles[2]} lines`,
+            position: 'bottom',
+            font: { size: 11, weight: 'normal' }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Lines Changed' }
+          }
+        }
+      }
+    });
+
+    // Weekly PR Throughput Chart
+    const weeklyPRData = <%= pct[:weekly_throughput].to_json %>;
+    chartInstances.weeklyThroughput = new Chart(document.getElementById('weeklyThroughputChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: weeklyPRData.labels,
+        datasets: [
+          {
+            label: 'PRs Created',
+            data: weeklyPRData.created,
+            borderColor: 'rgba(59, 130, 246, 0.8)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: false
+          },
+          {
+            label: 'PRs Merged',
+            data: weeklyPRData.merged,
+            borderColor: 'rgba(34, 197, 94, 0.8)',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            tension: 0.4,
+            fill: false
+          },
+          {
+            type: 'line',
+            label: `Created P50 (${weeklyPRData.percentiles.created[0]})`,
+            data: new Array(weeklyPRData.labels.length).fill(weeklyPRData.percentiles.created[0]),
+            borderColor: 'rgba(59, 130, 246, 0.4)',
+            borderDash: [5, 5],
+            pointRadius: 0,
+            borderWidth: 2,
+            fill: false
+          },
+          {
+            type: 'line',
+            label: `Merged P50 (${weeklyPRData.percentiles.merged[0]})`,
+            data: new Array(weeklyPRData.labels.length).fill(weeklyPRData.percentiles.merged[0]),
+            borderColor: 'rgba(34, 197, 94, 0.4)',
+            borderDash: [5, 5],
+            pointRadius: 0,
+            borderWidth: 2,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'top' }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'PRs per Week' }
+          }
+        }
+      }
+    });
+
+    // Time to Green Percentiles Chart
+    const timeToGreenPct = <%= pct[:time_to_green].to_json %>;
+    chartInstances.timeToGreenPercentiles = new Chart(document.getElementById('timeToGreenPercentilesChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: timeToGreenPct.labels,
+        datasets: [{
+          label: 'Hours',
+          data: timeToGreenPct.percentiles,
+          backgroundColor: [
+            timeToGreenPct.percentiles[0] <= 0.5 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(255, 205, 0, 0.9)',
+            timeToGreenPct.percentiles[1] <= 0.5 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(255, 205, 0, 0.9)',
+            timeToGreenPct.percentiles[2] <= 0.5 ? 'rgba(34, 197, 94, 0.8)' : timeToGreenPct.percentiles[2] <= 1 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)',
+            timeToGreenPct.percentiles[3] <= 1 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.label}: ${ctx.parsed.y} hours`,
+              afterLabel: () => `Target: P90 < 30 min (0.5h)`
+            }
+          },
+          title: {
+            display: true,
+            text: `Avg: ${timeToGreenPct.stats.avg} hours | ${timeToGreenPct.stats.count} data points`,
+            position: 'bottom',
+            font: { size: 11, weight: 'normal' }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Hours' }
+          }
+        }
+      }
+    });
+
+    // CI Success Rate Histogram Chart
+    const ciSuccessPct = <%= pct[:ci_success_rate].to_json %>;
+    chartInstances.ciSuccessHistogram = new Chart(document.getElementById('ciSuccessHistogramChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: ciSuccessPct.distribution.map(d => d.range),
+        datasets: [{
+          label: 'Days',
+          data: ciSuccessPct.distribution.map(d => d.count),
+          backgroundColor: [
+            'rgba(220, 38, 38, 0.8)',   // 0-50% - red
+            'rgba(249, 115, 22, 0.8)',  // 50-75% - orange
+            'rgba(255, 205, 0, 0.9)',   // 75-90% - yellow
+            'rgba(34, 197, 94, 0.6)',   // 90-95% - light green
+            'rgba(34, 197, 94, 0.8)'    // 95-100% - green
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.parsed.y} days with ${ctx.label} CI success rate`
+            }
+          },
+          title: {
+            display: true,
+            text: `P50: ${ciSuccessPct.percentiles[0]}% | P90: ${ciSuccessPct.percentiles[2]}%`,
+            position: 'bottom',
+            font: { size: 11, weight: 'normal' }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Number of Days' },
+            ticks: { stepSize: 1 }
+          },
+          x: {
+            title: { display: true, text: 'CI Success Rate Range' }
+          }
+        }
+      }
+    });
     }
     
     // Heatmap Logic

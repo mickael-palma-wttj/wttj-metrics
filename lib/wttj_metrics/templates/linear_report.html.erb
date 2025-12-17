@@ -159,6 +159,17 @@
           </table>
           </div>
         </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Bug MTTR by Team
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Mean Time To Resolve bugs by team. Lower is better. Shows team responsiveness to bug fixes.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="bugMttrChart"></canvas>
+          </div>
+        </div>
       </div>
       </div>
     </section>
@@ -203,6 +214,28 @@
             </span>
           </h3>
           <div id="heatmap-container" class="heatmap-container"></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Daily Throughput Percentiles
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">P50/P75/P90/P95 distribution of daily tickets created and completed. Higher P90/P95 indicates occasional high-volume days.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="throughputPercentilesChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Weekly Throughput Trend
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Weekly ticket flow with P50 baseline. Shows consistency of delivery over time.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="weeklyThroughputChart"></canvas>
+          </div>
         </div>
       </div>
       </div>
@@ -310,6 +343,41 @@
 <% end %>
           </tbody>
         </table>
+        </div>
+      </div>
+      <div class="charts-grid" style="margin-top: 1.5rem;">
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Cycle Velocity Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Story points completed per cycle. P50 is typical, P90 shows high-performing cycles.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="velocityDistributionChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Completion Rate Distribution
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Distribution of cycle completion rates. Target: P50 above 80%.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="completionDistributionChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Completion Rate Histogram
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">How many cycles fall into each completion rate bucket. Aim for most cycles in 75-100% range.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="completionHistogramChart"></canvas>
+          </div>
         </div>
       </div>
       </div>
@@ -620,6 +688,262 @@
         scales: { x: { beginAtZero: true } }
       }
     );
+
+    // ==================== PERCENTILE CHARTS ====================
+<% pct = percentile_data %>
+    
+    // Throughput Percentiles Chart (Grouped Bar)
+    chartInstances.throughputPercentiles = new Chart(document.getElementById('throughputPercentilesChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: <%= pct[:throughput][:labels].to_json %>,
+        datasets: [
+          {
+            label: 'Tickets Created',
+            data: <%= pct[:throughput][:created].to_json %>,
+            backgroundColor: 'rgba(21, 21, 21, 0.8)',
+            borderRadius: 4
+          },
+          {
+            label: 'Tickets Completed',
+            data: <%= pct[:throughput][:completed].to_json %>,
+            backgroundColor: 'rgba(255, 205, 0, 0.9)',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} tickets/day`
+            }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Tickets per Day' }
+          }
+        }
+      }
+    });
+
+    // Weekly Throughput Trend Chart
+    const weeklyData = <%= pct[:weekly_throughput].to_json %>;
+    chartInstances.weeklyThroughput = new Chart(document.getElementById('weeklyThroughputChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: weeklyData.labels,
+        datasets: [
+          {
+            label: 'Created',
+            data: weeklyData.created,
+            borderColor: 'rgba(21, 21, 21, 0.8)',
+            backgroundColor: 'rgba(21, 21, 21, 0.1)',
+            tension: 0.4,
+            fill: false
+          },
+          {
+            label: 'Completed',
+            data: weeklyData.completed,
+            borderColor: 'rgba(255, 205, 0, 0.9)',
+            backgroundColor: 'rgba(255, 205, 0, 0.1)',
+            tension: 0.4,
+            fill: false
+          },
+          {
+            type: 'line',
+            label: `Created P50 (${weeklyData.percentiles.created[0]})`,
+            data: new Array(weeklyData.labels.length).fill(weeklyData.percentiles.created[0]),
+            borderColor: 'rgba(21, 21, 21, 0.4)',
+            borderDash: [5, 5],
+            pointRadius: 0,
+            borderWidth: 2,
+            fill: false
+          },
+          {
+            type: 'line',
+            label: `Completed P50 (${weeklyData.percentiles.completed[0]})`,
+            data: new Array(weeklyData.labels.length).fill(weeklyData.percentiles.completed[0]),
+            borderColor: 'rgba(255, 205, 0, 0.5)',
+            borderDash: [5, 5],
+            pointRadius: 0,
+            borderWidth: 2,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'top' }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Tickets per Week' }
+          }
+        }
+      }
+    });
+
+    // Bug MTTR by Team Chart
+    const bugMttrData = <%= pct[:bug_mttr].to_json %>;
+    chartInstances.bugMttr = createBarChart(
+      'bugMttrChart',
+      bugMttrData.labels,
+      bugMttrData.datasets.map((ds, idx) => ({
+        label: `${ds.label} (Avg: ${ds.value} days)`,
+        data: [ds.value],
+        backgroundColor: teamColorPalette[idx % teamColorPalette.length],
+        borderRadius: 4
+      })),
+      {
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.label}: ${ctx.parsed.y} days avg MTTR`
+            }
+          }
+        },
+        scales: { 
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Days to Resolve' }
+          }
+        }
+      }
+    );
+
+    // Velocity Distribution Chart
+    const velocityData = <%= pct[:velocity].to_json %>;
+    chartInstances.velocityDistribution = new Chart(document.getElementById('velocityDistributionChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: velocityData.labels,
+        datasets: [{
+          label: 'Story Points',
+          data: velocityData.percentiles,
+          backgroundColor: [
+            'rgba(34, 197, 94, 0.8)',   // P50 - green
+            'rgba(59, 130, 246, 0.8)',  // P75 - blue
+            'rgba(255, 205, 0, 0.9)',   // P90 - yellow
+            'rgba(249, 115, 22, 0.8)'   // P95 - orange
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterLabel: () => `Min: ${velocityData.stats.min} | Max: ${velocityData.stats.max} | Avg: ${velocityData.stats.avg}`
+            }
+          },
+          title: {
+            display: true,
+            text: `Based on ${velocityData.stats.count} cycles`,
+            position: 'bottom',
+            font: { size: 11, weight: 'normal' }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Story Points' }
+          }
+        }
+      }
+    });
+
+    // Completion Rate Distribution Chart
+    const completionData = <%= pct[:completion].to_json %>;
+    chartInstances.completionDistribution = new Chart(document.getElementById('completionDistributionChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: completionData.labels,
+        datasets: [{
+          label: 'Completion Rate',
+          data: completionData.percentiles,
+          backgroundColor: [
+            completionData.percentiles[0] >= 80 ? 'rgba(34, 197, 94, 0.8)' : completionData.percentiles[0] >= 50 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)',
+            completionData.percentiles[1] >= 80 ? 'rgba(34, 197, 94, 0.8)' : completionData.percentiles[1] >= 50 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)',
+            completionData.percentiles[2] >= 80 ? 'rgba(34, 197, 94, 0.8)' : completionData.percentiles[2] >= 50 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)',
+            completionData.percentiles[3] >= 80 ? 'rgba(34, 197, 94, 0.8)' : completionData.percentiles[3] >= 50 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)'
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.label}: ${ctx.parsed.y}%`,
+              afterLabel: () => `Target: P50 ≥ 80%`
+            }
+          },
+          title: {
+            display: true,
+            text: `Avg: ${completionData.stats.avg}% | ${completionData.stats.count} cycles`,
+            position: 'bottom',
+            font: { size: 11, weight: 'normal' }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            max: 100,
+            title: { display: true, text: 'Completion %' },
+            ticks: { callback: v => v + '%' }
+          }
+        }
+      }
+    });
+
+    // Completion Rate Histogram Chart
+    const histogramData = completionData.distribution;
+    chartInstances.completionHistogram = new Chart(document.getElementById('completionHistogramChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: histogramData.map(h => h.range),
+        datasets: [{
+          label: 'Number of Cycles',
+          data: histogramData.map(h => h.count),
+          backgroundColor: [
+            'rgba(220, 38, 38, 0.8)',   // 0-25% - red
+            'rgba(249, 115, 22, 0.8)',  // 25-50% - orange
+            'rgba(255, 205, 0, 0.9)',   // 50-75% - yellow
+            'rgba(34, 197, 94, 0.6)',   // 75-90% - light green
+            'rgba(34, 197, 94, 0.8)'    // 90-100% - green
+          ],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.parsed.y} cycles completed ${ctx.label}`
+            }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            title: { display: true, text: 'Number of Cycles' },
+            ticks: { stepSize: 1 }
+          },
+          x: {
+            title: { display: true, text: 'Completion Rate Range' }
+          }
+        }
+      }
+    });
     }
     
     // Create charts on load

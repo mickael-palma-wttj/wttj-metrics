@@ -177,6 +177,15 @@ module WttjMetrics
           assignee_dist.map { |m| { label: m[:metric], value: m[:value].to_i } }
         end
 
+        def percentile_data
+          @percentile_data ||= PercentileDataBuilder.new(
+            parser,
+            teams: selected_teams,
+            cutoff_date: cutoff_date,
+            available_teams: @data_provider.available_teams
+          ).all_percentile_data
+        end
+
         def cycles_parsed
           filtered_cycles = metrics_by_category['cycle']&.select { |m| m[:date] >= cutoff_date } || []
           @cycles_parsed ||= Metrics::Linear::CycleParser.new(
