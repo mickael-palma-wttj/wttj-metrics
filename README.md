@@ -55,11 +55,12 @@ A Ruby CLI tool to collect metrics from [Linear](https://linear.app) and generat
 ## Features
 
 - 📊 **Collect Metrics** - Fetch issues, cycles, and team data from Linear GraphQL API
-- � **GitHub Integration** - Fetch PRs, commits, and release data from GitHub GraphQL API
+- 🐙 **GitHub Integration** - Fetch PRs, commits, and release data from GitHub GraphQL API
 - 📈 **HTML Dashboard** - Interactive charts with Chart.js (flow, bugs, cycles, distributions)
+- 📉 **Percentile Analysis** - Statistical insights with P50/P75/P90/P95 charts for throughput, velocity, and PR metrics
 - 🔥 **Activity Heatmaps** - Visualize commit and ticket completion activity by hour/day
 - 📑 **Excel Export** - Detailed spreadsheets for further analysis
-- 🐛 **Bug Tracking** - Track bug creation/resolution by team over time
+- 🐛 **Bug Tracking** - Track bug creation/resolution by team over time with MTTR by team
 - ⚡ **Caching** - Smart API response caching for faster subsequent runs
 - 🎨 **WTTJ Branding** - Dashboard styled with Welcome to the Jungle colors
 - 🔧 **Team Filtering** - Focus reports on specific teams or view all teams
@@ -74,11 +75,14 @@ The generated HTML dashboard includes the following sections:
 | Section | Description |
 |---------|-------------|
 | **Key Metrics** | Cycle time, lead time, review time, WIP, throughput, completion rate |
-| **Bugs** | Open bugs, resolution rate, MTTR by team, bugs by priority, bug flow by team |
-| **Ticket Flow** | Created vs completed tickets over time, state transitions |
+| **Bugs** | Open bugs, resolution rate, MTTR by team, bugs by priority, bug flow by team, MTTR percentiles |
+| **Ticket Flow** | Created vs completed tickets, state transitions, daily throughput percentiles, weekly throughput trends |
 | **Distributions** | Status, priority, type (7 categories), and assignee breakdowns |
 | **Cycles** | Sprint metrics, velocity, commitment accuracy, team performance |
+| **Team Comparison** | Team metrics table, velocity distribution, completion rate distribution and histogram |
 | **Commit Activity** | Heatmap of commit frequency by day and hour (GitHub only) |
+| **GitHub Efficiency** | PR velocity metrics, time to review/merge percentiles (P50/P75/P90/P95) |
+| **GitHub Quality** | PR size distribution, CI time to green percentiles, CI success rate distribution |
 
 ---
 
@@ -358,9 +362,28 @@ SELECTED_TEAMS = ['ATS', 'Global ATS', 'Marketplace', 'Platform', 'ROI', 'Sourci
 |--------|-------------|
 | **Commit Activity** | Heatmap of commit frequency by day of week and hour of day |
 | **Ticket Activity** | Heatmap of ticket completion frequency by day of week and hour of day |
-| **Comments per PR** | Average number of comments per pull request |
-| **Repository Activity** | Top 10 most active repositories by PR count |
-| **Daily Breakdown** | Daily stats for Created, Merged, Closed, and Open PRs |
+
+### Percentile Metrics (Linear)
+
+| Metric | Description |
+|--------|-------------|
+| **Bug MTTR by Team** | Mean time to resolve bugs per team (bar chart) |
+| **Daily Throughput Percentiles** | P50/P75/P90/P95 of daily completed tickets over time |
+| **Weekly Throughput Trend** | Weekly completed ticket counts trend |
+| **Cycle Velocity Distribution** | Distribution of velocity across cycles |
+| **Completion Rate Distribution** | Distribution of completion rates across cycles |
+| **Completion Rate Histogram** | Histogram showing frequency of completion rate ranges |
+
+### Percentile Metrics (GitHub)
+
+| Metric | Description |
+|--------|-------------|
+| **Time to First Review (P50/P75/P90/P95)** | Percentile distribution of time from PR creation to first review |
+| **Time to Merge (P50/P75/P90/P95)** | Percentile distribution of time from PR creation to merge |
+| **PR Size Distribution** | Histogram of PR sizes (additions + deletions) |
+| **CI Time to Green (P50/P75/P90/P95)** | Percentile distribution of CI pipeline completion time |
+| **CI Success Rate Distribution** | Distribution of CI success rates across PRs |
+| **Weekly PR Throughput** | Weekly count of merged PRs trend |
 
 ---
 
@@ -494,6 +517,8 @@ wttj-metrics/
 | **Linear::MetricAccessor** | Memoized metric retrieval from CSV parser |
 | **Linear::TeamFilter** | Team selection and discovery logic |
 | **Linear::BugsByTeamBuilder** | Bug statistic aggregation by team |
+| **Linear::PercentileDataBuilder** | Percentile calculations for Linear metrics |
+| **GitHub::PercentileDataBuilder** | Percentile calculations for GitHub metrics |
 | **Presenters** | Data formatting for HTML/Excel display |
 | **Helpers::LoggerMixin** | Shared logger configuration |
 | **FileCache** | JSON-based response caching |

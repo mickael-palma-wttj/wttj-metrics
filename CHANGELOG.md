@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Percentile Charts for Linear Reports**: New statistical visualizations integrated into existing report sections
+  - **Bug Tracking Section**: Bug MTTR by Team bar chart showing mean time to resolve bugs per team
+  - **Ticket Flow Section**: Daily Throughput Percentiles (P50/P75/P90/P95) line chart and Weekly Throughput Trend bar chart
+  - **Team Comparison Section**: Cycle Velocity Distribution, Completion Rate Distribution, and Completion Rate Histogram
+  - New `Reports::Linear::PercentileDataBuilder` class for calculating percentile metrics
+- **Percentile Charts for GitHub Reports**: Statistical visualizations for PR and CI metrics
+  - **Efficiency Trends Section**: Time to First Review (P50/P75/P90/P95) and Time to Merge (P50/P75/P90/P95) line charts
+  - **Quality & Health Section**: PR Size Distribution histogram, CI Time to Green percentiles, and CI Success Rate Distribution
+  - **Collaboration Section**: Weekly PR Throughput trend chart
+  - New `Reports::GitHub::PercentileDataBuilder` class for calculating GitHub percentile metrics
 - **Team Configuration System**: New configuration file support (`lib/config/teams.yml`) to map logical teams to source-specific names
   - Supports 1-to-many mapping (e.g., one Linear team to multiple GitHub teams)
   - Wildcard support for team matching
