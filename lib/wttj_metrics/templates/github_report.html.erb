@@ -415,7 +415,7 @@
     <!-- Team Metrics Table -->
     <section>
       <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title" id="team-metrics"><span class="chevron">▼</span> &#128101; Team Metrics</h2>
+        <h2 class="section-title" id="team-metrics"><span class="chevron">▼</span> &#128101; Team Metrics<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams:<br><%= team_mapping_display %></span></span><% end %></h2>
         <label class="toggle-switch" onclick="event.stopPropagation()">
           <input type="checkbox" checked onchange="toggleSectionByCheckbox(this)">
           <span class="toggle-slider"></span>

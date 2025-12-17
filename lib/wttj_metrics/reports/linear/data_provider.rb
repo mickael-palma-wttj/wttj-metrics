@@ -37,12 +37,12 @@ module WttjMetrics
         end
 
         def team_mapping_display
-          return selected_teams.join(', ') unless @teams_config
+          return selected_teams.map { |t| "• #{t}" }.join('<br>') unless @teams_config
 
           @teams_config.defined_teams.map do |unified_name|
             patterns = @teams_config.patterns_for(unified_name, :linear)
-            "#{unified_name} (#{patterns.join(', ')})"
-          end.join(' | ')
+            "• #{unified_name} (#{patterns.join(', ')})"
+          end.join('<br>')
         end
 
         def available_teams

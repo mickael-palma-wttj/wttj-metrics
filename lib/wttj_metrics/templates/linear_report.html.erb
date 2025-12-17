@@ -120,6 +120,17 @@
             <canvas id="bugsByTeamChart"></canvas>
           </div>
         </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            Bug MTTR by Team<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
+            <span class="tooltip-icon">?
+              <span class="tooltip-text">Mean Time To Resolve bugs by team. Lower is better. Shows team responsiveness to bug fixes.</span>
+            </span>
+          </h3>
+          <div class="chart-container">
+            <canvas id="bugMttrChart"></canvas>
+          </div>
+        </div>
         <div class="chart-card full-width">
           <h3 class="chart-title">
             Bug Stats by Team (All Time)<% unless all_teams_mode %><span class="filter-badge">Filtered<span class="tooltip-text">Teams: <%= team_mapping_display %></span></span><% end %>
@@ -157,17 +168,6 @@
 <% end %>
             </tbody>
           </table>
-          </div>
-        </div>
-        <div class="chart-card">
-          <h3 class="chart-title">
-            Bug MTTR by Team
-            <span class="tooltip-icon">?
-              <span class="tooltip-text">Mean Time To Resolve bugs by team. Lower is better. Shows team responsiveness to bug fixes.</span>
-            </span>
-          </h3>
-          <div class="chart-container">
-            <canvas id="bugMttrChart"></canvas>
           </div>
         </div>
       </div>
@@ -790,32 +790,35 @@
 
     // Bug MTTR by Team Chart
     const bugMttrData = <%= pct[:bug_mttr].to_json %>;
-    chartInstances.bugMttr = createBarChart(
-      'bugMttrChart',
-      bugMttrData.labels,
-      bugMttrData.datasets.map((ds, idx) => ({
-        label: `${ds.label} (Avg: ${ds.value} days)`,
-        data: [ds.value],
-        backgroundColor: teamColorPalette[idx % teamColorPalette.length],
-        borderRadius: 4
-      })),
-      {
+    chartInstances.bugMttr = new Chart(document.getElementById('bugMttrChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: bugMttrData.labels,
+        datasets: [{
+          label: 'MTTR (days)',
+          data: bugMttrData.datasets.map(ds => ds.value),
+          backgroundColor: bugMttrData.labels.map((_, idx) => teamColorPalette[idx % teamColorPalette.length]),
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
         plugins: { 
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: ctx => `${ctx.label}: ${ctx.parsed.y} days avg MTTR`
+              label: ctx => `${ctx.parsed.x.toFixed(1)} days avg MTTR`
             }
           }
         },
         scales: { 
-          y: { 
+          x: { 
             beginAtZero: true,
             title: { display: true, text: 'Days to Resolve' }
           }
         }
       }
-    );
+    });
 
     // Velocity Distribution Chart
     const velocityData = <%= pct[:velocity].to_json %>;

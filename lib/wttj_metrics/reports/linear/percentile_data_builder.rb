@@ -47,6 +47,7 @@ module WttjMetrics
         end
 
         # Bug resolution time percentiles by team (MTTR)
+        # Only shows selected/filtered teams
         def bug_mttr_by_team
           bugs_data = @parser.metrics_for('bugs_by_team')
           teams_mttr = {}

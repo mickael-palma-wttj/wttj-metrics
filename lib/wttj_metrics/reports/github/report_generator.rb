@@ -54,11 +54,30 @@ module WttjMetrics
         def initialize(csv_path, days: 90, teams: nil, teams_config: nil)
           @csv_path = csv_path
           @days_to_show = days
-          @teams = teams # Unused but kept for interface consistency
+          @teams = teams
           @teams_config = teams_config
           @today = Date.today.to_s
           @parser = Data::CsvParser.new(csv_path)
           @data = @parser.data
+        end
+
+        def selected_teams
+          return @teams_config.defined_teams if @teams_config
+
+          @teams || []
+        end
+
+        def all_teams_mode
+          @teams == :all || (@teams.nil? && @teams_config.nil?)
+        end
+
+        def team_mapping_display
+          return selected_teams.map { |t| "• #{t}" }.join('<br>') unless @teams_config
+
+          @teams_config.defined_teams.map do |unified_name|
+            patterns = @teams_config.patterns_for(unified_name, :github)
+            "• #{unified_name} (#{patterns.join(', ')})"
+          end.join('<br>')
         end
 
         def generate_html(output_path)
