@@ -33,10 +33,13 @@ RSpec.describe WttjMetrics::Reports::Linear::PercentileDataBuilder do
     [
       { date: '2025-01-10', metric: 'TeamA:Cycle1:velocity', value: '20' },
       { date: '2025-01-10', metric: 'TeamA:Cycle1:progress', value: '85' },
+      { date: '2025-01-10', metric: 'TeamA:Cycle1:status', value: 'completed' },
       { date: '2025-01-17', metric: 'TeamA:Cycle2:velocity', value: '25' },
       { date: '2025-01-17', metric: 'TeamA:Cycle2:progress', value: '90' },
+      { date: '2025-01-17', metric: 'TeamA:Cycle2:status', value: 'completed' },
       { date: '2025-01-10', metric: 'TeamB:Cycle1:velocity', value: '15' },
-      { date: '2025-01-10', metric: 'TeamB:Cycle1:progress', value: '70' }
+      { date: '2025-01-10', metric: 'TeamB:Cycle1:progress', value: '70' },
+      { date: '2025-01-10', metric: 'TeamB:Cycle1:status', value: 'completed' }
     ]
   end
 

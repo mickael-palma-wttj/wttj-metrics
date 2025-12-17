@@ -65,15 +65,16 @@ module WttjMetrics
           format_team_comparison(teams_mttr, 'MTTR (days)')
         end
 
-        # Cycle velocity distribution
+        # Cycle velocity distribution (excludes upcoming cycles and zero-velocity cycles)
         def cycle_velocity_distribution
           velocities = []
 
-          all_cycle_data.each do |metric|
-            next unless metric[:metric].end_with?(':velocity')
-            next unless within_cutoff?(metric[:date])
+          completed_cycle_identifiers.each do |cycle_id|
+            velocity_metric = find_cycle_metric(cycle_id, ':velocity')
+            next unless velocity_metric
 
-            velocities << metric[:value].to_f
+            value = velocity_metric[:value].to_f
+            velocities << value if value.positive?
           end
 
           {
@@ -88,16 +89,15 @@ module WttjMetrics
           }
         end
 
-        # Cycle completion rate distribution
+        # Cycle completion rate distribution (only completed cycles)
         def completion_rate_distribution
           rates = []
 
-          # Use only :progress to avoid counting both :progress and :completion_rate
-          all_cycle_data.each do |metric|
-            next unless metric[:metric].end_with?(':progress')
-            next unless within_cutoff?(metric[:date])
+          completed_cycle_identifiers.each do |cycle_id|
+            progress_metric = find_cycle_metric(cycle_id, ':progress')
+            next unless progress_metric
 
-            rates << metric[:value].to_f
+            rates << progress_metric[:value].to_f
           end
 
           {
@@ -147,6 +147,31 @@ module WttjMetrics
 
         def all_cycle_data
           @all_cycle_data ||= @parser.metrics_by_category['cycle'] || []
+        end
+
+        # Returns cycle identifiers (e.g., "Team:Cycle 1") for completed/active cycles only
+        def completed_cycle_identifiers
+          @completed_cycle_identifiers ||= begin
+            cycle_statuses = {}
+
+            all_cycle_data.each do |metric|
+              next unless metric[:metric].end_with?(':status')
+              next unless within_cutoff?(metric[:date])
+
+              cycle_id = metric[:metric].sub(':status', '')
+              cycle_statuses[cycle_id] = metric[:value].to_s.downcase
+            end
+
+            # Only include completed cycles (exclude upcoming)
+            cycle_statuses.select { |_id, status| status == 'completed' }.keys
+          end
+        end
+
+        # Find a specific metric for a cycle
+        def find_cycle_metric(cycle_id, metric_suffix)
+          all_cycle_data.find do |metric|
+            metric[:metric] == "#{cycle_id}#{metric_suffix}" && within_cutoff?(metric[:date])
+          end
         end
 
         def within_cutoff?(date_value)

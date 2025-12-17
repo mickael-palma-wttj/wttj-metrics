@@ -472,6 +472,15 @@
     // Store chart instances for resize handling
     const chartInstances = {};
     
+    // Percentile color constants
+    const PERCENTILE_COLORS = {
+      P50: 'rgba(34, 197, 94, 0.8)',   // Green
+      P75: 'rgba(59, 130, 246, 0.8)',  // Blue
+      P90: 'rgba(255, 205, 0, 0.9)',   // Yellow
+      P95: 'rgba(249, 115, 22, 0.8)'   // Orange
+    };
+    const PERCENTILE_COLORS_ARRAY = [PERCENTILE_COLORS.P50, PERCENTILE_COLORS.P75, PERCENTILE_COLORS.P90, PERCENTILE_COLORS.P95];
+    
     // Function to create all charts
     function createCharts() {
       // Destroy existing charts
@@ -829,12 +838,7 @@
         datasets: [{
           label: 'Story Points',
           data: velocityData.percentiles,
-          backgroundColor: [
-            'rgba(34, 197, 94, 0.8)',   // P50 - green
-            'rgba(59, 130, 246, 0.8)',  // P75 - blue
-            'rgba(255, 205, 0, 0.9)',   // P90 - yellow
-            'rgba(249, 115, 22, 0.8)'   // P95 - orange
-          ],
+          backgroundColor: PERCENTILE_COLORS_ARRAY,
           borderRadius: 4
         }]
       },
@@ -871,12 +875,7 @@
         datasets: [{
           label: 'Completion Rate',
           data: completionData.percentiles,
-          backgroundColor: [
-            completionData.percentiles[0] >= 80 ? 'rgba(34, 197, 94, 0.8)' : completionData.percentiles[0] >= 50 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)',
-            completionData.percentiles[1] >= 80 ? 'rgba(34, 197, 94, 0.8)' : completionData.percentiles[1] >= 50 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)',
-            completionData.percentiles[2] >= 80 ? 'rgba(34, 197, 94, 0.8)' : completionData.percentiles[2] >= 50 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)',
-            completionData.percentiles[3] >= 80 ? 'rgba(34, 197, 94, 0.8)' : completionData.percentiles[3] >= 50 ? 'rgba(255, 205, 0, 0.9)' : 'rgba(220, 38, 38, 0.8)'
-          ],
+          backgroundColor: PERCENTILE_COLORS_ARRAY,
           borderRadius: 4
         }]
       },
