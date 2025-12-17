@@ -41,18 +41,24 @@ test.describe('GitHub Report Structure', () => {
             'Time to First Review History (Days)',
             'Time to Approval History (Days)',
             'Weekly Deployment Frequency',
+            'Time to First Review (P50/P75/P90/P95)',
+            'Time to Merge (P50/P75/P90/P95)',
             'CI Success Rate History',
             'Acceptance Rate History',
             'Unreviewed PR Rate History',
             'Hotfix Rate History',
             'Time to Green History (Hours)',
+            'PR Size History',
+            'PR Size Distribution',
+            'CI Time to Green (P50/P75/P90/P95)',
+            'CI Success Rate Distribution',
             'PR Outcome History',
             'Reviews per PR History',
             'Comments per PR History',
             'Rework Cycles History',
             'Top 10 Active Repositories (PRs Created)',
             'Top 10 Active Contributors (PRs Created)',
-            'PR Size History'
+            'Weekly PR Throughput'
         ];
 
         for (const chart of charts) {

@@ -137,7 +137,7 @@ jobs:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_ORG: ${{ vars.GH_ORG }}
-        run: ./bin/wttj-metrics collect --sources github
+        run: ./bin/wttj-metrics collect --sources github --days 7
 
       - name: Save GitHub metrics
         if: steps.restore-github.outputs.cache-hit != 'true'
@@ -151,7 +151,7 @@ jobs:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_ORG: ${{ vars.GH_ORG }}
-        run: ./bin/wttj-metrics report --sources linear github
+        run: ./bin/wttj-metrics report --sources linear github --days 7
 
       - name: Run Playwright tests
         run: npm test
