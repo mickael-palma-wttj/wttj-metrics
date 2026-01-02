@@ -9,6 +9,7 @@ module WttjMetrics
         attr_reader :data, :metrics_by_category, :days_to_show, :today, :selected_teams, :parser, :all_teams_mode,
                     :teams_config, :start_date, :end_date
 
+        # :reek:LongParameterList { max_params: 6 }
         def initialize(csv_path, days: 90, teams: nil, teams_config: nil, start_date: nil, end_date: nil)
           @csv_path = csv_path
           @days_to_show = days
@@ -43,7 +44,7 @@ module WttjMetrics
         end
 
         def team_mapping_display
-          return selected_teams.map { |t| "• #{t}" }.join('<br>') unless @teams_config
+          return selected_teams.map { |team| "• #{team}" }.join('<br>') unless @teams_config
 
           @teams_config.defined_teams.map do |unified_name|
             patterns = @teams_config.patterns_for(unified_name, :linear)

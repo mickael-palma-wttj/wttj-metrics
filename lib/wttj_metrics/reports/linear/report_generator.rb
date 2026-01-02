@@ -33,6 +33,7 @@ module WttjMetrics
           'Done' => %w[Done Released Canceled Duplicate Auto-closed]
         }.freeze
 
+        # :reek:LongParameterList { max_params: 6 }
         def initialize(csv_path, days: 90, teams: nil, teams_config: nil, start_date: nil, end_date: nil)
           @data_provider = DataProvider.new(
             csv_path,
