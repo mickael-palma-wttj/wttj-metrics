@@ -6,6 +6,8 @@ module WttjMetrics
       module Timeseries
         # Tracks bug-specific metrics including MTTR
         class BugMetrics
+          include Helpers::Linear::IssueHelper
+
           COMPLETED_STATES = %w[completed canceled].freeze
 
           def initialize
@@ -75,11 +77,6 @@ module WttjMetrics
           attr_reader :stats_by_team
 
           private
-
-          def issue_is_bug?(issue)
-            labels = issue['labels']&.dig('nodes') || []
-            labels.any? { |label| label['name']&.match?(/bug/i) }
-          end
 
           def completed_state?(issue)
             COMPLETED_STATES.include?(issue.dig('state', 'type'))
