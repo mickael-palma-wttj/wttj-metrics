@@ -5,8 +5,9 @@ module WttjMetrics
     module Linear
       # Calculates team performance metrics
       class TeamCalculator < Base
+        include Helpers::StatisticsHelper
+
         DAYS_IN_MONTH = 30
-        PERCENTAGE_MULTIPLIER = 100
         HOURS_PER_DAY = 24
 
         def calculate
@@ -29,15 +30,11 @@ module WttjMetrics
           return 0 if recent.empty?
 
           completed_count = count_completed_issues(recent)
-          calculate_percentage(completed_count, recent.size)
+          calculate_percentage(completed_count, recent.size, precision: 2)
         end
 
         def count_completed_issues(issue_collection)
           issue_collection.count { |issue| issue['completedAt'] }
-        end
-
-        def calculate_percentage(numerator, denominator)
-          ((numerator.to_f / denominator) * PERCENTAGE_MULTIPLIER).round(2)
         end
 
         def recent_issues

@@ -5,7 +5,7 @@ module WttjMetrics
     module Linear
       # Calculates cycle/sprint metrics
       class CycleCalculator
-        PERCENTAGE_MULTIPLIER = 100
+        include Helpers::StatisticsHelper
 
         def initialize(cycles, today: Date.today)
           @cycles = cycles
@@ -62,7 +62,7 @@ module WttjMetrics
           return 0 if cycle_issues.empty?
 
           completed = cycle_issues.count { |issue| issue_completed?(issue) }
-          (completed.to_f / cycle_issues.size) * PERCENTAGE_MULTIPLIER
+          calculate_percentage(completed, cycle_issues.size, precision: 2)
         end
 
         def carryover_count_for(cycle)
@@ -107,8 +107,8 @@ module WttjMetrics
       # Builds detail rows for a single cycle
       class CycleDetailBuilder
         include Helpers::Linear::IssueHelper
+        include Helpers::StatisticsHelper
 
-        PERCENTAGE_MULTIPLIER = 100
         METRICS = %i[
           total_issues completed_issues bug_count velocity planned_points
           completion_rate carryover progress duration_days tickets_per_day
@@ -194,7 +194,7 @@ module WttjMetrics
         end
 
         def completion_rate
-          calculate_percentage(completed_issues, total_issues)
+          calculate_percentage(completed_issues, total_issues, precision: 0)
         end
 
         def carryover
@@ -202,13 +202,7 @@ module WttjMetrics
         end
 
         def progress
-          calculate_percentage(completed_issues, total_issues)
-        end
-
-        def calculate_percentage(numerator, denominator)
-          return 0 unless denominator.positive?
-
-          ((numerator.to_f / denominator) * PERCENTAGE_MULTIPLIER).round
+          calculate_percentage(completed_issues, total_issues, precision: 0)
         end
 
         def duration_days
@@ -240,7 +234,7 @@ module WttjMetrics
           final = final_scope.to_f
           return 0.0 if initial.zero?
 
-          (((final - initial) / initial) * PERCENTAGE_MULTIPLIER).round(1)
+          (((final - initial) / initial) * Helpers::StatisticsHelper::PERCENTAGE_MULTIPLIER).round(1)
         end
 
         def initial_scope

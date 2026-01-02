@@ -6,10 +6,10 @@ module WttjMetrics
       # Calculates bug-related metrics
       class BugCalculator < Base
         include Helpers::Linear::IssueHelper
+        include Helpers::StatisticsHelper
 
         COMPLETED_STATES = %w[completed canceled].freeze
         DAYS_IN_MONTH = 30
-        PERCENTAGE_MULTIPLIER = 100
         METRIC_MAPPINGS = {
           total_bugs: :total,
           open_bugs: :open,
@@ -138,7 +138,7 @@ module WttjMetrics
         def bug_ratio
           return 0 if issues.empty?
 
-          ((bugs.size.to_f / issues.size) * PERCENTAGE_MULTIPLIER).round(1)
+          calculate_percentage(bugs.size, issues.size)
         end
 
         def bugs_by_priority
