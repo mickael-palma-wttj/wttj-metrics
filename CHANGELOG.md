@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Overrides `--days` when provided; `--days` still works as before
   - Filters Linear issues by creation date and cycles by overlap with date range
   - Filters GitHub PRs by creation date
+  - Report generation respects date range for chart display and header text
 - **Percentile Charts for Linear Reports**: New statistical visualizations integrated into existing report sections
   - **Bug Tracking Section**: Bug MTTR by Team bar chart showing mean time to resolve bugs per team
   - **Ticket Flow Section**: Daily Throughput Percentiles (P50/P75/P90/P95) line chart and Weekly Throughput Trend bar chart

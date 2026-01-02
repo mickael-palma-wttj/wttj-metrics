@@ -33,8 +33,15 @@ module WttjMetrics
           'Done' => %w[Done Released Canceled Duplicate Auto-closed]
         }.freeze
 
-        def initialize(csv_path, days: 90, teams: nil, teams_config: nil)
-          @data_provider = DataProvider.new(csv_path, days: days, teams: teams, teams_config: teams_config)
+        def initialize(csv_path, days: 90, teams: nil, teams_config: nil, start_date: nil, end_date: nil)
+          @data_provider = DataProvider.new(
+            csv_path,
+            days: days,
+            teams: teams,
+            teams_config: teams_config,
+            start_date: start_date,
+            end_date: end_date
+          )
         end
 
         def generate_html(output_path)

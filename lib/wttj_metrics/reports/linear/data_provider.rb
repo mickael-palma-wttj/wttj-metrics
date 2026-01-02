@@ -7,12 +7,14 @@ module WttjMetrics
     module Linear
       class DataProvider
         attr_reader :data, :metrics_by_category, :days_to_show, :today, :selected_teams, :parser, :all_teams_mode,
-                    :teams_config
+                    :teams_config, :start_date, :end_date
 
-        def initialize(csv_path, days: 90, teams: nil, teams_config: nil)
+        def initialize(csv_path, days: 90, teams: nil, teams_config: nil, start_date: nil, end_date: nil)
           @csv_path = csv_path
           @days_to_show = days
-          @today = Date.today.to_s
+          @start_date = start_date
+          @end_date = end_date || Date.today
+          @today = @end_date.to_s
           @parser = Data::CsvParser.new(csv_path)
           @data = @parser.data
           @metrics_by_category = @parser.metrics_by_category
@@ -33,7 +35,11 @@ module WttjMetrics
         end
 
         def cutoff_date
-          @cutoff_date ||= (Date.today - @days_to_show).to_s
+          @cutoff_date ||= if @start_date
+                             @start_date.to_s
+                           else
+                             (@end_date - @days_to_show).to_s
+                           end
         end
 
         def team_mapping_display

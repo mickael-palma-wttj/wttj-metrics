@@ -46,14 +46,18 @@ module WttjMetrics
                            csv_file,
                            days: options.days,
                            teams: options.teams,
-                           teams_config: teams_config
+                           teams_config: teams_config,
+                           start_date: options.start_date,
+                           end_date: options.end_date
                          )
                        else
                          Reports::Linear::ReportGenerator.new(
                            csv_file,
                            days: options.days,
                            teams: options.teams,
-                           teams_config: teams_config
+                           teams_config: teams_config,
+                           start_date: options.start_date,
+                           end_date: options.end_date
                          )
                        end
       end

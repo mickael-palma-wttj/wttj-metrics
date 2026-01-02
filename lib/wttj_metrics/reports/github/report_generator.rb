@@ -49,14 +49,16 @@ module WttjMetrics
           time_to_green: 'avg_time_to_green_hours'
         }.freeze
 
-        attr_reader :data, :days_to_show, :today
+        attr_reader :data, :days_to_show, :today, :start_date, :end_date
 
-        def initialize(csv_path, days: 90, teams: nil, teams_config: nil)
+        def initialize(csv_path, days: 90, teams: nil, teams_config: nil, start_date: nil, end_date: nil)
           @csv_path = csv_path
           @days_to_show = days
+          @start_date = start_date
+          @end_date = end_date || Date.today
           @teams = teams
           @teams_config = teams_config
-          @today = Date.today.to_s
+          @today = @end_date.to_s
           @parser = Data::CsvParser.new(csv_path)
           @data = @parser.data
         end
@@ -262,7 +264,11 @@ module WttjMetrics
         end
 
         def cutoff_date
-          @cutoff_date ||= (Date.today - @days_to_show).to_s
+          @cutoff_date ||= if @start_date
+                             @start_date.to_s
+                           else
+                             (@end_date - @days_to_show).to_s
+                           end
         end
 
         def calculate_daily_deploy_frequency
