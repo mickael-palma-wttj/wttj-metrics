@@ -178,6 +178,9 @@ Fetch data from Linear API and save to CSV:
 |--------|-------|---------|-------------|
 | `--output` | `-o` | `tmp/metrics.csv` | CSV output file path |
 | `--sources` | `-s` | `linear` | Data sources to collect from (linear, github) |
+| `--days` | `-d` | `90` | Number of days to collect data for |
+| `--start-date` | | - | Start date (YYYY-MM-DD), overrides --days |
+| `--end-date` | | today | End date (YYYY-MM-DD), inclusive |
 | `--cache` | | `true` | Use cache for API responses |
 | `--clear-cache` | | `false` | Clear cache before fetching |
 
@@ -194,6 +197,9 @@ Create HTML dashboard from collected metrics:
 
 # Custom time range (365 days)
 ./bin/wttj-metrics report metrics.csv --days 365
+
+# Specific date range
+./bin/wttj-metrics report metrics.csv --start-date 2024-01-01 --end-date 2024-06-30
 
 # Also generate Excel report
 ./bin/wttj-metrics report metrics.csv --excel
@@ -215,6 +221,8 @@ Create HTML dashboard from collected metrics:
 | `--output` | `-o` | `report/report.html` | HTML output file path |
 | `--sources` | `-s` | `linear` | Data sources to include (linear, github) |
 | `--days` | `-d` | `90` | Number of days to show in charts |
+| `--start-date` | | - | Start date (YYYY-MM-DD), overrides --days |
+| `--end-date` | | today | End date (YYYY-MM-DD), inclusive |
 | `--teams` | `-t` | *default list* | Teams to include in report |
 | `--teams-config` | `-c` | `lib/config/teams.yml` | Path to team configuration YAML |
 | `--all-teams` | | `false` | Include all teams (no filter) |

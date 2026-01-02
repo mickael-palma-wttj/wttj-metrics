@@ -43,6 +43,8 @@ module WttjMetrics
                      desc: 'Data sources to collect from (linear, github)'
     option :days, aliases: '-d', type: :numeric, default: DEFAULT_REPORT_DAYS,
                   desc: 'Number of days to collect data for'
+    option :start_date, type: :string, desc: 'Start date (YYYY-MM-DD), overrides --days'
+    option :end_date, type: :string, desc: 'End date (YYYY-MM-DD), defaults to today'
     def collect
       collect_options = options.dup
 
@@ -72,6 +74,8 @@ module WttjMetrics
     option :excel_path, type: :string, default: 'report/report.xlsx', desc: 'Excel output file path'
     option :sources, aliases: '-s', type: :array, default: ['linear'],
                      desc: 'Data sources to include in filename resolution (linear, github)'
+    option :start_date, type: :string, desc: 'Start date (YYYY-MM-DD), overrides --days'
+    option :end_date, type: :string, desc: 'End date (YYYY-MM-DD), defaults to today'
     def report(csv_file = 'tmp/metrics.csv')
       if csv_file == 'tmp/metrics.csv'
         options[:sources].each do |source|

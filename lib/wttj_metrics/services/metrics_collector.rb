@@ -35,17 +35,27 @@ module WttjMetrics
       def fetch_data
         data = {}
 
-        data.merge!(Linear::DataFetcher.new(cache_strategy, logger).call) if options.sources.include?('linear')
+        if options.sources.include?('linear')
+          data.merge!(Linear::DataFetcher.new(cache_strategy, logger, start_date, end_date).call)
+        end
 
         if options.sources.include?('github')
           if ENV['GITHUB_TOKEN'] && ENV.fetch('GITHUB_ORG', nil)
-            data.merge!(Github::DataFetcher.new(cache_strategy, logger, options.days).call)
+            data.merge!(Github::DataFetcher.new(cache_strategy, logger, start_date, end_date).call)
           else
             logger.warn '⚠️  Skipping GitHub: GITHUB_TOKEN or GITHUB_ORG not set'
           end
         end
 
         data
+      end
+
+      def start_date
+        options.start_date || (Date.today - options.days)
+      end
+
+      def end_date
+        options.end_date
       end
 
       def cache_strategy

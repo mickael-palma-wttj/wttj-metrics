@@ -6,16 +6,17 @@ module WttjMetrics
   module Services
     module Github
       class DataFetcher
-        def initialize(cache, logger, days = 90)
+        def initialize(cache, logger, start_date = nil, end_date = nil)
           @cache = cache
           @logger = logger
-          @days = days
+          @start_date = start_date || (Date.today - 90)
+          @end_date = end_date || Date.today
         end
 
         def call
           @logger.info '📊 Fetching data from GitHub...'
 
-          from_date = (Date.today - @days).iso8601
+          from_date = @start_date.iso8601
           prs = fetch_prs(from_date)
           return {} if prs.empty?
 
@@ -92,8 +93,9 @@ module WttjMetrics
         end
 
         def filter_prs(prs, from_date)
+          to_date = (@end_date + 1).iso8601
           filtered = prs.select do |pr|
-            pr['createdAt'] >= from_date
+            pr['createdAt'] >= from_date && pr['createdAt'] < to_date
           end
           filtered.map { |pr| deep_symbolize_keys(pr) }
         end

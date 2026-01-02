@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Date Range Filtering**: New `--start-date` and `--end-date` CLI options for both `collect` and `report` commands
+  - Specify exact date ranges in YYYY-MM-DD format (e.g., `--start-date 2024-01-01 --end-date 2024-06-30`)
+  - End date is inclusive (includes all items from that day)
+  - Overrides `--days` when provided; `--days` still works as before
+  - Filters Linear issues by creation date and cycles by overlap with date range
+  - Filters GitHub PRs by creation date
 - **Percentile Charts for Linear Reports**: New statistical visualizations integrated into existing report sections
   - **Bug Tracking Section**: Bug MTTR by Team bar chart showing mean time to resolve bugs per team
   - **Ticket Flow Section**: Daily Throughput Percentiles (P50/P75/P90/P95) line chart and Weekly Throughput Trend bar chart
