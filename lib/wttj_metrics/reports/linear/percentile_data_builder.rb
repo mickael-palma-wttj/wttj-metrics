@@ -6,7 +6,8 @@ module WttjMetrics
       # Builds percentile data from timeseries metrics for distribution analysis
       # Single Responsibility: Calculate and format percentile statistics
       class PercentileDataBuilder
-        PERCENTILES = [50, 75, 90, 95].freeze
+        include Helpers::StatisticsHelper
+
         TEAM_COLORS = %w[blue green orange purple pink cyan red lime].freeze
 
         def initialize(parser, teams: [], cutoff_date: nil, available_teams: [])
@@ -192,24 +193,6 @@ module WttjMetrics
           "W#{week}"
         end
 
-        def calculate_percentiles(values)
-          return PERCENTILES.map { 0 } if values.empty?
-
-          sorted = values.sort
-          PERCENTILES.map { |percentile| percentile_value(sorted, percentile) }
-        end
-
-        def percentile_value(sorted_array, percentile)
-          return 0 if sorted_array.empty?
-
-          rank = (percentile / 100.0) * (sorted_array.length - 1)
-          lower = sorted_array[rank.floor]
-          upper = sorted_array[rank.ceil] || lower
-          weight = rank - rank.floor
-
-          (lower + (weight * (upper - lower))).round(2)
-        end
-
         def format_team_comparison(teams_data, metric_label)
           teams = teams_data.keys.sort
           {
@@ -239,12 +222,6 @@ module WttjMetrics
           # Handle 100% bucket
           counts.last[:count] += values.count { |v| v >= buckets[-1] }
           counts
-        end
-
-        def safe_average(values)
-          return 0 if values.empty?
-
-          (values.sum / values.size).round(2)
         end
       end
     end

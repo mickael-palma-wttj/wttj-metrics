@@ -6,7 +6,8 @@ module WttjMetrics
       # Builds percentile data from GitHub metrics for distribution analysis
       # Single Responsibility: Calculate and format percentile statistics for PR metrics
       class PercentileDataBuilder
-        PERCENTILES = [50, 75, 90, 95].freeze
+        include Helpers::StatisticsHelper
+
         TEAM_COLORS = %w[blue green orange purple pink cyan red lime].freeze
 
         def initialize(parser, cutoff_date: nil)
@@ -199,33 +200,6 @@ module WttjMetrics
           }
         end
 
-        def build_stats(values)
-          {
-            min: values.min&.round(2) || 0,
-            max: values.max&.round(2) || 0,
-            avg: safe_average(values),
-            count: values.size
-          }
-        end
-
-        def calculate_percentiles(values)
-          return PERCENTILES.map { 0 } if values.empty?
-
-          sorted = values.sort
-          PERCENTILES.map { |percentile| percentile_value(sorted, percentile) }
-        end
-
-        def percentile_value(sorted_array, percentile)
-          return 0 if sorted_array.empty?
-
-          rank = (percentile / 100.0) * (sorted_array.length - 1)
-          lower = sorted_array[rank.floor]
-          upper = sorted_array[rank.ceil] || lower
-          weight = rank - rank.floor
-
-          (lower + (weight * (upper - lower))).round(2)
-        end
-
         def build_histogram(values, buckets:)
           return buckets[0..-2].map { |_| { range: '0-0', count: 0 } } if values.empty?
 
@@ -234,12 +208,6 @@ module WttjMetrics
             count += values.count { |v| v >= high } if high == buckets.last
             { range: "#{low}-#{high}%", count: count }
           end
-        end
-
-        def safe_average(values)
-          return 0 if values.empty?
-
-          (values.sum / values.size).round(2)
         end
       end
     end
