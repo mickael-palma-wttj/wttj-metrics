@@ -42,7 +42,8 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
   before do
     allow(WttjMetrics::Config).to receive(:validate!)
     allow(WttjMetrics::Services::CacheFactory).to receive_messages(enabled: cache, disabled: nil)
-    allow(WttjMetrics::Services::Linear::DataFetcher).to receive(:new).with(anything, anything, anything, anything).and_return(data_fetcher)
+    allow(WttjMetrics::Services::Linear::DataFetcher).to receive(:new).with(anything, anything, anything,
+                                                                            anything).and_return(data_fetcher)
     allow(WttjMetrics::Metrics::Linear::Calculator).to receive(:new).and_return(calculator)
     allow(WttjMetrics::Data::CsvWriter).to receive(:new).and_return(csv_writer)
     allow(WttjMetrics::Services::MetricsSummaryLogger).to receive(:new).and_return(summary_logger)
@@ -239,7 +240,8 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
       let(:github_rows) { [%w[2024-01-01 github pr_velocity 5]] }
 
       before do
-        allow(WttjMetrics::Services::Github::DataFetcher).to receive(:new).with(anything, anything, anything, anything).and_return(github_fetcher)
+        allow(WttjMetrics::Services::Github::DataFetcher).to receive(:new).with(anything, anything, anything,
+                                                                                anything).and_return(github_fetcher)
         allow(WttjMetrics::Metrics::Github::Calculator).to receive(:new).and_return(github_calculator)
         allow(ENV).to receive(:[]).and_call_original
         allow(ENV).to receive(:[]).with('GITHUB_TOKEN').and_return('token')
