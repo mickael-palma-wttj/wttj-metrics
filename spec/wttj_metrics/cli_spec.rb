@@ -23,8 +23,8 @@ RSpec.describe WttjMetrics::CLI do
     let(:csv_writer) { instance_double(WttjMetrics::Data::CsvWriter) }
     let(:cache) { instance_double(WttjMetrics::Data::FileCache) }
 
-    let(:issues) { [{ 'id' => '1' }, { 'id' => '2' }] }
-    let(:cycles) { [{ 'id' => 'c1' }] }
+    let(:issues) { [{ 'id' => '1', 'createdAt' => Date.today.iso8601 }, { 'id' => '2', 'createdAt' => Date.today.iso8601 }] }
+    let(:cycles) { [{ 'id' => 'c1', 'startsAt' => (Date.today - 7).iso8601, 'endsAt' => Date.today.iso8601 }] }
     let(:team_members) { [{ 'name' => 'Alice' }] }
     let(:workflow_states) { [{ 'name' => 'Backlog' }] }
     let(:rows) do

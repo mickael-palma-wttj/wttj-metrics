@@ -9,15 +9,15 @@ RSpec.describe WttjMetrics::Services::Linear::DataFetcher do
 
   let(:mock_issues) do
     [
-      { id: '1', title: 'Issue 1' },
-      { id: '2', title: 'Issue 2' }
+      { id: '1', title: 'Issue 1', 'createdAt' => Date.today.iso8601 },
+      { id: '2', title: 'Issue 2', 'createdAt' => Date.today.iso8601 }
     ]
   end
 
   let(:mock_cycles) do
     [
-      { id: 'c1', name: 'Sprint 1' },
-      { id: 'c2', name: 'Sprint 2' }
+      { id: 'c1', name: 'Sprint 1', 'startsAt' => (Date.today - 14).iso8601, 'endsAt' => (Date.today - 7).iso8601 },
+      { id: 'c2', name: 'Sprint 2', 'startsAt' => (Date.today - 7).iso8601, 'endsAt' => Date.today.iso8601 }
     ]
   end
 
@@ -49,7 +49,10 @@ RSpec.describe WttjMetrics::Services::Linear::DataFetcher do
   end
 
   describe '#call' do
-    subject(:fetcher) { described_class.new(cache, logger) }
+    subject(:fetcher) { described_class.new(cache, logger, start_date, end_date) }
+
+    let(:start_date) { Date.today - 90 }
+    let(:end_date) { Date.today }
 
     it 'logs the start of data fetching' do
       fetcher.call
@@ -90,7 +93,7 @@ RSpec.describe WttjMetrics::Services::Linear::DataFetcher do
     it 'logs the count of issues and cycles' do
       fetcher.call
 
-      expect(logger).to have_received(:info).with('   Found 2 issues')
+      expect(logger).to have_received(:info).with("   Found 2 issues (#{start_date} to #{end_date})")
       expect(logger).to have_received(:info).with('   Found 2 cycles')
     end
 
@@ -118,7 +121,7 @@ RSpec.describe WttjMetrics::Services::Linear::DataFetcher do
       it 'logs zero counts' do
         fetcher.call
 
-        expect(logger).to have_received(:info).with('   Found 0 issues')
+        expect(logger).to have_received(:info).with("   Found 0 issues (#{start_date} to #{end_date})")
         expect(logger).to have_received(:info).with('   Found 0 cycles')
       end
 
@@ -131,13 +134,19 @@ RSpec.describe WttjMetrics::Services::Linear::DataFetcher do
     end
 
     context 'with large datasets' do
-      let(:mock_issues) { Array.new(1500) { |i| { id: i.to_s, title: "Issue #{i}" } } }
-      let(:mock_cycles) { Array.new(50) { |i| { id: i.to_s, name: "Sprint #{i}" } } }
+      let(:mock_issues) do
+        Array.new(1500) { |i| { id: i.to_s, title: "Issue #{i}", 'createdAt' => Date.today.iso8601 } }
+      end
+      let(:mock_cycles) do
+        Array.new(50) do |i|
+          { id: i.to_s, name: "Sprint #{i}", 'startsAt' => (Date.today - 7).iso8601, 'endsAt' => Date.today.iso8601 }
+        end
+      end
 
       it 'logs correct counts for large datasets' do
         fetcher.call
 
-        expect(logger).to have_received(:info).with('   Found 1500 issues')
+        expect(logger).to have_received(:info).with("   Found 1500 issues (#{start_date} to #{end_date})")
         expect(logger).to have_received(:info).with('   Found 50 cycles')
       end
     end

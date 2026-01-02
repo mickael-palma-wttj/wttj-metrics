@@ -10,7 +10,10 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
       cache_enabled: true,
       clear_cache: false,
       output: 'tmp/metrics.csv',
-      sources: ['linear']
+      sources: ['linear'],
+      days: 90,
+      start_date: nil,
+      end_date: Date.today
     )
   end
 
@@ -39,7 +42,7 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
   before do
     allow(WttjMetrics::Config).to receive(:validate!)
     allow(WttjMetrics::Services::CacheFactory).to receive_messages(enabled: cache, disabled: nil)
-    allow(WttjMetrics::Services::Linear::DataFetcher).to receive(:new).and_return(data_fetcher)
+    allow(WttjMetrics::Services::Linear::DataFetcher).to receive(:new).with(anything, anything, anything, anything).and_return(data_fetcher)
     allow(WttjMetrics::Metrics::Linear::Calculator).to receive(:new).and_return(calculator)
     allow(WttjMetrics::Data::CsvWriter).to receive(:new).and_return(csv_writer)
     allow(WttjMetrics::Services::MetricsSummaryLogger).to receive(:new).and_return(summary_logger)
@@ -60,10 +63,10 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
       expect(logger).to have_received(:info).with(match(/🚀 Starting Metrics Collection \(linear\) - #{Date.today}/))
     end
 
-    it 'creates a DataFetcher with cache and logger' do
+    it 'creates a DataFetcher with cache, logger, and date range' do
       collector.call
 
-      expect(WttjMetrics::Services::Linear::DataFetcher).to have_received(:new).with(cache, logger)
+      expect(WttjMetrics::Services::Linear::DataFetcher).to have_received(:new).with(cache, logger, anything, anything)
     end
 
     it 'calls DataFetcher to fetch data' do
@@ -128,7 +131,8 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
 
     context 'when cache is enabled' do
       let(:options) do
-        double('Options', cache_enabled: true, clear_cache: false, output: 'tmp/metrics.csv', sources: ['linear'])
+        double('Options', cache_enabled: true, clear_cache: false, output: 'tmp/metrics.csv', sources: ['linear'],
+                          days: 90, start_date: nil, end_date: Date.today)
       end
 
       it 'uses enabled cache' do
@@ -146,7 +150,8 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
 
     context 'when cache is disabled' do
       let(:options) do
-        double('Options', cache_enabled: false, clear_cache: false, output: 'tmp/metrics.csv', sources: ['linear'])
+        double('Options', cache_enabled: false, clear_cache: false, output: 'tmp/metrics.csv', sources: ['linear'],
+                          days: 90, start_date: nil, end_date: Date.today)
       end
 
       it 'uses disabled cache (nil)' do
@@ -158,13 +163,14 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
       it 'passes nil as cache to DataFetcher' do
         collector.call
 
-        expect(WttjMetrics::Services::Linear::DataFetcher).to have_received(:new).with(nil, logger)
+        expect(WttjMetrics::Services::Linear::DataFetcher).to have_received(:new).with(nil, logger, anything, anything)
       end
     end
 
     context 'when clear_cache is true' do
       let(:options) do
-        double('Options', cache_enabled: true, clear_cache: true, output: 'tmp/metrics.csv', sources: ['linear'])
+        double('Options', cache_enabled: true, clear_cache: true, output: 'tmp/metrics.csv', sources: ['linear'],
+                          days: 90, start_date: nil, end_date: Date.today)
       end
 
       it 'clears the cache before fetching data' do
@@ -222,7 +228,9 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
           clear_cache: false,
           output: 'tmp/metrics.csv',
           sources: ['github'],
-          days: 90
+          days: 90,
+          start_date: nil,
+          end_date: Date.today
         )
       end
       let(:github_fetcher) { instance_double(WttjMetrics::Services::Github::DataFetcher, call: github_data) }
@@ -231,7 +239,7 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
       let(:github_rows) { [%w[2024-01-01 github pr_velocity 5]] }
 
       before do
-        allow(WttjMetrics::Services::Github::DataFetcher).to receive(:new).and_return(github_fetcher)
+        allow(WttjMetrics::Services::Github::DataFetcher).to receive(:new).with(anything, anything, anything, anything).and_return(github_fetcher)
         allow(WttjMetrics::Metrics::Github::Calculator).to receive(:new).and_return(github_calculator)
         allow(ENV).to receive(:[]).and_call_original
         allow(ENV).to receive(:[]).with('GITHUB_TOKEN').and_return('token')
@@ -261,7 +269,9 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
           clear_cache: false,
           output: 'tmp/metrics.csv',
           sources: ['github'],
-          days: 90
+          days: 90,
+          start_date: nil,
+          end_date: Date.today
         )
       end
 
@@ -288,7 +298,9 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
           clear_cache: false,
           output: 'tmp/metrics.csv',
           sources: ['github'],
-          days: 90
+          days: 90,
+          start_date: nil,
+          end_date: Date.today
         )
       end
 

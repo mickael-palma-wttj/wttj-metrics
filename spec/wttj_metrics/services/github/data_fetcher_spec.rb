@@ -3,11 +3,13 @@
 require 'spec_helper'
 
 RSpec.describe WttjMetrics::Services::Github::DataFetcher do
-  subject(:fetcher) { described_class.new(cache, logger) }
+  subject(:fetcher) { described_class.new(cache, logger, start_date, end_date) }
 
   let(:logger) { instance_double(Logger, info: nil, error: nil, warn: nil) }
   let(:client) { instance_double(WttjMetrics::Sources::Github::Client) }
   let(:cache) { instance_double(WttjMetrics::Data::FileCache, read: nil, write: nil) }
+  let(:start_date) { Date.today - 90 }
+  let(:end_date) { Date.today }
   let(:prs) do
     [{ 'title' => 'PR 1', 'createdAt' => Date.today.iso8601, 'url' => 'http://github.com/owner/repo/pull/1',
        'repository' => { 'name' => 'repo' } }]
@@ -179,8 +181,9 @@ RSpec.describe WttjMetrics::Services::Github::DataFetcher do
       end
     end
 
-    context 'with custom days' do
-      subject(:fetcher) { described_class.new(cache, logger, 30) }
+    context 'with custom date range' do
+      let(:start_date) { Date.today - 30 }
+      let(:end_date) { Date.today }
 
       it 'fetches pull requests from 30 days ago' do
         fetcher.call

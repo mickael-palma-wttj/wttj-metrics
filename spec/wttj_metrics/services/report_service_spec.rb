@@ -13,7 +13,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
       excel_path: 'tmp/report.xlsx',
       days: 90,
       teams: %w[ATS Platform],
-      teams_config: nil
+      teams_config: nil,
+      start_date: nil,
+      end_date: nil
     )
   end
 
@@ -55,7 +57,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
         csv_file,
         days: 90,
         teams: %w[ATS Platform],
-        teams_config: nil
+        teams_config: nil,
+        start_date: nil,
+        end_date: nil
       )
     end
 
@@ -105,7 +109,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_path: 'tmp/report.xlsx',
           days: 90,
           teams: %w[ATS Platform],
-          teams_config: nil
+          teams_config: nil,
+          start_date: nil,
+          end_date: nil
         )
       end
 
@@ -140,7 +146,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_path: 'exports/excel/report.xlsx',
           days: 90,
           teams: [],
-          teams_config: nil
+          teams_config: nil,
+          start_date: nil,
+          end_date: nil
         )
       end
 
@@ -172,7 +180,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_path: 'tmp/report.xlsx',
           days: 90,
           teams: [],
-          teams_config: nil
+          teams_config: nil,
+          start_date: nil,
+          end_date: nil
         )
 
         service = described_class.new(csv_file, options_with_excel, logger)
@@ -193,7 +203,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_path: 'tmp/report.xlsx',
           days: 30,
           teams: [],
-          teams_config: nil
+          teams_config: nil,
+          start_date: nil,
+          end_date: nil
         )
       end
 
@@ -204,7 +216,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
           csv_file,
           days: 30,
           teams: [],
-          teams_config: nil
+          teams_config: nil,
+          start_date: nil,
+          end_date: nil
         )
       end
     end
@@ -218,7 +232,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
           excel_path: 'tmp/report.xlsx',
           days: 90,
           teams: %w[ATS Platform Sourcing],
-          teams_config: nil
+          teams_config: nil,
+          start_date: nil,
+          end_date: nil
         )
       end
 
@@ -229,7 +245,9 @@ RSpec.describe WttjMetrics::Services::ReportService do
           csv_file,
           days: 90,
           teams: %w[ATS Platform Sourcing],
-          teams_config: nil
+          teams_config: nil,
+          start_date: nil,
+          end_date: nil
         )
       end
     end
