@@ -133,20 +133,31 @@ module WttjMetrics
           @percentile_data ||= PercentileDataBuilder.new(@parser, cutoff_date: cutoff_date).all_percentile_data
         end
 
+        def team_metrics_warning
+          team_metrics
+          @team_metrics_warning
+        end
+
         def team_metrics
           @team_metrics ||= begin
             teams = TeamService.new(@parser, @teams_config).resolve_teams
-            teams = selected_teams if teams.empty? && @teams_config
 
-            teams.each_with_object({}) do |team_name, hash|
-              category = "github:#{team_name}"
-              calculator = MetricsCalculator.new(metrics_data(category))
+            if teams.empty?
+              @team_metrics_warning = if @teams_config
+                                       'No GitHub team metrics found in the CSV. Re-run `collect` with a `GITHUB_TOKEN` that can read org teams (or after teams have been cached) to populate per-team GitHub metrics.'
+                                     end
+              {}
+            else
+              teams.each_with_object({}) do |team_name, hash|
+                category = "github:#{team_name}"
+                calculator = MetricsCalculator.new(metrics_data(category))
 
-              hash[team_name] = {
-                metrics: METRIC_MAPPING.transform_values { |name| calculator.latest_or_nil(name) },
-                history: METRIC_MAPPING.transform_values { |name| calculator.history(name) },
-                daily_breakdown: daily_breakdown_for(team_name)
-              }
+                hash[team_name] = {
+                  metrics: METRIC_MAPPING.transform_values { |name| calculator.latest_or_nil(name) },
+                  history: METRIC_MAPPING.transform_values { |name| calculator.history(name) },
+                  daily_breakdown: daily_breakdown_for(team_name)
+                }
+              end
             end
           end
         end

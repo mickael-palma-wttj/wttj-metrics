@@ -228,6 +228,32 @@ RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
       expect(metrics['TeamA'][:history][:total_merged].size).to eq(2)
       expect(metrics['TeamA'][:daily_breakdown][:datasets][:merged]).to include(2, 3)
     end
+
+    context 'when no team metrics exist in the CSV but a teams config is provided' do
+      subject(:configured_generator) { described_class.new(csv_path, teams_config: teams_config) }
+
+      let(:teams_config) { instance_double(WttjMetrics::Values::TeamConfiguration, defined_teams: ['ATS']) }
+
+      before do
+        parser = instance_double(WttjMetrics::Data::CsvParser)
+        allow(WttjMetrics::Data::CsvParser).to receive(:new).with(csv_path).and_return(parser)
+        allow(parser).to receive_messages(data: [], metrics_by_category: { 'github' => [], 'github_daily' => [] })
+
+        team_service = instance_double(WttjMetrics::Reports::Github::TeamService, resolve_teams: [])
+        allow(WttjMetrics::Reports::Github::TeamService).to receive(:new).and_return(team_service)
+      end
+
+      it 'returns an empty hash and exposes a warning' do
+        # Exercise
+        metrics = configured_generator.team_metrics
+
+        # Verify
+        aggregate_failures do
+          expect(metrics).to eq({})
+          expect(configured_generator.team_metrics_warning).to match(/No GitHub team metrics found/i)
+        end
+      end
+    end
   end
 
   describe '#generate_excel' do

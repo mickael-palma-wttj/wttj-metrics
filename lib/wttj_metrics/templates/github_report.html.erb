@@ -424,6 +424,9 @@
       <div class="section-content">
         <div class="charts-grid">
           <div class="chart-card full-width">
+            <% if team_metrics_warning %>
+              <div class="callout callout-warning"><%= ERB::Util.html_escape(team_metrics_warning) %></div>
+            <% end %>
             <div class="search-container">
               <input type="text" id="teamSearch" placeholder="Search teams..." oninput="filterTable('teamSearch', 'teamMetricsTable')" class="search-input">
             </div>

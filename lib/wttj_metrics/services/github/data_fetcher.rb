@@ -176,13 +176,34 @@ module WttjMetrics
         end
 
         def fetch_teams_data
-          return {} unless github_token?
+          org = ENV.fetch('GITHUB_ORG', nil)
+          cache_key = "github_teams_#{org}"
+          stale_teams = nil
 
-          @logger.info "   Fetching teams for organization: #{ENV.fetch('GITHUB_ORG', nil)}"
-          client.fetch_teams(ENV.fetch('GITHUB_ORG', nil))
+          if cache
+            fresh_teams = cache.read(cache_key, max_age_hours: 24)
+            return fresh_teams if fresh_teams
+
+            stale_teams = cache.read(cache_key, max_age_hours: 87_600)
+          end
+
+          unless github_token?
+            if stale_teams
+              @logger.warn '   ⚠️  GITHUB_TOKEN not set. Using cached teams without updating.'
+              return stale_teams
+            end
+
+            @logger.warn '   ⚠️  GITHUB_TOKEN not set and no cached teams. Skipping teams fetch.'
+            return {}
+          end
+
+          @logger.info "   Fetching teams for organization: #{org}"
+          teams = client.fetch_teams(org)
+          cache&.write(cache_key, teams)
+          teams
         rescue StandardError => e
           @logger.warn "⚠️  Error fetching teams: #{e.message}"
-          {}
+          stale_teams || {}
         end
 
         def github_token?
