@@ -46,7 +46,7 @@ RSpec.describe WttjMetrics::Presenters::CycleMetricPresenter do
       let(:metric_name) { 'median_cycle_velocity' }
 
       it 'returns the tooltip' do
-        expect(tooltip).to eq('Median story points completed per cycle across all completed cycles.')
+        expect(tooltip).to eq('Median story points completed per cycle across completed cycles (excluding zero-velocity cycles).')
       end
     end
 

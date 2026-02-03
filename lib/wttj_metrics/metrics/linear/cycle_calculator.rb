@@ -36,6 +36,9 @@ module WttjMetrics
           return 0 if completed_cycles.empty?
 
           velocities = completed_cycles.map { |cycle| completed_points(cycle).to_f }
+                                     .select(&:positive?)
+          return 0 if velocities.empty?
+
           safe_median(velocities, precision: 1)
         end
 

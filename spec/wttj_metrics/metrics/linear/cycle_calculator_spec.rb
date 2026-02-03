@@ -64,6 +64,18 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
                 { 'estimate' => 1, 'state' => { 'type' => 'completed' } }
               ]
             }
+          },
+          {
+            'name' => 'Sprint 3',
+            'startsAt' => '2024-11-29',
+            'endsAt' => '2024-12-12',
+            'completedAt' => '2024-12-12T10:00:00Z',
+            'issues' => {
+              'nodes' => [
+                { 'estimate' => nil, 'state' => { 'type' => 'completed' } },
+                { 'estimate' => nil, 'state' => { 'type' => 'completed' } }
+              ]
+            }
           }
         ]
       end
@@ -71,15 +83,17 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
       it 'calculates median cycle velocity across completed cycles' do
         # Sprint 1: 3 + 5 = 8 points
         # Sprint 2: 2 + 3 + 5 + 1 = 11 points
-        # Average: (8 + 11) / 2 = 9.5 points
+        # Sprint 3: no estimates => 0 points (excluded from median)
+        # Median (excluding zeros): median(8, 11) = 9.5 points
         expect(result[:median_cycle_velocity]).to eq(9.5)
       end
 
-      it 'calculates average commitment accuracy across completed cycles' do
+      it 'calculates median commitment accuracy across completed cycles' do
         # Sprint 1: 2/3 = 66.67%
         # Sprint 2: 4/4 = 100%
-        # Average: (66.67 + 100) / 2 = 83.33%
-        expect(result[:cycle_commitment_accuracy]).to be_within(0.1).of(83.33)
+        # Sprint 3: 2/2 = 100%
+        # Median(66.67, 100, 100) = 100%
+        expect(result[:cycle_commitment_accuracy]).to eq(100.0)
       end
     end
 
@@ -172,6 +186,7 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
             'name' => 'Sprint 1',
             'startsAt' => '2024-12-01',
             'endsAt' => '2024-12-14',
+            'completedAt' => '2024-12-14T10:00:00Z',
             'issues' => {
               'nodes' => [
                 { 'estimate' => nil, 'state' => { 'type' => 'completed' } }
@@ -181,7 +196,7 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
         ]
       end
 
-      it 'treats nil estimate as 0 in median calculation' do
+      it 'returns zero when all completed cycles have zero velocity' do
         expect(result[:median_cycle_velocity]).to eq(0)
       end
     end
