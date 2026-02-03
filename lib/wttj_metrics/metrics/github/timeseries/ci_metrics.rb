@@ -22,7 +22,7 @@ module WttjMetrics
           def metrics
             {
               ci_success_rate: rate(@count_ci_success, @pr_count),
-              avg_time_to_green_hours: median_duration(@time_to_green, 3600.0)
+              median_time_to_green_hours: median_duration(@time_to_green, 3600.0)
             }
           end
 

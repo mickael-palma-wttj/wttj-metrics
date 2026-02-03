@@ -11,20 +11,20 @@ module WttjMetrics
           merged: ->(c) { c.sum('merged') },
           closed: ->(c) { c.sum('closed') },
           open: ->(c) { c.last_value('open') },
-          avg_time_to_merge: ->(c) { c.weighted_median('avg_time_to_merge_hours', 'merged') },
-          avg_reviews: ->(c) { c.weighted_median('avg_reviews_per_pr', 'created') },
-          avg_comments: ->(c) { c.weighted_median('avg_comments_per_pr', 'created') },
-          avg_additions: ->(c) { c.weighted_median('avg_additions_per_pr', 'created') },
-          avg_deletions: ->(c) { c.weighted_median('avg_deletions_per_pr', 'created') },
-          avg_time_to_first_review: ->(c) { c.simple_median('avg_time_to_first_review_days') },
+          median_time_to_merge: ->(c) { c.weighted_median('median_time_to_merge_hours', 'merged') },
+          median_reviews: ->(c) { c.weighted_median('median_reviews_per_pr', 'created') },
+          median_comments: ->(c) { c.weighted_median('median_comments_per_pr', 'created') },
+          median_additions: ->(c) { c.weighted_median('median_additions_per_pr', 'created') },
+          median_deletions: ->(c) { c.weighted_median('median_deletions_per_pr', 'created') },
+          median_time_to_first_review: ->(c) { c.simple_median('median_time_to_first_review_days') },
           merge_rate: lambda(&:merge_rate),
-          avg_time_to_approval: ->(c) { c.simple_median('avg_time_to_approval_days') },
-          avg_rework_cycles: ->(c) { c.weighted_median('avg_rework_cycles', 'created') },
+          median_time_to_approval: ->(c) { c.simple_median('median_time_to_approval_days') },
+          median_rework_cycles: ->(c) { c.weighted_median('median_rework_cycles', 'created') },
           unreviewed_pr_rate: ->(c) { c.rate_from_daily('unreviewed_pr_rate', 'created') },
           ci_success_rate: ->(c) { c.rate_from_daily('ci_success_rate', 'created') },
           deploy_frequency: ->(c) { c.sum('releases_count') },
           hotfix_rate: ->(c) { c.rate('hotfix_count', 'releases_count') },
-          time_to_green: ->(c) { c.simple_median('avg_time_to_green_hours') }
+          time_to_green: ->(c) { c.simple_median('median_time_to_green_hours') }
         }.freeze
 
         def initialize(daily_data)

@@ -22,8 +22,8 @@ RSpec.describe WttjMetrics::Presenters::TeamMetricPresenter do
       end
     end
 
-    context 'with avg_blocked_time_hours' do
-      let(:metric_name) { 'avg_blocked_time_hours' }
+    context 'with median_blocked_time_hours' do
+      let(:metric_name) { 'median_blocked_time_hours' }
 
       it 'uses Median prefix' do
         expect(label).to eq('Median blocked time hours')
@@ -42,8 +42,8 @@ RSpec.describe WttjMetrics::Presenters::TeamMetricPresenter do
       end
     end
 
-    context 'with avg_blocked_time_hours' do
-      let(:metric_name) { 'avg_blocked_time_hours' }
+    context 'with median_blocked_time_hours' do
+      let(:metric_name) { 'median_blocked_time_hours' }
 
       it 'returns the tooltip' do
         expect(tooltip).to eq('Median hours issues spend in blocked state.')
@@ -71,7 +71,7 @@ RSpec.describe WttjMetrics::Presenters::TeamMetricPresenter do
     end
 
     context 'with hours metric' do
-      let(:metric_name) { 'avg_blocked_time_hours' }
+      let(:metric_name) { 'median_blocked_time_hours' }
 
       it 'returns hours unit' do
         expect(unit).to eq('h')

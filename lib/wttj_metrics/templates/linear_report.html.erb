@@ -329,16 +329,16 @@
             <tr>
               <td><strong><%= team %></strong></td>
               <td><%= stats[:cycles_with_data] %>/<%= stats[:total_cycles] %></td>
-              <td><%= stats[:avg_velocity] %> pts</td>
-              <td><%= stats[:avg_tickets_per_cycle] %></td>
-              <td><%= stats[:avg_assignees] %></td>
-              <td><%= stats[:avg_tickets_per_day] %></td>
+              <td><%= stats[:median_velocity] %> pts</td>
+              <td><%= stats[:median_tickets_per_cycle] %></td>
+              <td><%= stats[:median_assignees] %></td>
+              <td><%= stats[:median_tickets_per_day] %></td>
               <td>
-                <div class="progress-bar"><div class="progress-fill <%= stats[:avg_completion_rate] >= 80 ? 'completion-high' : stats[:avg_completion_rate] >= 50 ? 'completion-medium' : 'completion-low' %>" style="width: <%= stats[:avg_completion_rate] %>%"></div></div>
-                <small><%= stats[:avg_completion_rate] %>%</small>
+                <div class="progress-bar"><div class="progress-fill <%= stats[:median_completion_rate] >= 80 ? 'completion-high' : stats[:median_completion_rate] >= 50 ? 'completion-medium' : 'completion-low' %>" style="width: <%= stats[:median_completion_rate] %>%"></div></div>
+                <small><%= stats[:median_completion_rate] %>%</small>
               </td>
               <td><%= stats[:total_carryover] %></td>
-              <td class="<%= stats[:avg_scope_change] > 0 ? 'scope-increased' : stats[:avg_scope_change] < 0 ? 'scope-decreased' : 'scope-neutral' %>"><%= stats[:avg_scope_change] > 0 ? '+' : '' %><%= stats[:avg_scope_change] %>%</td>
+              <td class="<%= stats[:median_scope_change] > 0 ? 'scope-increased' : stats[:median_scope_change] < 0 ? 'scope-decreased' : 'scope-neutral' %>"><%= stats[:median_scope_change] > 0 ? '+' : '' %><%= stats[:median_scope_change] %>%</td>
             </tr>
 <% end %>
           </tbody>

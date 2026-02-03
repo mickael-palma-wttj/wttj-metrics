@@ -13,9 +13,9 @@ module WttjMetrics
 
         def calculate
           {
-            avg_cycle_time_days: avg_cycle_time,
-            avg_lead_time_days: avg_lead_time,
-            avg_review_time_days: avg_review_time,
+            median_cycle_time_days: median_cycle_time,
+            median_lead_time_days: median_lead_time,
+            median_review_time_days: median_review_time,
             weekly_throughput: weekly_throughput,
             current_wip: current_wip
           }
@@ -29,7 +29,7 @@ module WttjMetrics
 
         private
 
-        def avg_cycle_time
+        def median_cycle_time
           median_duration(cycle_time_eligible_issues) do |issue|
             duration_between(issue['startedAt'], issue['completedAt'])
           end
@@ -43,7 +43,7 @@ module WttjMetrics
           issue['completedAt'] && issue['startedAt']
         end
 
-        def avg_lead_time
+        def median_lead_time
           median_duration(completed_issues) do |issue|
             duration_between(issue['createdAt'], issue['completedAt'])
           end
@@ -75,7 +75,7 @@ module WttjMetrics
           @completed_issues ||= filter_issues_by_state(COMPLETED_STATE)
         end
 
-        def avg_review_time
+        def median_review_time
           median_from_collection(collect_review_times)
         end
 

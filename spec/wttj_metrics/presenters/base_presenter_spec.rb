@@ -50,11 +50,11 @@ RSpec.describe WttjMetrics::Presenters::BasePresenter do
 
     context 'with multiple underscores' do
       # Setup
-      let(:metric) { { metric: 'avg_cycle_time', value: 10 } }
+      let(:metric) { { metric: 'median_cycle_time', value: 10 } }
 
       it 'replaces all underscores with spaces' do
         # Exercise & Verify
-        expect(label).to eq('Avg cycle time')
+        expect(label).to eq('Median cycle time')
       end
     end
   end

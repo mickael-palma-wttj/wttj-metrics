@@ -649,7 +649,7 @@
     
     
     const breakdownLabels = ["2024-12-09","2024-12-16","2024-12-23","2024-12-30","2025-01-06","2025-01-13","2025-01-20","2025-01-27","2025-02-03","2025-02-10","2025-02-17","2025-02-24","2025-03-03","2025-03-10","2025-03-17","2025-03-24","2025-03-31","2025-04-07","2025-04-14","2025-04-21","2025-04-28","2025-05-05","2025-05-12","2025-05-19","2025-05-26","2025-06-02","2025-06-09","2025-06-16","2025-06-23","2025-06-30","2025-07-07","2025-07-14","2025-07-21","2025-07-28","2025-08-04","2025-08-11","2025-08-18","2025-08-25","2025-09-01","2025-09-08","2025-09-15","2025-09-22","2025-09-29","2025-10-06","2025-10-13","2025-10-20","2025-10-27","2025-11-03","2025-11-10","2025-11-17","2025-11-24","2025-12-01","2025-12-08"];
-    const globalMetrics = {"avg_time_to_merge":3.6962,"total_merged":13829.0,"avg_reviews":1.14,"avg_comments":1.17,"avg_time_to_first_review":2.7991,"avg_additions":295.57,"avg_deletions":177.95,"avg_changed_files":7.33,"avg_commits":2.94,"merge_rate":75.23,"avg_time_to_approval":3.079,"avg_rework_cycles":0.01,"unreviewed_pr_rate":29.99,"ci_success_rate":92.8,"deploy_frequency":34.06,"deploy_frequency_daily":4.87,"hotfix_rate":0.0,"time_to_green":8.65};
+    const globalMetrics = {"median_time_to_merge":3.6962,"total_merged":13829.0,"median_reviews":1.14,"median_comments":1.17,"median_time_to_first_review":2.7991,"median_additions":295.57,"median_deletions":177.95,"median_changed_files":7.33,"median_commits":2.94,"merge_rate":75.23,"median_time_to_approval":3.079,"median_rework_cycles":0.01,"unreviewed_pr_rate":29.99,"ci_success_rate":92.8,"deploy_frequency":34.06,"deploy_frequency_daily":4.87,"hotfix_rate":0.0,"time_to_green":8.65};
 
     function createBaselineDataset(value, label, color) {
       return {
@@ -690,7 +690,7 @@
             backgroundColor: colors.blue,
             tension: 0.4
           },
-          createBaselineDataset(globalMetrics.avg_time_to_merge, 'Period Median', colors.blue)
+          createBaselineDataset(globalMetrics.median_time_to_merge, 'Period Median', colors.blue)
         ]
       },
       options: {
@@ -718,7 +718,7 @@
             backgroundColor: colors.cyan,
             tension: 0.4
           },
-          createBaselineDataset(globalMetrics.avg_time_to_first_review, 'Period Median', colors.cyan)
+          createBaselineDataset(globalMetrics.median_time_to_first_review, 'Period Median', colors.cyan)
         ]
       },
       options: {
@@ -742,7 +742,7 @@
             backgroundColor: colors.green,
             tension: 0.4
           },
-          createBaselineDataset(globalMetrics.avg_time_to_approval, 'Period Median', colors.green)
+          createBaselineDataset(globalMetrics.median_time_to_approval, 'Period Median', colors.green)
         ]
       },
       options: {
@@ -770,7 +770,7 @@
             backgroundColor: colors.purple,
             tension: 0.4
           },
-          createBaselineDataset(globalMetrics.avg_reviews, 'Period Median', colors.purple)
+          createBaselineDataset(globalMetrics.median_reviews, 'Period Median', colors.purple)
         ]
       },
       options: {
@@ -793,7 +793,7 @@
             backgroundColor: colors.orange,
             tension: 0.4
           },
-          createBaselineDataset(globalMetrics.avg_comments, 'Period Median', colors.orange)
+          createBaselineDataset(globalMetrics.median_comments, 'Period Median', colors.orange)
         ]
       },
       options: {
@@ -816,7 +816,7 @@
             backgroundColor: colors.red,
             tension: 0.4
           },
-          createBaselineDataset(globalMetrics.avg_rework_cycles, 'Period Median', colors.red)
+          createBaselineDataset(globalMetrics.median_rework_cycles, 'Period Median', colors.red)
         ]
       },
       options: {

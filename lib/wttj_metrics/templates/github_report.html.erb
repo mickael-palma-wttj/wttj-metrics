@@ -31,7 +31,7 @@
       <div class="metrics-grid">
         <div class="metric-card">
           <span class="tooltip">Median time from PR creation to merge</span>
-          <div class="metric-value"><%= metrics[:avg_time_to_merge].round(1) %>d</div>
+          <div class="metric-value"><%= metrics[:median_time_to_merge].round(1) %>d</div>
           <div class="metric-label">Median Time to Merge</div>
         </div>
         <div class="metric-card">
@@ -41,17 +41,17 @@
         </div>
         <div class="metric-card">
           <span class="tooltip">Median number of reviews per PR</span>
-          <div class="metric-value"><%= metrics[:avg_reviews].round(1) %></div>
+          <div class="metric-value"><%= metrics[:median_reviews].round(1) %></div>
           <div class="metric-label">Median Reviews / PR</div>
         </div>
         <div class="metric-card">
           <span class="tooltip">Median number of comments per PR</span>
-          <div class="metric-value"><%= metrics[:avg_comments].round(1) %></div>
+          <div class="metric-value"><%= metrics[:median_comments].round(1) %></div>
           <div class="metric-label">Median Comments / PR</div>
         </div>
         <div class="metric-card">
           <span class="tooltip">Median time from PR creation to first review</span>
-          <div class="metric-value"><%= metrics[:avg_time_to_first_review].round(1) %>d</div>
+          <div class="metric-value"><%= metrics[:median_time_to_first_review].round(1) %>d</div>
           <div class="metric-label">Median Time to First Review</div>
         </div>
         <div class="metric-card">
@@ -61,12 +61,12 @@
         </div>
         <div class="metric-card">
           <span class="tooltip">Median time from PR creation to first approval</span>
-          <div class="metric-value"><%= metrics[:avg_time_to_approval].round(1) %>d</div>
+          <div class="metric-value"><%= metrics[:median_time_to_approval].round(1) %>d</div>
           <div class="metric-label">Median Time to Approval</div>
         </div>
         <div class="metric-card">
           <span class="tooltip">Median number of 'Changes Requested' reviews per PR</span>
-          <div class="metric-value"><%= metrics[:avg_rework_cycles].round(1) %></div>
+          <div class="metric-value"><%= metrics[:median_rework_cycles].round(1) %></div>
           <div class="metric-label">Rework Cycles</div>
         </div>
         <div class="metric-card">
@@ -81,12 +81,12 @@
         </div>
         <div class="metric-card">
           <span class="tooltip">Median lines added per PR</span>
-          <div class="metric-value"><%= metrics[:avg_additions].to_i %></div>
+          <div class="metric-value"><%= metrics[:median_additions].to_i %></div>
           <div class="metric-label">Median Additions / PR</div>
         </div>
         <div class="metric-card">
           <span class="tooltip">Median lines deleted per PR</span>
-          <div class="metric-value"><%= metrics[:avg_deletions].to_i %></div>
+          <div class="metric-value"><%= metrics[:median_deletions].to_i %></div>
           <div class="metric-label">Median Deletions / PR</div>
         </div>
       </div>
@@ -433,8 +433,8 @@
               <tr>
                 <th onclick="sortTable('teamMetricsTable', 0)" class="sortable">Team</th>
                 <th onclick="sortTable('teamMetricsTable', 1)" class="sortable">Merged PRs<br><span>Total: <%= metrics[:total_merged].to_i %></span></th>
-                <th onclick="sortTable('teamMetricsTable', 2)" class="sortable">Median Time to Merge (d)<br><span>Median: <%= format_metric_value(metrics[:avg_time_to_merge]) %></span></th>
-                <th onclick="sortTable('teamMetricsTable', 3)" class="sortable">Median Reviews<br><span>Median: <%= format_metric_value(metrics[:avg_reviews]) %></span></th>
+                <th onclick="sortTable('teamMetricsTable', 2)" class="sortable">Median Time to Merge (d)<br><span>Median: <%= format_metric_value(metrics[:median_time_to_merge]) %></span></th>
+                <th onclick="sortTable('teamMetricsTable', 3)" class="sortable">Median Reviews<br><span>Median: <%= format_metric_value(metrics[:median_reviews]) %></span></th>
                 <th onclick="sortTable('teamMetricsTable', 4)" class="sortable">Unreviewed Rate (%)<br><span>Median: <%= format_metric_value(metrics[:unreviewed_pr_rate]) %></span></th>
                 <th onclick="sortTable('teamMetricsTable', 5)" class="sortable">Merge Rate (%)<br><span>Median: <%= format_metric_value(metrics[:merge_rate]) %></span></th>
                 <th onclick="sortTable('teamMetricsTable', 6)" class="sortable">CI Success (%)<br><span>Median: <%= format_metric_value(metrics[:ci_success_rate]) %></span></th>
@@ -445,12 +445,12 @@
                 <tr class="team-row">
                   <td><%= team_name %></td>
                   <td><%= data[:metrics][:total_merged].to_i %></td>
-                  <% team_time_to_merge = data[:metrics][:avg_time_to_merge] %>
-                  <td <%= metric_color_class(team_time_to_merge, metrics[:avg_time_to_merge], inverse: true) %>>
+                  <% team_time_to_merge = data[:metrics][:median_time_to_merge] %>
+                  <td <%= metric_color_class(team_time_to_merge, metrics[:median_time_to_merge], inverse: true) %>>
                     <%= team_time_to_merge.nil? ? '-' : format_metric_value(team_time_to_merge) %>
                   </td>
-                  <% team_reviews = data[:metrics][:avg_reviews] %>
-                  <td <%= metric_color_class(team_reviews, metrics[:avg_reviews]) %>>
+                  <% team_reviews = data[:metrics][:median_reviews] %>
+                  <td <%= metric_color_class(team_reviews, metrics[:median_reviews]) %>>
                     <%= team_reviews.nil? ? '-' : format_metric_value(team_reviews) %>
                   </td>
                   <td>
@@ -545,81 +545,81 @@
       });
       
     // Time to Merge Chart
-    const avgTimeMergeHours = <%= breakdown[:datasets][:avg_time_to_merge].to_json %>;
-    const avgTimeMergeDays = avgTimeMergeHours.map(h => (h / 24).toFixed(2));
+    const medianTimeMergeHours = <%= breakdown[:datasets][:median_time_to_merge].to_json %>;
+    const medianTimeMergeDays = medianTimeMergeHours.map(h => (h / 24).toFixed(2));
 
     chartInstances.timeToMerge = createMetricLineChart(
       'timeToMergeChart',
       breakdownLabels,
-      avgTimeMergeDays,
+      medianTimeMergeDays,
       'Median Time to Merge (Days)',
       colors.blue,
-      globalMetrics.avg_time_to_merge
+      globalMetrics.median_time_to_merge
     );
 
     // Time to First Review Chart
-    const avgTimeFirstReviewRaw = <%= breakdown[:datasets][:avg_time_to_first_review].to_json %>;
+    const medianTimeFirstReviewRaw = <%= breakdown[:datasets][:median_time_to_first_review].to_json %>;
     // Data is already in days
-    const avgTimeFirstReviewDays = avgTimeFirstReviewRaw.map(d => Number(d).toFixed(2));
+    const medianTimeFirstReviewDays = medianTimeFirstReviewRaw.map(d => Number(d).toFixed(2));
 
     chartInstances.timeToFirstReview = createMetricLineChart(
       'timeToFirstReviewChart',
       breakdownLabels,
-      avgTimeFirstReviewDays,
+      medianTimeFirstReviewDays,
       'Median Time to First Review (Days)',
       colors.cyan,
-      globalMetrics.avg_time_to_first_review
+      globalMetrics.median_time_to_first_review
     );
 
     // Time to Approval Chart
     chartInstances.timeToApproval = createMetricLineChart(
       'timeToApprovalChart',
       breakdownLabels,
-      <%= breakdown[:datasets][:avg_time_to_approval].to_json %>,
+      <%= breakdown[:datasets][:median_time_to_approval].to_json %>,
       'Median Time to Approval (Days)',
       colors.green,
-      globalMetrics.avg_time_to_approval
+      globalMetrics.median_time_to_approval
     );
 
     // Reviews & Comments Charts
-    const avgReviews = <%= breakdown[:datasets][:avg_reviews].to_json %>;
-    const avgComments = <%= breakdown[:datasets][:avg_comments].to_json %>;
-    const avgRework = <%= breakdown[:datasets][:avg_rework_cycles].to_json %>;
+    const medianReviews = <%= breakdown[:datasets][:median_reviews].to_json %>;
+    const medianComments = <%= breakdown[:datasets][:median_comments].to_json %>;
+    const medianRework = <%= breakdown[:datasets][:median_rework_cycles].to_json %>;
 
     chartInstances.reviews = createMetricLineChart(
       'reviewsChart',
       breakdownLabels,
-      avgReviews,
+      medianReviews,
       'Median Reviews',
       colors.purple,
-      globalMetrics.avg_reviews
+      globalMetrics.median_reviews
     );
 
     chartInstances.comments = createMetricLineChart(
       'commentsChart',
       breakdownLabels,
-      avgComments,
+      medianComments,
       'Median Comments',
       colors.orange,
-      globalMetrics.avg_comments
+      globalMetrics.median_comments
     );
 
     chartInstances.reworkCycles = createMetricLineChart(
       'reworkCyclesChart',
       breakdownLabels,
-      avgRework,
+      medianRework,
       'Median Rework Cycles',
       colors.red,
-      globalMetrics.avg_rework_cycles
+      globalMetrics.median_rework_cycles
     );
 
     // PR Size Chart
-    const avgAdditionsRaw = <%= breakdown[:datasets][:avg_additions].to_json %>;
-    const avgDeletionsRaw = <%= breakdown[:datasets][:avg_deletions].to_json %>;
+    const medianAdditionsRaw = <%= breakdown[:datasets][:median_additions].to_json %>;
+    const medianDeletionsRaw = <%= breakdown[:datasets][:median_deletions].to_json %>;
 
-    const sizeTotals = breakdownLabels.map((_, i) => (avgAdditionsRaw[i] || 0) + (avgDeletionsRaw[i] || 0));
-    const additionsPct = avgAdditionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
-    const deletionsPct = avgDeletionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
+    const sizeTotals = breakdownLabels.map((_, i) => (medianAdditionsRaw[i] || 0) + (medianDeletionsRaw[i] || 0));
+    const additionsPct = medianAdditionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
+    const deletionsPct = medianDeletionsRaw.map((val, i) => sizeTotals[i] > 0 ? (val / sizeTotals[i] * 100) : 0);
 
     chartInstances.prSize = createStackedBarChart(
       'prSizeChart',
@@ -629,13 +629,13 @@
           label: 'Median Additions',
           data: additionsPct,
           backgroundColor: colors.green,
-          raw: avgAdditionsRaw
+          raw: medianAdditionsRaw
         },
         {
           label: 'Median Deletions',
           data: deletionsPct,
           backgroundColor: colors.red,
-          raw: avgDeletionsRaw
+          raw: medianDeletionsRaw
         }
       ]
     );

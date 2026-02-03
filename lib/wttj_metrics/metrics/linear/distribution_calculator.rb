@@ -29,11 +29,11 @@ module WttjMetrics
 
         # Also expose backlog age as an issue characteristic
         def backlog_metrics
-          { avg_backlog_age_days: avg_backlog_age }
+          { median_backlog_age_days: median_backlog_age }
         end
 
         def backlog_rows
-          [[today.to_s, 'issues', 'avg_backlog_age_days', avg_backlog_age]]
+          [[today.to_s, 'issues', 'median_backlog_age_days', median_backlog_age]]
         end
 
         private
@@ -220,7 +220,7 @@ module WttjMetrics
           issues.select { |issue| issue.dig('state', 'type') == state_type }
         end
 
-        def avg_backlog_age
+        def median_backlog_age
           backlog_issues = filter_issues_by_state('backlog')
           return 0 if backlog_issues.empty?
 

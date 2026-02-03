@@ -114,10 +114,10 @@ module WttjMetrics
               sheet.add_row [
                 team,
                 "#{stats[:cycles_with_data]}/#{stats[:total_cycles]}",
-                stats[:avg_velocity],
-                stats[:avg_tickets_per_cycle],
-                stats[:avg_completion_rate].round(1),
-                stats[:avg_scope_change].round(1)
+                stats[:median_velocity],
+                stats[:median_tickets_per_cycle],
+                stats[:median_completion_rate].round(1),
+                stats[:median_scope_change].round(1)
               ]
             end
 

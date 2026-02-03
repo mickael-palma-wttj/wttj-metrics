@@ -25,11 +25,11 @@ module WttjMetrics
 
           def metrics
             {
-              avg_reviews_per_pr: safe_median(@reviews_per_pr, precision: 2),
-              avg_comments_per_pr: safe_median(@comments_per_pr, precision: 2),
-              avg_rework_cycles: safe_median(@rework_cycles_per_pr, precision: 2),
-              avg_time_to_first_review_days: median_duration(@time_to_first_review, 86_400.0),
-              avg_time_to_approval_days: median_duration(@time_to_approval, 86_400.0),
+              median_reviews_per_pr: safe_median(@reviews_per_pr, precision: 2),
+              median_comments_per_pr: safe_median(@comments_per_pr, precision: 2),
+              median_rework_cycles: safe_median(@rework_cycles_per_pr, precision: 2),
+              median_time_to_first_review_days: median_duration(@time_to_first_review, 86_400.0),
+              median_time_to_approval_days: median_duration(@time_to_approval, 86_400.0),
               unreviewed_pr_rate: rate(@count_zero_reviews, @pr_count)
             }
           end

@@ -18,9 +18,9 @@ module WttjMetrics
           return {} if pull_requests.empty?
 
           {
-            avg_reviews_per_pr: avg_reviews_per_pr,
-            avg_comments_per_pr: avg_comments_per_pr,
-            avg_rework_cycles: avg_rework_cycles,
+            median_reviews_per_pr: median_reviews_per_pr,
+            median_comments_per_pr: median_comments_per_pr,
+            median_rework_cycles: median_rework_cycles,
             unreviewed_pr_rate: unreviewed_pr_rate
           }
         end
@@ -37,15 +37,15 @@ module WttjMetrics
           @count ||= pull_requests.size
         end
 
-        def avg_reviews_per_pr
+        def median_reviews_per_pr
           calculate_median { |pr| pr.dig(:reviews, :totalCount) || 0 }
         end
 
-        def avg_comments_per_pr
+        def median_comments_per_pr
           calculate_median { |pr| pr.dig(:comments, :totalCount) || 0 }
         end
 
-        def avg_rework_cycles
+        def median_rework_cycles
           calculate_median { |pr| count_changes_requested(pr) }
         end
 

@@ -8,11 +8,11 @@ module WttjMetrics
       class PrVelocityCalculator
         CATEGORY = 'github'
         METRICS = {
-          avg_time_to_merge_days: 'avg_time_to_merge_days',
+          median_time_to_merge_days: 'median_time_to_merge_days',
           total_merged: 'total_merged_prs',
-          avg_time_to_first_review_days: 'avg_time_to_first_review_days',
+          median_time_to_first_review_days: 'median_time_to_first_review_days',
           merge_rate: 'merge_rate',
-          avg_time_to_approval_days: 'avg_time_to_approval_days'
+          median_time_to_approval_days: 'median_time_to_approval_days'
         }.freeze
 
         def initialize(pull_requests)
@@ -23,11 +23,11 @@ module WttjMetrics
           return {} if @pull_requests.empty?
 
           {
-            avg_time_to_merge_days: avg_time_to_merge,
+            median_time_to_merge_days: median_time_to_merge,
             total_merged: merged_prs.size,
-            avg_time_to_first_review_days: avg_time_to_first_review,
+            median_time_to_first_review_days: median_time_to_first_review,
             merge_rate: merge_rate,
-            avg_time_to_approval_days: avg_time_to_approval
+            median_time_to_approval_days: median_time_to_approval
           }
         end
 
@@ -46,7 +46,7 @@ module WttjMetrics
           @merged_prs ||= @pull_requests.select { |pr| pr[:state] == 'MERGED' }
         end
 
-        def avg_time_to_merge
+        def median_time_to_merge
           return 0.0 if merged_prs.empty?
 
           median_duration(merged_prs) do |pr|
@@ -54,7 +54,7 @@ module WttjMetrics
           end
         end
 
-        def avg_time_to_first_review
+        def median_time_to_first_review
           prs_with_reviews = @pull_requests.select { |pr| reviews(pr).any? }
           return 0.0 if prs_with_reviews.empty?
 
@@ -72,7 +72,7 @@ module WttjMetrics
           (merged_prs.size.to_f / total * 100).round(2)
         end
 
-        def avg_time_to_approval
+        def median_time_to_approval
           prs_with_approval = @pull_requests.select { |pr| approvals(pr).any? }
           return 0.0 if prs_with_approval.empty?
 

@@ -8,10 +8,10 @@ module WttjMetrics
       class PrSizeCalculator
         CATEGORY = 'github'
         METRICS = {
-          avg_additions: 'avg_additions_per_pr',
-          avg_deletions: 'avg_deletions_per_pr',
-          avg_changed_files: 'avg_changed_files_per_pr',
-          avg_commits: 'avg_commits_per_pr'
+          median_additions: 'median_additions_per_pr',
+          median_deletions: 'median_deletions_per_pr',
+          median_changed_files: 'median_changed_files_per_pr',
+          median_commits: 'median_commits_per_pr'
         }.freeze
 
         def initialize(pull_requests)
@@ -22,10 +22,10 @@ module WttjMetrics
           return {} if @pull_requests.empty?
 
           {
-            avg_additions: median_metric { |pr| pr[:additions] },
-            avg_deletions: median_metric { |pr| pr[:deletions] },
-            avg_changed_files: median_metric { |pr| pr[:changedFiles] },
-            avg_commits: median_metric { |pr| pr.dig(:commits, :totalCount) }
+            median_additions: median_metric { |pr| pr[:additions] },
+            median_deletions: median_metric { |pr| pr[:deletions] },
+            median_changed_files: median_metric { |pr| pr[:changedFiles] },
+            median_commits: median_metric { |pr| pr.dig(:commits, :totalCount) }
           }
         end
 

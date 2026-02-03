@@ -23,8 +23,8 @@ RSpec.describe WttjMetrics::Presenters::BugMetricPresenter do
       end
     end
 
-    context 'with avg_bug_resolution_days metric' do
-      let(:name) { 'avg_bug_resolution_days' }
+    context 'with median_bug_resolution_days metric' do
+      let(:name) { 'median_bug_resolution_days' }
 
       it 'uses Median prefix' do
         expect(presenter.label).to eq('Median resolution days')
@@ -49,8 +49,8 @@ RSpec.describe WttjMetrics::Presenters::BugMetricPresenter do
       end
     end
 
-    context 'with avg_bug_resolution_days' do
-      let(:name) { 'avg_bug_resolution_days' }
+    context 'with median_bug_resolution_days' do
+      let(:name) { 'median_bug_resolution_days' }
 
       it 'returns the tooltip' do
         expect(presenter.tooltip).to eq('Median time to resolve a bug.')
@@ -67,8 +67,8 @@ RSpec.describe WttjMetrics::Presenters::BugMetricPresenter do
   end
 
   describe '#unit' do
-    context 'with avg_bug_resolution_days' do
-      let(:name) { 'avg_bug_resolution_days' }
+    context 'with median_bug_resolution_days' do
+      let(:name) { 'median_bug_resolution_days' }
 
       it 'returns days unit' do
         expect(presenter.unit).to eq(' days')

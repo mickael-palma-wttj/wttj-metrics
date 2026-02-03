@@ -19,8 +19,8 @@ module WttjMetrics
 
           def metrics
             {
-              avg_additions_per_pr: safe_median(@additions, precision: 2),
-              avg_deletions_per_pr: safe_median(@deletions, precision: 2)
+              median_additions_per_pr: safe_median(@additions, precision: 2),
+              median_deletions_per_pr: safe_median(@deletions, precision: 2)
             }
           end
         end

@@ -34,7 +34,7 @@ RSpec.describe WttjMetrics::Services::MetricsCollector do
 
   let(:calculated_rows) do
     [
-      ['2024-01-01', 'flow', 'avg_cycle_time_days', '10.5'],
+      ['2024-01-01', 'flow', 'median_cycle_time_days', '10.5'],
       ['2024-01-01', 'issues', 'total_issues', '150']
     ]
   end
