@@ -141,9 +141,9 @@ RSpec.describe WttjMetrics::Metrics::Linear::CycleCalculator do
         ]
       end
 
-      it 'calculates average carryover across all completed cycles' do
-        # (3 + 1 + 4) / 3 = 8 / 3 = 2.7
-        expect(result[:cycle_carryover_count]).to eq(2.7)
+      it 'calculates median carryover across all completed cycles' do
+        # Median(3, 1, 4) = 3
+        expect(result[:cycle_carryover_count]).to eq(3.0)
       end
     end
 

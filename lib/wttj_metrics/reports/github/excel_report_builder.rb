@@ -8,24 +8,24 @@ module WttjMetrics
       # Builds Excel reports from GitHub metrics data
       class ExcelReportBuilder
         KEY_METRICS_CONFIG = [
-          { label: 'Avg Time to Merge', key: :avg_time_to_merge, unit: 'days' },
+          { label: 'Median Time to Merge', key: :avg_time_to_merge, unit: 'days' },
           { label: 'Total Merged PRs', key: :total_merged, unit: '' },
-          { label: 'Avg Reviews/PR', key: :avg_reviews, unit: '' },
-          { label: 'Avg Comments/PR', key: :avg_comments, unit: '' },
-          { label: 'Avg Time to First Review', key: :avg_time_to_first_review, unit: 'days' },
+          { label: 'Median Reviews/PR', key: :avg_reviews, unit: '' },
+          { label: 'Median Comments/PR', key: :avg_comments, unit: '' },
+          { label: 'Median Time to First Review', key: :avg_time_to_first_review, unit: 'days' },
           { label: 'Merge Rate', key: :merge_rate, unit: '%' },
-          { label: 'Time to Approval', key: :avg_time_to_approval, unit: 'days' },
+          { label: 'Median Time to Approval', key: :avg_time_to_approval, unit: 'days' },
           { label: 'Rework Cycles', key: :avg_rework_cycles, unit: '' },
           { label: 'CI Success Rate', key: :ci_success_rate, unit: '%' },
           { label: 'Daily Deploys', key: :deploy_frequency_daily, unit: '' },
-          { label: 'Avg Additions/PR', key: :avg_additions, unit: 'lines' },
-          { label: 'Avg Deletions/PR', key: :avg_deletions, unit: 'lines' },
-          { label: 'Avg Changed Files/PR', key: :avg_changed_files, unit: '' },
-          { label: 'Avg Commits/PR', key: :avg_commits, unit: '' }
+          { label: 'Median Additions/PR', key: :avg_additions, unit: 'lines' },
+          { label: 'Median Deletions/PR', key: :avg_deletions, unit: 'lines' },
+          { label: 'Median Changed Files/PR', key: :avg_changed_files, unit: '' },
+          { label: 'Median Commits/PR', key: :avg_commits, unit: '' }
         ].freeze
 
-        DAILY_BREAKDOWN_HEADERS = %w[Date Merged Closed Open Avg_Merge_Time(h) Avg_Reviews Avg_Comments Avg_Additions
-                                     Avg_Deletions Avg_Time_To_First_Review(h)].freeze
+        DAILY_BREAKDOWN_HEADERS = %w[Date Merged Closed Open Median_Merge_Time(h) Median_Reviews Median_Comments Median_Additions
+                                     Median_Deletions Median_Time_To_First_Review(h)].freeze
 
         DAILY_DATASET_KEYS = %i[merged closed open avg_time_to_merge avg_reviews avg_comments avg_additions
                                 avg_deletions avg_time_to_first_review].freeze

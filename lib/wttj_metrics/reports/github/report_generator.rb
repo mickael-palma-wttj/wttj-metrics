@@ -136,13 +136,14 @@ module WttjMetrics
         def team_metrics
           @team_metrics ||= begin
             teams = TeamService.new(@parser, @teams_config).resolve_teams
+            teams = selected_teams if teams.empty? && @teams_config
 
             teams.each_with_object({}) do |team_name, hash|
               category = "github:#{team_name}"
               calculator = MetricsCalculator.new(metrics_data(category))
 
               hash[team_name] = {
-                metrics: METRIC_MAPPING.transform_values { |name| calculator.latest(name) },
+                metrics: METRIC_MAPPING.transform_values { |name| calculator.latest_or_nil(name) },
                 history: METRIC_MAPPING.transform_values { |name| calculator.history(name) },
                 daily_breakdown: daily_breakdown_for(team_name)
               }

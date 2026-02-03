@@ -26,8 +26,8 @@ RSpec.describe WttjMetrics::Presenters::BugMetricPresenter do
     context 'with avg_bug_resolution_days metric' do
       let(:name) { 'avg_bug_resolution_days' }
 
-      it 'keeps Avg prefix capitalized' do
-        expect(presenter.label).to eq('Avg resolution days')
+      it 'uses Median prefix' do
+        expect(presenter.label).to eq('Median resolution days')
       end
     end
 
@@ -53,7 +53,7 @@ RSpec.describe WttjMetrics::Presenters::BugMetricPresenter do
       let(:name) { 'avg_bug_resolution_days' }
 
       it 'returns the tooltip' do
-        expect(presenter.tooltip).to eq('Average time to resolve a bug.')
+        expect(presenter.tooltip).to eq('Median time to resolve a bug.')
       end
     end
 

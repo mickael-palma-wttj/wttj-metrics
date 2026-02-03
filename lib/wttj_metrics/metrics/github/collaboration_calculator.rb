@@ -38,16 +38,15 @@ module WttjMetrics
         end
 
         def avg_reviews_per_pr
-          calculate_average { |pr| pr.dig(:reviews, :totalCount) || 0 }
+          calculate_median { |pr| pr.dig(:reviews, :totalCount) || 0 }
         end
 
         def avg_comments_per_pr
-          calculate_average { |pr| pr.dig(:comments, :totalCount) || 0 }
+          calculate_median { |pr| pr.dig(:comments, :totalCount) || 0 }
         end
 
         def avg_rework_cycles
-          total = pull_requests.sum { |pr| count_changes_requested(pr) }
-          (total.to_f / count).round(2)
+          calculate_median { |pr| count_changes_requested(pr) }
         end
 
         def unreviewed_pr_rate
@@ -55,9 +54,19 @@ module WttjMetrics
           (unreviewed.to_f / count * 100).round(2)
         end
 
-        def calculate_average(&)
-          total = pull_requests.sum(&)
-          (total.to_f / count).round(2)
+        def calculate_median(&)
+          values = pull_requests.map(&).map(&:to_f)
+          median(values).round(2)
+        end
+
+        def median(values)
+          return 0.0 if values.empty?
+
+          sorted = values.sort
+          mid = sorted.length / 2
+          return sorted[mid] if sorted.length.odd?
+
+          (sorted[mid - 1] + sorted[mid]) / 2.0
         end
 
         def count_changes_requested(pull_request)

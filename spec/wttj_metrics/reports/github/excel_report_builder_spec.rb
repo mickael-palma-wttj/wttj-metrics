@@ -74,13 +74,13 @@ RSpec.describe WttjMetrics::Reports::Github::ExcelReportBuilder do
         builder.build('dummy.xlsx')
 
         # Float value with unit
-        expect(sheet).to have_received(:add_row).with(['Avg Time to Merge', '2.5 days'])
+        expect(sheet).to have_received(:add_row).with(['Median Time to Merge', '2.5 days'])
         # Integer value with empty unit
         expect(sheet).to have_received(:add_row).with(['Total Merged PRs', '100'])
         # Float value with empty unit
-        expect(sheet).to have_received(:add_row).with(['Avg Reviews/PR', '3.2'])
+        expect(sheet).to have_received(:add_row).with(['Median Reviews/PR', '3.2'])
         # Integer value with unit
-        expect(sheet).to have_received(:add_row).with(['Avg Additions/PR', '150 lines'])
+        expect(sheet).to have_received(:add_row).with(['Median Additions/PR', '150 lines'])
       end
     end
   end

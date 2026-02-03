@@ -30,7 +30,7 @@ module WttjMetrics
         private
 
         def avg_cycle_time
-          average_duration(cycle_time_eligible_issues) do |issue|
+          median_duration(cycle_time_eligible_issues) do |issue|
             duration_between(issue['startedAt'], issue['completedAt'])
           end
         end
@@ -44,7 +44,7 @@ module WttjMetrics
         end
 
         def avg_lead_time
-          average_duration(completed_issues) do |issue|
+          median_duration(completed_issues) do |issue|
             duration_between(issue['createdAt'], issue['completedAt'])
           end
         end
@@ -76,7 +76,7 @@ module WttjMetrics
         end
 
         def avg_review_time
-          average_from_collection(collect_review_times)
+          median_from_collection(collect_review_times)
         end
 
         def collect_review_times
@@ -122,17 +122,25 @@ module WttjMetrics
           (issue.dig('history', 'nodes') || []).sort_by { |h| h['createdAt'] }
         end
 
-        def average_duration(collection, &)
+        def median_duration(collection, &)
           return 0 if collection.empty?
 
-          total = collection.sum(&)
-          round_to_precision(total / collection.size)
+          values = collection.map(&)
+          round_to_precision(median(values))
         end
 
-        def average_from_collection(values)
+        def median_from_collection(values)
           return 0 if values.empty?
 
-          round_to_precision(values.sum / values.size)
+          round_to_precision(median(values))
+        end
+
+        def median(values)
+          sorted = values.sort
+          mid = sorted.length / 2
+          return sorted[mid] if sorted.length.odd?
+
+          (sorted[mid - 1] + sorted[mid]) / 2.0
         end
 
         def round_to_precision(value)

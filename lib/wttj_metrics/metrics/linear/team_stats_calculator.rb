@@ -6,6 +6,8 @@ module WttjMetrics
       # Calculates aggregate statistics for team cycles
       # Single Responsibility: Team statistics calculation
       class TeamStatsCalculator
+        include Helpers::StatisticsHelper
+
         COUNTABLE_STATUSES = %w[completed active].freeze
         METRIC_DEFINITIONS = [
           { key: :avg_velocity, field: :velocity, precision: 0 },
@@ -59,10 +61,8 @@ module WttjMetrics
         end
 
         def average(cycles, field, precision: 1)
-          return 0 if cycles.empty?
-
-          total = sum(cycles, field)
-          (total.to_f / cycles.size).round(precision)
+          values = cycles.map { |cycle| field_value(cycle, field).to_f }
+          safe_median(values, precision: precision)
         end
 
         def sum(cycles, field)

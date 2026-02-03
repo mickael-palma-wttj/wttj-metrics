@@ -54,11 +54,7 @@ module WttjMetrics
           blocked_times = collect_blocked_times
           return 0 if blocked_times.empty?
 
-          calculate_average(blocked_times)
-        end
-
-        def calculate_average(values)
-          (values.sum / values.size).round(2)
+          safe_median(blocked_times, precision: 2)
         end
 
         def collect_blocked_times

@@ -43,12 +43,10 @@ RSpec.describe WttjMetrics::Reports::Github::WeeklyAggregator do
       expect(result[:datasets][:open]).to eq([4, 0])
     end
 
-    it 'calculates weighted average for time to merge' do
-      # Week 1:
-      # Day 1: 10 * 5 (merged) = 50
-      # Day 2: 20 * 3 (merged) = 60
-      # Total: 110 / 8 = 13.75
-      expect(result[:datasets][:avg_time_to_merge]).to eq([13.75, 0])
+    it 'calculates weighted median for time to merge' do
+      # Week 1 values (weighted by merged count):
+      # 10h (weight 5), 20h (weight 3) => weighted median is 10
+      expect(result[:datasets][:avg_time_to_merge]).to eq([10.0, 0.0])
     end
 
     context 'with empty data' do

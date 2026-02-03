@@ -10,7 +10,7 @@ module WttjMetrics
         'closed_bugs' => 'Bugs that have been completed.',
         'bugs_created_last_30d' => 'New bugs created in the last 30 days.',
         'bugs_closed_last_30d' => 'Bugs resolved in the last 30 days.',
-        'avg_bug_resolution_days' => 'Average time to resolve a bug.',
+        'avg_bug_resolution_days' => 'Median time to resolve a bug.',
         'bug_ratio' => 'Percentage of issues that are bugs.'
       }.freeze
 
@@ -21,7 +21,7 @@ module WttjMetrics
           name.tr('_', ' ')
               .gsub('bugs ', '')
               .gsub('bug ', '')
-              .gsub('avg ', 'Avg ')
+              .gsub('avg ', 'Median ')
               .strip
               .capitalize
         end

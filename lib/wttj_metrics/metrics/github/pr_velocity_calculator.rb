@@ -49,7 +49,7 @@ module WttjMetrics
         def avg_time_to_merge
           return 0.0 if merged_prs.empty?
 
-          average_duration(merged_prs) do |pr|
+          median_duration(merged_prs) do |pr|
             days_between(pr[:createdAt], pr[:mergedAt])
           end
         end
@@ -58,7 +58,7 @@ module WttjMetrics
           prs_with_reviews = @pull_requests.select { |pr| reviews(pr).any? }
           return 0.0 if prs_with_reviews.empty?
 
-          average_duration(prs_with_reviews) do |pr|
+          median_duration(prs_with_reviews) do |pr|
             first_review = reviews(pr).min_by { |r| r[:createdAt] }
             days_between(pr[:createdAt], first_review[:createdAt])
           end
@@ -76,7 +76,7 @@ module WttjMetrics
           prs_with_approval = @pull_requests.select { |pr| approvals(pr).any? }
           return 0.0 if prs_with_approval.empty?
 
-          average_duration(prs_with_approval) do |pr|
+          median_duration(prs_with_approval) do |pr|
             first_approval = approvals(pr).min_by { |r| r[:createdAt] }
             days_between(pr[:createdAt], first_approval[:createdAt])
           end
@@ -94,9 +94,17 @@ module WttjMetrics
           (DateTime.parse(end_date) - DateTime.parse(start_date)).to_f
         end
 
-        def average_duration(collection, &)
-          total = collection.sum(&)
-          (total / collection.size).round(4)
+        def median_duration(collection, &)
+          values = collection.map(&)
+          median(values).round(4)
+        end
+
+        def median(values)
+          sorted = values.sort
+          mid = sorted.length / 2
+          return sorted[mid] if sorted.length.odd?
+
+          (sorted[mid - 1] + sorted[mid]) / 2.0
         end
       end
     end

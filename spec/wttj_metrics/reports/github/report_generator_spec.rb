@@ -184,7 +184,7 @@ RSpec.describe WttjMetrics::Reports::Github::ReportGenerator do
       expect(breakdown[:labels]).to include('2025-12-01', '2025-12-08')
       expect(breakdown[:datasets][:merged]).to eq([10, 8])
       expect(breakdown[:datasets][:open]).to eq([12, 15])
-      expect(breakdown[:datasets][:avg_time_to_merge]).to eq([15.0, 5.0])
+      expect(breakdown[:datasets][:avg_time_to_merge]).to eq([10.0, 5.0])
     end
   end
 

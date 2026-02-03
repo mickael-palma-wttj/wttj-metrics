@@ -25,8 +25,8 @@ RSpec.describe WttjMetrics::Presenters::TeamMetricPresenter do
     context 'with avg_blocked_time_hours' do
       let(:metric_name) { 'avg_blocked_time_hours' }
 
-      it 'formats with Avg capitalized' do
-        expect(label).to eq('Avg blocked time hours')
+      it 'uses Median prefix' do
+        expect(label).to eq('Median blocked time hours')
       end
     end
   end
@@ -46,7 +46,7 @@ RSpec.describe WttjMetrics::Presenters::TeamMetricPresenter do
       let(:metric_name) { 'avg_blocked_time_hours' }
 
       it 'returns the tooltip' do
-        expect(tooltip).to eq('Average hours issues spend in blocked state.')
+        expect(tooltip).to eq('Median hours issues spend in blocked state.')
       end
     end
 

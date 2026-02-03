@@ -19,7 +19,7 @@ RSpec.describe WttjMetrics::Presenters::FlowMetricPresenter do
 
       it 'formats correctly' do
         # Exercise & Verify
-        expect(label).to eq('Avg cycle time')
+        expect(label).to eq('Median cycle time')
       end
     end
 
@@ -29,7 +29,7 @@ RSpec.describe WttjMetrics::Presenters::FlowMetricPresenter do
 
       it 'formats correctly' do
         # Exercise & Verify
-        expect(label).to eq('Avg lead time')
+        expect(label).to eq('Median lead time')
       end
     end
 
@@ -97,7 +97,7 @@ RSpec.describe WttjMetrics::Presenters::FlowMetricPresenter do
 
       it 'returns descriptive tooltip' do
         # Exercise & Verify
-        expect(tooltip).to include('Average time from when work starts')
+        expect(tooltip).to include('Median time from when work starts')
       end
     end
 

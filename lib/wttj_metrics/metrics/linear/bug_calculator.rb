@@ -116,7 +116,7 @@ module WttjMetrics
           resolution_times = calculate_resolution_times
           return 0 if resolution_times.empty?
 
-          average(resolution_times).round(1)
+          safe_median(resolution_times, precision: 1)
         end
 
         def calculate_resolution_times
@@ -129,10 +129,6 @@ module WttjMetrics
           created = parse_date(bug['createdAt'])
           completed = parse_date(bug['completedAt'])
           (completed - created).to_f
-        end
-
-        def average(numbers)
-          numbers.sum / numbers.size.to_f
         end
 
         def bug_ratio

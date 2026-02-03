@@ -66,9 +66,27 @@ module WttjMetrics
             cached_prs = []
           end
 
+          if cached_prs.any? && !github_token?
+            @logger.warn '   ⚠️  GITHUB_TOKEN not set. Using cached PRs without updating.'
+            return cached_prs
+          end
+
           prs = if cached_prs.any?
-                  merge_with_cache(org, cached_prs, from_date)
+                  begin
+                    merge_with_cache(org, cached_prs, from_date)
+                  rescue Octokit::Unauthorized => e
+                    @logger.warn "   ⚠️  Cannot update PR cache (unauthorized): #{e.message}. Using cached PRs."
+                    cached_prs
+                  rescue StandardError => e
+                    @logger.warn "   ⚠️  Cannot update PR cache: #{e.message}. Using cached PRs."
+                    cached_prs
+                  end
                 else
+                  unless github_token?
+                    @logger.error '   ❌ No cached PRs and GITHUB_TOKEN not set. Cannot fetch PRs.'
+                    return []
+                  end
+
                   @logger.info "   No cache found. Fetching all PRs since #{from_date}..."
                   prs = client.fetch_organization_pull_requests(org, from_date)
                   deep_stringify_keys(prs)
@@ -102,12 +120,18 @@ module WttjMetrics
 
         def fetch_releases_data(prs, from_date)
           cache_key = "github_releases_#{ENV.fetch('GITHUB_ORG', nil)}"
+          stale_releases = cache&.read(cache_key, max_age_hours: 87_600)
           if cache
             fresh_releases = cache.read(cache_key, max_age_hours: 24)
             if fresh_releases
               @logger.info '   ✨ Releases cache is fresh (< 24h). Skipping update.'
               return fresh_releases
             end
+          end
+
+          if stale_releases && !github_token?
+            @logger.warn '   ⚠️  GITHUB_TOKEN not set. Using cached releases without updating.'
+            return stale_releases
           end
 
           repos = Set.new
@@ -119,6 +143,11 @@ module WttjMetrics
           end
 
           return [] if repos.empty?
+
+          unless github_token?
+            @logger.warn '   ⚠️  GITHUB_TOKEN not set and no cached releases. Skipping releases fetch.'
+            return []
+          end
 
           @logger.info "   Fetching releases for #{repos.size} repositories..."
 
@@ -147,11 +176,17 @@ module WttjMetrics
         end
 
         def fetch_teams_data
+          return {} unless github_token?
+
           @logger.info "   Fetching teams for organization: #{ENV.fetch('GITHUB_ORG', nil)}"
           client.fetch_teams(ENV.fetch('GITHUB_ORG', nil))
         rescue StandardError => e
           @logger.warn "⚠️  Error fetching teams: #{e.message}"
           {}
+        end
+
+        def github_token?
+          !ENV.fetch('GITHUB_TOKEN', nil).to_s.strip.empty?
         end
 
         def client

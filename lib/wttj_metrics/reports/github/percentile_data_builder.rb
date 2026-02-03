@@ -175,8 +175,8 @@ module WttjMetrics
         def format_team_metric(teams_data, metric_name, divisor: 1)
           teams_data.keys.sort.map do |team|
             values = teams_data[team][metric_name] || []
-            avg = safe_average(values) / divisor
-            { team: team, value: avg.round(2) }
+            median = safe_median(values) / divisor
+            { team: team, value: median.round(2) }
           end
         end
 
