@@ -139,7 +139,7 @@ RSpec.describe WttjMetrics::Presenters::FlowMetricPresenter do
 
     it 'includes value and unit' do
       # Exercise & Verify
-      expect(display_value).to eq('5 days')
+      expect(display_value).to eq('5.7 days')
     end
   end
 end
